@@ -1,0 +1,40 @@
+@mixin border-radius($radius) {
+  -webkit-border-radius: $radius;
+     -moz-border-radius: $radius;
+      -ms-border-radius: $radius;
+          border-radius: $radius;
+}
+
+* {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+body {
+  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+}
+
+.nav-div {
+  background: url("../img/d6d6d6_1px_horiz.png") bottom repeat-x;
+}
+
+.dl-nav-tab {
+  margin-top: 1rem;
+  margin-left: 2rem;
+
+  dd {
+    background: #FFFFFF;
+  }
+
+  dd.active {
+    $one_px_solid_gray: 1px solid #D6D6D6;
+    border-left: $one_px_solid_gray;
+    border-top: $one_px_solid_gray;
+    border-right: $one_px_solid_gray;
+  }
+
+  dd:first-child {
+    margin-right: 1rem;
+  }
+}
