@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/normalize.css" />
     <link rel="stylesheet" href="css/foundation.min.css" />
     <link rel="stylesheet" href="css/styles.css" />
+
     <script src="js/vendor/modernizr.js"></script>
   </head>
   <body>
@@ -19,7 +20,14 @@
     </div>
     <div class="tabs-content">
       <div class="content active" id="module-finder">
-        Module Finder
+        <div data-ex-role="exhibit-collection" data-ex-item-types="Module"></div>
+        <div data-ex-role="exhibit-view"
+             data-ex-view-class="Exhibit.TabularView"
+             data-ex-label="Table"
+             data-ex-columns=".label, .name, .description, .crap"
+             data-ex-column-labels="Module Code, Module Name, Module Description, some crap"
+             data-ex-column-formats="list, list, list, list">
+        </div>
       </div>
       <div class="content" id="timetable-builder">
         Timetable Builder
@@ -28,8 +36,39 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
     <script src="js/vendor/foundation.min.js"></script>
+    <script src="js/vendor/exhibit3/exhibit-api.js?bundle=false&autoCreate=false"></script>
     <script>
       $(document).foundation();
+      $(document).one("scriptsLoaded.exhibit", function() {
+      window.database = Exhibit.Database.create();
+      window.database.loadData({
+        items: [
+          {
+            type: "Module",
+            label: "MA1101R",
+            name: "Linear Algebra I",
+            description: "The basics of Linear Algebra",
+            crap: "Crap 1"
+          },
+          {
+            type: "Module",
+            label: "GEK1534",
+            name: "Microbes which changed the world",
+            description: "A very funny module",
+            crap: "Crap 2"
+          },
+          {
+            type: "Module",
+            label: "CS3230",
+            name: "Design and Analysis of Algorithms",
+            description: "Good theoretical foundation",
+            crap: "Crap 3"
+          }
+        ]
+      });
+      window.exhibit = Exhibit.create();
+      window.exhibit.configureFromDOM();
+      });
     </script>
   </body>
 </html>
