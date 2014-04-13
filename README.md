@@ -28,3 +28,9 @@ Install the Ruby gems in the `Gemfile`:
 For generating CSS from SCSS:
 
     sass --watch src/scss:resources/public/css
+
+## Running the web server
+
+    lein ring server-headless
+
+And go to http://127.0.0.1:3000/index.html
