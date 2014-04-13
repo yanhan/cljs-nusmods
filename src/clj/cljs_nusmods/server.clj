@@ -1,10 +1,11 @@
 (ns cljs-nusmods.server
   (:use compojure.core)
   (:require [compojure.handler :as handler]
-            [compojure.route :as route]))
+            [compojure.route :as route]
+            [ring.util.response :as resp]))
 
 (defroutes app-routes
-  (GET "/" [] "<h1>Hello World</h1>")
+  (GET "/" [] (resp/redirect "index.html"))
   (route/resources "/"))
 
 (def app
