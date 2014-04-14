@@ -25,7 +25,7 @@ stdout.
 
 To run it:
 
-    node inspect_types/types.js
+    node inspect_scripts/types.js
 
 ### key_frequency.js
 
