@@ -26,3 +26,12 @@ stdout.
 To run it:
 
     node inspect_types/types.js
+
+### key_frequency.js
+
+Shows how often a key (such as `ModuleCode`, `ModuleTitle`) appears in the set
+of all module objects.
+
+To run it:
+
+    node inspect_scripts/key_frequency.js
