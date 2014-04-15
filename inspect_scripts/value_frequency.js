@@ -69,6 +69,7 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
     valuesHash) {
   var i;
   var k;
+  var m;
   var key;
   var countObj;
   var prop;
@@ -93,18 +94,11 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
         valueLen = prop.length;
         nrOccurrences = countObj[prop];
         if (!freqHash.hasOwnProperty(nrOccurrences)) {
-          freqHash[nrOccurrences] = {
-            count: 0,
-            lengthArray: []
-          };
+          freqHash[nrOccurrences] = [];
         }
-        // number of occurrences --> how many unique strings occur this many times
-        freqHash[nrOccurrences].count += 1;
-        // for the number of times this string appears, push it onto the
-        // `lengthArray`
-        for (k = 0; k < nrOccurrences; k += 1) {
-          freqHash[nrOccurrences].lengthArray.push(valueLen);
-        }
+        // number of occurrences --> array of integers. Each integer is the
+        //   lenghth of a unique string which is present that many times.
+        freqHash[nrOccurrences].push(valueLen);
       }
     }
     // compute the number of different buckets. Bucket refers to the number of
@@ -121,22 +115,28 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
       arr = [];
       for (nrOccurrences in freqHash) {
         if (freqHash.hasOwnProperty(nrOccurrences)) {
-          lengthArray = freqHash[nrOccurrences].lengthArray;
+          lengthArray = [];
+          sumLengths = 0;
+          for (k = 0, len = freqHash[nrOccurrences].length; k < len; k += 1) {
+            valueLen = freqHash[nrOccurrences][k];
+            sumLengths += valueLen * nrOccurrences;
+            for (m = 0; m < nrOccurrences; m += 1) {
+              lengthArray.push(valueLen);
+            }
+          }
           lengthArray.sort();
           len = lengthArray.length;
-          sumLengths = 0;
-          for (k = 0; k < len; k += 1) {
-            sumLengths += lengthArray[k];
-          }
           arr.push({
             nrOccurrences: nrOccurrences,
-            count: freqHash[nrOccurrences].count,
+            count: freqHash[nrOccurrences].length,
             minLen: lengthArray[0],
             maxLen: lengthArray[len-1],
             medianLen: ((len % 2 === 1) ? lengthArray[Math.floor(len/2)] :
               (lengthArray[len/2 - 1] + lengthArray[len/2]) / 2),
             avgLen: sumLengths / len
           });
+          // computes space savings gained by storing each unique string
+          // once in an array along with integers to their index in that array
         }
       }
       arr.sort(function(a, b) { return b.nrOccurrences - a.nrOccurrences });
