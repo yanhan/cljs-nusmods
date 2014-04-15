@@ -136,7 +136,7 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
             medianLen: ((len % 2 === 1) ? lengthArray[Math.floor(len/2)] :
               (lengthArray[len/2 - 1] + lengthArray[len/2]) / 2),
             avgLen: sumLengths / len
-          })
+          });
         }
       }
       arr.sort(function(a, b) { return b.nrOccurrences - a.nrOccurrences });
