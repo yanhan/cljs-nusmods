@@ -35,3 +35,16 @@ of all module objects.
 To run it:
 
     node inspect_scripts/key_frequency.js
+
+### value_frequency.js
+
+For every key in a module, gives a summary of the number of values that appear
+X times, so we can decide a good strategy to pick for data representation to
+minimize the eventual `modules.json` file size.
+
+**NOTE:** Currently this only works for a subset of keys whose values are
+strings.
+
+To run it:
+
+    node inspect_scripts/value_frequency.js
