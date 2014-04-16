@@ -83,6 +83,9 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
   var lengthArray;
   var len;
   var sumLengths;
+  var sumLengthsOfAllStrings;
+  var sumLengthsOfUniqueStrings;
+  var bytesForStoringIntegerIndices;
 
   for (i = 0; i < nrStringKeys; i += 1) {
     key = stringKeys[i];
@@ -113,6 +116,9 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
       retHash[key] = { result: FREQ_ALL_UNIQUE };
     } else {
       arr = [];
+      sumLengthsOfAllStrings = 0;
+      sumLengthsOfUniqueStrings = 0;
+      bytesForStoringIntegerIndices = 0;
       for (nrOccurrences in freqHash) {
         if (freqHash.hasOwnProperty(nrOccurrences)) {
           lengthArray = [];
@@ -120,10 +126,14 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
           for (k = 0, len = freqHash[nrOccurrences].length; k < len; k += 1) {
             valueLen = freqHash[nrOccurrences][k];
             sumLengths += valueLen * nrOccurrences;
+            sumLengthsOfUniqueStrings += valueLen;
+            // assume one integer takes up 8 bytes
+            bytesForStoringIntegerIndices += 8 * nrOccurrences;
             for (m = 0; m < nrOccurrences; m += 1) {
               lengthArray.push(valueLen);
             }
           }
+          sumLengthsOfAllStrings += sumLengths;
           lengthArray.sort();
           len = lengthArray.length;
           arr.push({
@@ -135,14 +145,15 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
               (lengthArray[len/2 - 1] + lengthArray[len/2]) / 2),
             avgLen: sumLengths / len
           });
-          // computes space savings gained by storing each unique string
-          // once in an array along with integers to their index in that array
         }
       }
       arr.sort(function(a, b) { return b.nrOccurrences - a.nrOccurrences });
       retHash[key] = {
         result: FREQ_MORE_ANALYSIS,
-        stats: arr
+        stats: arr,
+        sumLengthsOfAllStrings: sumLengthsOfAllStrings,
+        sumLengthsOfUniqueStrings: sumLengthsOfUniqueStrings,
+        bytesForStoringIntegerIndices: bytesForStoringIntegerIndices
       };
     }
   }
@@ -180,6 +191,29 @@ var show_results_for_string_keys = function(results) {
           ", avg length: " + statsObj.avgLen + ", median length: " +
           statsObj.medianLen + "]"
        );
+      }
+      console.log("Sum of length of all strings: " +
+        keyResult.sumLengthsOfAllStrings
+      );
+      console.log("Sum of lengths of unique strings: " +
+        keyResult.sumLengthsOfUniqueStrings
+      );
+      console.log("Bytes for storing integer indices (8 byte ints): " +
+        keyResult.bytesForStoringIntegerIndices
+      );
+      console.log("Storing all strings vs. storing unique strings + " +
+        "integer indices: " + keyResult.sumLengthsOfAllStrings + " vs. " +
+        (keyResult.sumLengthsOfUniqueStrings +
+         keyResult.bytesForStoringIntegerIndices)
+      );
+      if (keyResult.sumLengthsOfAllStrings <=
+          keyResult.sumLengthsOfUniqueStrings +
+            keyResult.bytesForStoringIntegerIndices) {
+        console.log("It is more efficient in space to store all the strings.");
+      } else {
+        console.log("It is more efficient in space to store unique strings " +
+          "with integer indices."
+        );
       }
     }
   }
