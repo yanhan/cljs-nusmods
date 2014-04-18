@@ -65,7 +65,7 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
   _(stringKeys).forEach(function(key) {
     var countObj = valuesHash[key];
     var freqHash = {};
-    var sumLengthsOfAllStrings;
+    var bytesForStoringAllStrings;
     var sumLengthsOfUniqueStrings;
     var arr = [];
     var bytesForStoringIntegerIndices = 0;
@@ -82,7 +82,7 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
       // all values are unique
       retHash[key] = { result: FREQ_ALL_UNIQUE };
     } else {
-      sumLengthsOfAllStrings = 0;
+      bytesForStoringAllStrings = 0;
       sumLengthsOfUniqueStrings = 0;
       _.forOwn(freqHash, function(stringLengthArray, nrOccurrences) {
         var lengthArray = _.reduce(stringLengthArray,
@@ -95,7 +95,7 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
           function(sumLengths, currentLength) {
               return sumLengths + nrOccurrences * currentLength;
           }, 0);
-        sumLengthsOfAllStrings += sumLengths;
+        bytesForStoringAllStrings += sumLengths;
         sumLengthsOfUniqueStrings += sumLengths / nrOccurrences;
         bytesForStoringIntegerIndices += 8 * len;
         arr.push({
@@ -112,7 +112,7 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
       retHash[key] = {
         result: FREQ_MORE_ANALYSIS,
         stats: arr,
-        sumLengthsOfAllStrings: sumLengthsOfAllStrings,
+        bytesForStoringAllStrings: bytesForStoringAllStrings,
         sumLengthsOfUniqueStrings: sumLengthsOfUniqueStrings,
         bytesForStoringIntegerIndices: bytesForStoringIntegerIndices
       };
@@ -146,7 +146,7 @@ var show_results_for_string_keys = function(results) {
         );
       });
       console.log("Sum of length of all strings: " +
-        keyResult.sumLengthsOfAllStrings
+        keyResult.bytesForStoringAllStrings
       );
       console.log("Sum of lengths of unique strings: " +
         keyResult.sumLengthsOfUniqueStrings
@@ -155,11 +155,11 @@ var show_results_for_string_keys = function(results) {
         keyResult.bytesForStoringIntegerIndices
       );
       console.log("Storing all strings vs. storing unique strings + " +
-        "integer indices: " + keyResult.sumLengthsOfAllStrings + " vs. " +
+        "integer indices: " + keyResult.bytesForStoringAllStrings + " vs. " +
         (keyResult.sumLengthsOfUniqueStrings +
          keyResult.bytesForStoringIntegerIndices)
       );
-      if (keyResult.sumLengthsOfAllStrings <=
+      if (keyResult.bytesForStoringAllStrings <=
           keyResult.sumLengthsOfUniqueStrings +
             keyResult.bytesForStoringIntegerIndices) {
         console.log("It is more efficient in space to store all the strings.");
