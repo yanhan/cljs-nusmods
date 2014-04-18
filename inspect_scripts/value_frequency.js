@@ -11,6 +11,11 @@ var ARRAY_OF_STRINGS_KEYS = [
   "Types", "Lecturers"
 ];
 
+var TIMETABLE_KEYS = [
+  "ClassNo", "LessonType", "WeekText", "DayText", "StartTime", "EndTime",
+  "Venue"
+];
+
 // Returns an object that looks like this:
 // {
 //    ModuleCode: {
@@ -263,4 +268,28 @@ show_results(
      )
    )
  );
+})();
+
+(function() {
+  var timetableKey = "Timetable";
+  var arrayTimetableObjects = _.reduce(MODULES_ARRAY,
+    function(timetableArray, mod) {
+      if (_.has(mod, timetableKey)) {
+        _.forEach(mod[timetableKey], function(ttObj) {
+          timetableArray.push(ttObj);
+        });
+      }
+      return timetableArray;
+    }, []);
+  console.log("\n\n");
+  console.log("Timetable objects analysis");
+  console.log("--------------------------");
+  show_results(
+    TIMETABLE_KEYS,
+    compute_stats_from_value_frequencies(
+      TIMETABLE_KEYS,
+      compute_value_frequencies(TIMETABLE_KEYS, arrayTimetableObjects
+      )
+    )
+  );
 })();
