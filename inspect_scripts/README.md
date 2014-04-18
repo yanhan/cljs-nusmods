@@ -55,8 +55,9 @@ To run it:
 
 ### values_of_keys.js
 
-Shows all possible values for a key of a Module object. Currently this works
-for the `ModuleCredit` key.
+Shows all possible values for a key of a Module object. We use this to inspect
+certain keys of Module objects to derive more space efficient data
+representations.
 
 To run it:
 
