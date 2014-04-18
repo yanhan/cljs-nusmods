@@ -52,3 +52,12 @@ strings.
 To run it:
 
     node inspect_scripts/value_frequency.js
+
+### values_of_keys.js
+
+Shows all possible values for a key of a Module object. Currently this works
+for the `ModuleCredit` key.
+
+To run it:
+
+    node values_of_keys.js
