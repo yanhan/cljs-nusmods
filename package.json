@@ -5,6 +5,7 @@
   "author": "Pang Yan Han",
   "license": "MIT",
   "dependencies": {
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "moment": "~2.5.1"
   }
 }
