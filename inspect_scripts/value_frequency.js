@@ -41,7 +41,9 @@ var compute_value_frequencies = function(keyList, modArray) {
       if (_.has(mod, key)) {
         val = mod[key];
         if (val.trim() !== val) {
-          console.log("value for key \"" + key + "\" needs trimming");
+          console.log("value \"" + val + "\" for key \"" + key +
+            "\" needs trimming"
+          );
         }
         if (valuesHash[key][val]) {
           valuesHash[key][val] += 1;
