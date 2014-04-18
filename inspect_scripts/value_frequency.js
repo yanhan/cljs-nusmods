@@ -66,9 +66,9 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
     var countObj = valuesHash[key];
     var freqHash = {};
     var bytesForStoringAllStrings;
-    var sumLengthsOfUniqueStrings;
-    var arr = [];
-    var bytesForStoringIntegerIndices = 0;
+    var sumLengthOfUniqueStrings;
+    var bucketStatsArray = [];
+    var totalNrUniqueStrings = 0;
     // for each possible value for the current string key, compute an obj with:
     //   number of occurrences --> array of integers. Each integer in the array
     //   is the lengh of a unique string which is present that many times.
@@ -82,9 +82,19 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
       // all values are unique
       retHash[key] = { result: FREQ_ALL_UNIQUE };
     } else {
+      // compute array of BucketStats object along some other numbers.
+      // Each BucketStats object has the following properties:
+      // - nrOccurrences
+      // - stringLengthArray (optional)
+      // - count
+      // - minLen
+      // - maxLen
+      // - medianLen
+      // - avgLen
       bytesForStoringAllStrings = 0;
-      sumLengthsOfUniqueStrings = 0;
+      sumLengthOfUniqueStrings = 0;
       _.forOwn(freqHash, function(stringLengthArray, nrOccurrences) {
+        var nrUniqueStrings = stringLengthArray.length;
         var lengthArray = _.reduce(stringLengthArray,
           function(arr, stringLength) {
             _.times(nrOccurrences, function() { arr.push(stringLength); });
@@ -95,12 +105,14 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
           function(sumLengths, currentLength) {
               return sumLengths + nrOccurrences * currentLength;
           }, 0);
+        var bytesForStoringIntegerIndices;
         bytesForStoringAllStrings += sumLengths;
-        sumLengthsOfUniqueStrings += sumLengths / nrOccurrences;
-        bytesForStoringIntegerIndices += 8 * len;
-        arr.push({
+        sumLengthOfUniqueStrings += sumLengths / nrOccurrences;
+        totalNrUniqueStrings += nrUniqueStrings;
+        bucketStatsArray.push({
           nrOccurrences: nrOccurrences,
-          count: freqHash[nrOccurrences].length,
+          stringLengthArray: stringLengthArray,
+          count: nrUniqueStrings,
           minLen: lengthArray[0],
           maxLen: lengthArray[len-1],
           medianLen: ((len % 2 === 1) ? lengthArray[Math.floor(len/2)] :
@@ -108,18 +120,59 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
           avgLen: sumLengths / len
         });
       });
-      arr.sort(function(a, b) { return b.nrOccurrences - a.nrOccurrences });
+      bucketStatsArray.sort(function(a, b) {
+        return b.nrOccurrences - a.nrOccurrences
+      });
+      bytesForStoringIntegerIndices =
+        compute_storage_for_integer_indices(bucketStatsArray);
       retHash[key] = {
         result: FREQ_MORE_ANALYSIS,
-        stats: arr,
+        bucketStatsArray: _.map(bucketStatsArray, function(bucketStats) {
+          return _.omit(bucketStats, 'stringLengthArray');
+        }),
         bytesForStoringAllStrings: bytesForStoringAllStrings,
-        sumLengthsOfUniqueStrings: sumLengthsOfUniqueStrings,
+        // '[', ']', commas, quotes, strings themselves
+        bytesForStoringUniqueStringsInNewArray: 2 + (totalNrUniqueStrings - 1) +
+          totalNrUniqueStrings * 2 + sumLengthOfUniqueStrings,
         bytesForStoringIntegerIndices: bytesForStoringIntegerIndices
       };
     }
   });
 
   return retHash;
+};
+
+// Given an array of BucketStats objects with the `stringLengthArray` property,
+// where the array is sorted by descending `nrOccurrences` property, compute
+// the space required for storing integer indices in a JSON file.
+// Indices will start from 0 for high `nrOccurrences`.
+var compute_storage_for_integer_indices = function(bucketStatsArray) {
+  var compute_storage_for_one_non_negative_integer = function(x) {
+    var nrDigits = 0;
+    if (x === 0) {
+      return 1;
+    }
+    while (x > 0) {
+      nrDigits += 1;
+      x = Math.floor(x / 10);
+    }
+    return nrDigits;
+  };
+
+  return _.reduce(bucketStatsArray, function(accObj, bucketStats) {
+    var currentIndex = accObj.currentIndex;
+    var totalSpace = accObj.totalSpace;
+    var nrOccurrences = bucketStats.nrOccurrences;
+    _.forEach(bucketStats.stringLengthArray, function(stringLength) {
+      totalSpace += nrOccurrences *
+        compute_storage_for_one_non_negative_integer(currentIndex);
+      currentIndex += 1;
+    });
+    return {
+      currentIndex: currentIndex,
+      totalSpace: totalSpace
+    };
+  }, { currentIndex: 0, totalSpace: 0 }).totalSpace;
 };
 
 // Displays the results from the
@@ -129,7 +182,6 @@ var show_results_for_string_keys = function(results) {
   console.log("------------------------------");
   _.forEach(stringKeys, function(key, idx) {
     var keyResult = results[key];
-    var statsArr;
     if (idx > 0) {
       console.log("\n");
     }
@@ -137,30 +189,30 @@ var show_results_for_string_keys = function(results) {
     if (keyResult.result === FREQ_ALL_UNIQUE) {
       console.log("    All values are unique");
     } else {
-      _.forEach(keyResult.stats, function(statsObj) {
-        console.log("    Values occurring " + statsObj.nrOccurrences +
-          " times: " + statsObj.count + " unique strings [min length: " +
-          statsObj.minLen + ", max length: " + statsObj.maxLen +
-          ", avg length: " + statsObj.avgLen + ", median length: " +
-          statsObj.medianLen + "]"
+      _.forEach(keyResult.bucketStatsArray, function(bucketStats) {
+        console.log("    Values occurring " + bucketStats.nrOccurrences +
+          " times: " + bucketStats.count + " unique strings [min length: " +
+          bucketStats.minLen + ", max length: " + bucketStats.maxLen +
+          ", avg length: " + bucketStats.avgLen + ", median length: " +
+          bucketStats.medianLen + "]"
         );
       });
-      console.log("Sum of length of all strings: " +
+      console.log("Bytes for storing all strings: " +
         keyResult.bytesForStoringAllStrings
       );
-      console.log("Sum of lengths of unique strings: " +
-        keyResult.sumLengthsOfUniqueStrings
+      console.log("Bytes for storing unique strings in separate array: " +
+        keyResult.bytesForStoringUniqueStringsInNewArray
       );
-      console.log("Bytes for storing integer indices (8 byte ints): " +
+      console.log("Bytes for storing integer indices: " +
         keyResult.bytesForStoringIntegerIndices
       );
       console.log("Storing all strings vs. storing unique strings + " +
         "integer indices: " + keyResult.bytesForStoringAllStrings + " vs. " +
-        (keyResult.sumLengthsOfUniqueStrings +
+        (keyResult.bytesForStoringUniqueStringsInNewArray+
          keyResult.bytesForStoringIntegerIndices)
       );
       if (keyResult.bytesForStoringAllStrings <=
-          keyResult.sumLengthsOfUniqueStrings +
+          keyResult.bytesForStoringUniqueStringsInNewArray+
             keyResult.bytesForStoringIntegerIndices) {
         console.log("It is more efficient in space to store all the strings.");
       } else {
