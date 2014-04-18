@@ -78,7 +78,7 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
       }
       freqHash[nrOccurrences].push(uniqueString.length);
     });
-    if (_.keys(freqHash).length === 1) {
+    if (_.keys(freqHash).length === 1 && _.has(freqHash, 1)) {
       // all values are unique
       retHash[key] = { result: FREQ_ALL_UNIQUE };
     } else {
