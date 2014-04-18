@@ -62,3 +62,12 @@ representations.
 To run it:
 
     node values_of_keys.js
+
+### exam_date.js
+
+Compares 3 different data storage representations for the `ExamDate` field of a
+Module object to determine the one with better space efficiency.
+
+To run it:
+
+    node inspect_scripts/exam_date.js
