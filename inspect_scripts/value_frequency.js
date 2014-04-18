@@ -178,8 +178,6 @@ var compute_storage_for_integer_indices = function(bucketStatsArray) {
 // Displays the results from the
 // `compute_stats_for_string_keys_from_value_frequencies` function
 var show_results_for_string_keys = function(results) {
-  console.log("Value Analysis for string keys");
-  console.log("------------------------------");
   _.forEach(stringKeys, function(key, idx) {
     var keyResult = results[key];
     if (idx > 0) {
