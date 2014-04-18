@@ -26,13 +26,13 @@ var STRING_KEYS = [
 //      ...
 //    }
 // }
-var compute_value_frequencies_for_string_keys = function() {
+var compute_value_frequencies = function(keyList) {
   var valuesHash = {};
-  _(STRING_KEYS).forEach(function(stringKey) {
-    valuesHash[stringKey] = {};
+  _(keyList).forEach(function(key) {
+    valuesHash[key] = {};
   });
   _(MODULES_ARRAY).forEach(function(mod) {
-    _(STRING_KEYS).forEach(function(key) {
+    _(keyList).forEach(function(key) {
       var val;
       if (_.has(mod, key)) {
         val = mod[key];
@@ -57,10 +57,10 @@ var FREQ_MORE_ANALYSIS = 2;
 
 // computes some numbers on the values of string keys from the return value of
 // the `compute_value_frequencies_for_string_keys` function
-var compute_stats_for_string_keys_from_value_frequencies = function(
+var compute_stats_from_value_frequencies = function(keyList,
     valuesHash) {
   var retHash = {};
-  _(STRING_KEYS).forEach(function(key) {
+  _(keyList).forEach(function(key) {
     var countObj = valuesHash[key];
     var freqHash = {};
     var bytesForStoringAllStrings;
@@ -175,8 +175,8 @@ var compute_storage_for_integer_indices = function(bucketStatsArray) {
 
 // Displays the results from the
 // `compute_stats_for_string_keys_from_value_frequencies` function
-var show_results_for_string_keys = function(results) {
-  _.forEach(STRING_KEYS, function(key, idx) {
+var show_results = function(keyList, results) {
+  _.forEach(keyList, function(key, idx) {
     var keyResult = results[key];
     if (idx > 0) {
       console.log("\n");
@@ -220,8 +220,10 @@ var show_results_for_string_keys = function(results) {
   });
 };
 
-show_results_for_string_keys(
-  compute_stats_for_string_keys_from_value_frequencies(
-    compute_value_frequencies_for_string_keys()
+show_results(
+  STRING_KEYS,
+  compute_stats_from_value_frequencies(
+    STRING_KEYS,
+    compute_value_frequencies(STRING_KEYS)
   )
 );
