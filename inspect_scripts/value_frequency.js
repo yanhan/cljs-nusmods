@@ -1,7 +1,7 @@
 var _ = require("lodash");
-var modulesJSON = require("./modules.json");
+var MODULES_ARRAY = require("./modules.json");
 
-var stringKeys = [
+var STRING_KEYS = [
   "ModuleCode", "ModuleTitle", "Department", "ModuleDescription",
   "ModuleCredit", "Workload", "Preclusion", "ExamDate", "Prerequisite",
   "CrossModule", "Corequisite"
@@ -28,11 +28,11 @@ var stringKeys = [
 // }
 var compute_value_frequencies_for_string_keys = function() {
   var valuesHash = {};
-  _(stringKeys).forEach(function(stringKey) {
+  _(STRING_KEYS).forEach(function(stringKey) {
     valuesHash[stringKey] = {};
   });
-  _(modulesJSON).forEach(function(mod) {
-    _(stringKeys).forEach(function(key) {
+  _(MODULES_ARRAY).forEach(function(mod) {
+    _(STRING_KEYS).forEach(function(key) {
       var val;
       if (_.has(mod, key)) {
         val = mod[key];
@@ -60,7 +60,7 @@ var FREQ_MORE_ANALYSIS = 2;
 var compute_stats_for_string_keys_from_value_frequencies = function(
     valuesHash) {
   var retHash = {};
-  _(stringKeys).forEach(function(key) {
+  _(STRING_KEYS).forEach(function(key) {
     var countObj = valuesHash[key];
     var freqHash = {};
     var bytesForStoringAllStrings;
@@ -176,7 +176,7 @@ var compute_storage_for_integer_indices = function(bucketStatsArray) {
 // Displays the results from the
 // `compute_stats_for_string_keys_from_value_frequencies` function
 var show_results_for_string_keys = function(results) {
-  _.forEach(stringKeys, function(key, idx) {
+  _.forEach(STRING_KEYS, function(key, idx) {
     var keyResult = results[key];
     if (idx > 0) {
       console.log("\n");
