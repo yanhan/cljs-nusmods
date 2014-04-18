@@ -15,6 +15,7 @@ It is less buggy and contains a lot more features.
 ## System requirements
 
 - lein
+- node
 - rvm
 
 ## Setup
@@ -23,11 +24,22 @@ Install the Ruby gems in the `Gemfile`:
 
     bundle install
 
+Install the necessary nodejs libraries:
+
+    npm install
+
 ## Building
 
 For generating CSS from SCSS:
 
     sass --watch src/scss:resources/public/css
+
+Generating the `modinfo.js` and `auxmodinfo.js` files, and copying them to
+the `resources/public/js/` directory (these files hold compacted module
+information):
+
+    node convert_modules.js
+    cp modinfo.js auxmodinfo.js resources/public/js/
 
 ## Running the web server
 

@@ -24,8 +24,8 @@
         <div data-ex-role="exhibit-view"
              data-ex-view-class="Exhibit.TabularView"
              data-ex-label="Table"
-             data-ex-columns=".label, .name, .description, .crap"
-             data-ex-column-labels="Module Code, Module Name, Module Description, some crap"
+             data-ex-columns=".label, .name, .description, .mc, .exam, .department"
+             data-ex-column-labels="Module Code, Module Name, Module Description, MC, Exam, Department"
              data-ex-column-formats="list, list, list, list">
         </div>
       </div>
@@ -33,41 +33,36 @@
         Timetable Builder
       </div>
     </div>
+    <script src="js/modinfo.js"></script>
+    <script src="js/auxmodinfo.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+    <script src="js/vendor/lodash.min.js"></script>
     <script src="js/vendor/foundation.min.js"></script>
     <script src="js/vendor/exhibit3/exhibit-api.js?bundle=false&autoCreate=false"></script>
     <script>
       $(document).foundation();
       $(document).one("scriptsLoaded.exhibit", function() {
-      window.database = Exhibit.Database.create();
-      window.database.loadData({
-        items: [
-          {
+        var auxModulesArray = AUXMODULES.auxModules;
+        var examDateStringsArray = MODULES.examDates;
+        var departmentStringsArray = AUXMODULES.departments;
+        var modulesArray = _.map(MODULES.modules, function(modArrayRep, idx) {
+          var auxModule = auxModulesArray[idx];
+          return {
             type: "Module",
-            label: "MA1101R",
-            name: "Linear Algebra I",
-            description: "The basics of Linear Algebra",
-            crap: "Crap 1"
-          },
-          {
-            type: "Module",
-            label: "GEK1534",
-            name: "Microbes which changed the world",
-            description: "A very funny module",
-            crap: "Crap 2"
-          },
-          {
-            type: "Module",
-            label: "CS3230",
-            name: "Design and Analysis of Algorithms",
-            description: "Good theoretical foundation",
-            crap: "Crap 3"
-          }
-        ]
-      });
-      window.exhibit = Exhibit.create();
-      window.exhibit.configureFromDOM();
+            label: modArrayRep[0],
+            name: modArrayRep[1],
+            description: auxModule[0],
+            mc: modArrayRep[2],
+            exam: (modArrayRep[3] === -1) ? "No Exam" :
+              examDateStringsArray[modArrayRep[3]],
+            department: departmentStringsArray[auxModule[1]]
+          };
+        });
+        window.database = Exhibit.Database.create();
+        window.database.loadData({ items: modulesArray });
+        window.exhibit = Exhibit.create();
+        window.exhibit.configureFromDOM();
       });
     </script>
   </body>
