@@ -61,7 +61,7 @@ representations.
 
 To run it:
 
-    node values_of_keys.js
+    node inspect_scripts/values_of_keys.js
 
 ### exam_date.js
 
