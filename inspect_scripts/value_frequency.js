@@ -7,6 +7,10 @@ var STRING_KEYS = [
   "CrossModule", "Corequisite"
 ];
 
+var ARRAY_OF_STRINGS_KEYS = [
+  "Types", "Lecturers"
+];
+
 // Returns an object that looks like this:
 // {
 //    ModuleCode: {
@@ -227,3 +231,34 @@ show_results(
     compute_value_frequencies(STRING_KEYS, MODULES_ARRAY)
   )
 );
+
+(function() {
+  console.log("\n\n");
+  // preprocess `ARRAY_OF_STRINGS_KEYS` to get an array of objects where each
+  // object only has a single property (which is in `ARRAY_OF_STRINGS_KEY`);
+  // the value indexed by a key is a single string.
+  //
+  // This step is necessary due to the input format of the
+  // `compute_value_frequencies` function
+  var arrayModsWithArrayOfStringsKeys = [];
+  _.forEach(MODULES_ARRAY, function(mod) {
+    _.forEach(ARRAY_OF_STRINGS_KEYS, function(key) {
+      if (_.has(mod, key)) {
+        _.forEach(mod[key], function(value) {
+          var obj = {};
+          obj[key] = value;
+          arrayModsWithArrayOfStringsKeys.push(obj);
+        });
+      }
+    });
+ });
+ show_results(
+   ARRAY_OF_STRINGS_KEYS,
+   compute_stats_from_value_frequencies(
+     ARRAY_OF_STRINGS_KEYS,
+     compute_value_frequencies(ARRAY_OF_STRINGS_KEYS,
+       arrayModsWithArrayOfStringsKeys
+     )
+   )
+ );
+})();
