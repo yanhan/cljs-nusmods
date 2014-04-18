@@ -1,3 +1,4 @@
+var _ = require("lodash");
 var modulesJSON = require("./modules.json");
 var nrModules = modulesJSON.length;
 
@@ -28,21 +29,14 @@ var nrStringKeys = stringKeys.length;
 //    }
 // }
 var compute_value_frequencies_for_string_keys = function() {
-  var i;
-  var mod;
   var valuesHash = {};
-  var k;
-  var key;
-  var val;
-  for (k = 0; k < nrStringKeys; k += 1) {
-    valuesHash[stringKeys[k]] = {};
-  }
-
-  for (i = 0; i < nrModules; i += 1) {
-    mod = modulesJSON[i];
-    for (k = 0; k < nrStringKeys; k += 1) {
-      key = stringKeys[k];
-      if (mod.hasOwnProperty(key)) {
+  _(stringKeys).forEach(function(stringKey) {
+    valuesHash[stringKey] = {};
+  });
+  _(modulesJSON).forEach(function(mod) {
+    _(stringKeys).forEach(function(key) {
+      var val;
+      if (_.has(mod, key)) {
         val = mod[key];
         if (val.trim() !== val) {
           console.log("value for key \"" + key + "\" needs trimming");
@@ -53,8 +47,8 @@ var compute_value_frequencies_for_string_keys = function() {
           valuesHash[key][val] = 1;
         }
       }
-    }
-  }
+    });
+  });
   return valuesHash;
 };
 
@@ -67,86 +61,53 @@ var FREQ_MORE_ANALYSIS = 2;
 // the `compute_value_frequencies_for_string_keys` function
 var compute_stats_for_string_keys_from_value_frequencies = function(
     valuesHash) {
-  var i;
-  var k;
-  var m;
-  var key;
-  var countObj;
-  var prop;
   var retHash = {};
-  var ret = {};
-  var valueLen;
-  var nrOccurrences;
-  var freqHash;
-  var nrBuckets;
-  var arr;
-  var lengthArray;
-  var len;
-  var sumLengths;
-  var sumLengthsOfAllStrings;
-  var sumLengthsOfUniqueStrings;
-  var bytesForStoringIntegerIndices;
-
-  for (i = 0; i < nrStringKeys; i += 1) {
-    key = stringKeys[i];
-    countObj = valuesHash[key];
-    freqHash = {};
-    // for each possible value for that string key
-    for (prop in countObj) {
-      if (countObj.hasOwnProperty(prop)) {
-        valueLen = prop.length;
-        nrOccurrences = countObj[prop];
-        if (!freqHash.hasOwnProperty(nrOccurrences)) {
-          freqHash[nrOccurrences] = [];
-        }
-        // number of occurrences --> array of integers. Each integer is the
-        //   lenghth of a unique string which is present that many times.
-        freqHash[nrOccurrences].push(valueLen);
+  _(stringKeys).forEach(function(key) {
+    var countObj = valuesHash[key];
+    var freqHash = {};
+    var sumLengthsOfAllStrings;
+    var sumLengthsOfUniqueStrings;
+    var arr = [];
+    var bytesForStoringIntegerIndices = 0;
+    // for each possible value for the current string key, compute an obj with:
+    //   number of occurrences --> array of integers. Each integer in the array
+    //   is the lengh of a unique string which is present that many times.
+    _.forOwn(countObj, function(nrOccurrences, uniqueString) {
+      if (!_.has(freqHash, nrOccurrences)) {
+        freqHash[nrOccurrences] = [];
       }
-    }
-    // compute the number of different buckets. Bucket refers to the number of
-    // occurrences.
-    nrBuckets = 0;
-    for (nrOccurrences in freqHash) {
-      if (freqHash.hasOwnProperty(nrOccurrences)) {
-        nrBuckets += 1;
-      }
-    }
-    if (nrBuckets === 1) {
+      freqHash[nrOccurrences].push(uniqueString.length);
+    });
+    if (_.keys(freqHash).length === 1) {
+      // all values are unique
       retHash[key] = { result: FREQ_ALL_UNIQUE };
     } else {
-      arr = [];
       sumLengthsOfAllStrings = 0;
       sumLengthsOfUniqueStrings = 0;
-      bytesForStoringIntegerIndices = 0;
-      for (nrOccurrences in freqHash) {
-        if (freqHash.hasOwnProperty(nrOccurrences)) {
-          lengthArray = [];
-          sumLengths = 0;
-          for (k = 0, len = freqHash[nrOccurrences].length; k < len; k += 1) {
-            valueLen = freqHash[nrOccurrences][k];
-            sumLengths += valueLen * nrOccurrences;
-            sumLengthsOfUniqueStrings += valueLen;
-            // assume one integer takes up 8 bytes
-            bytesForStoringIntegerIndices += 8 * nrOccurrences;
-            for (m = 0; m < nrOccurrences; m += 1) {
-              lengthArray.push(valueLen);
-            }
-          }
-          sumLengthsOfAllStrings += sumLengths;
-          lengthArray.sort();
-          len = lengthArray.length;
-          arr.push({
-            nrOccurrences: nrOccurrences,
-            count: freqHash[nrOccurrences].length,
-            minLen: lengthArray[0],
-            maxLen: lengthArray[len-1],
-            medianLen: ((len % 2 === 1) ? lengthArray[Math.floor(len/2)] :
-              (lengthArray[len/2 - 1] + lengthArray[len/2]) / 2),
-            avgLen: sumLengths / len
-          });
-        }
-      }
+      _.forOwn(freqHash, function(stringLengthArray, nrOccurrences) {
+        var lengthArray = _.reduce(stringLengthArray,
+          function(arr, stringLength) {
+            _.times(nrOccurrences, function() { arr.push(stringLength); });
+            return arr;
+          }, []).sort();
+        var len = lengthArray.length;
+        var sumLengths = _.reduce(stringLengthArray,
+          function(sumLengths, currentLength) {
+              return sumLengths + nrOccurrences * currentLength;
+          }, 0);
+        sumLengthsOfAllStrings += sumLengths;
+        sumLengthsOfUniqueStrings += sumLengths / nrOccurrences;
+        bytesForStoringIntegerIndices += 8 * len;
+        arr.push({
+          nrOccurrences: nrOccurrences,
+          count: freqHash[nrOccurrences].length,
+          minLen: lengthArray[0],
+          maxLen: lengthArray[len-1],
+          medianLen: ((len % 2 === 1) ? lengthArray[Math.floor(len/2)] :
+            (lengthArray[len/2 - 1] + lengthArray[len/2]) / 2),
+          avgLen: sumLengths / len
+        });
+      });
       arr.sort(function(a, b) { return b.nrOccurrences - a.nrOccurrences });
       retHash[key] = {
         result: FREQ_MORE_ANALYSIS,
@@ -156,42 +117,34 @@ var compute_stats_for_string_keys_from_value_frequencies = function(
         bytesForStoringIntegerIndices: bytesForStoringIntegerIndices
       };
     }
-  }
+  });
+
   return retHash;
 };
 
+// Displays the results from the
+// `compute_stats_for_string_keys_from_value_frequencies` function
 var show_results_for_string_keys = function(results) {
-  var i;
-  var key;
-  var keyResult;
-  var statsObj;
-  var freq;
-  var k;
-  var starsArr;
-  var len;
   console.log("Value Analysis for string keys");
   console.log("------------------------------");
-  for (i = 0; i < nrStringKeys; i += 1) {
-    key = stringKeys[i];
-    keyResult = results[key];
-    if (i > 0) {
+  _.forEach(stringKeys, function(key, idx) {
+    var keyResult = results[key];
+    var statsArr;
+    if (idx > 0) {
       console.log("\n");
     }
     console.log("Key \"" + key + "\"");
     if (keyResult.result === FREQ_ALL_UNIQUE) {
       console.log("    All values are unique");
     } else {
-      statsArr = keyResult.stats;
-      len = statsArr.length;
-      for (k = 0; k < len; k += 1) {
-        statsObj = statsArr[k];
+      _.forEach(keyResult.stats, function(statsObj) {
         console.log("    Values occurring " + statsObj.nrOccurrences +
           " times: " + statsObj.count + " unique strings [min length: " +
           statsObj.minLen + ", max length: " + statsObj.maxLen +
           ", avg length: " + statsObj.avgLen + ", median length: " +
           statsObj.medianLen + "]"
-       );
-      }
+        );
+      });
       console.log("Sum of length of all strings: " +
         keyResult.sumLengthsOfAllStrings
       );
@@ -216,7 +169,7 @@ var show_results_for_string_keys = function(results) {
         );
       }
     }
-  }
+  });
 };
 
 show_results_for_string_keys(

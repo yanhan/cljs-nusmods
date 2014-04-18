@@ -1,0 +1,10 @@
+{
+  "name": "cljs-nusmods",
+  "version": "0.0.0",
+  "description": "ClojureScript implementation of [NUSMods](http://nusmods.com)",
+  "author": "Pang Yan Han",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "~2.4.1"
+  }
+}

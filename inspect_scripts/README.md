@@ -15,6 +15,10 @@ You will need a copy of the `modules.json` from http://api.nusmods.com/
 Place that in the `inspect_scripts` directory. One such `modules.json` file is
 http://api.nusmods.com/2013-2014/2/modules.json
 
+We make use of some libraries that need to be installed using:
+
+    npm install
+
 ## Overview of each file
 
 ### types.js
