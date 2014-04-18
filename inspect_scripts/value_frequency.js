@@ -26,12 +26,12 @@ var STRING_KEYS = [
 //      ...
 //    }
 // }
-var compute_value_frequencies = function(keyList) {
+var compute_value_frequencies = function(keyList, modArray) {
   var valuesHash = {};
   _(keyList).forEach(function(key) {
     valuesHash[key] = {};
   });
-  _(MODULES_ARRAY).forEach(function(mod) {
+  _(modArray).forEach(function(mod) {
     _(keyList).forEach(function(key) {
       var val;
       if (_.has(mod, key)) {
@@ -224,6 +224,6 @@ show_results(
   STRING_KEYS,
   compute_stats_from_value_frequencies(
     STRING_KEYS,
-    compute_value_frequencies(STRING_KEYS)
+    compute_value_frequencies(STRING_KEYS, MODULES_ARRAY)
   )
 );
