@@ -1,13 +1,11 @@
 var _ = require("lodash");
 var modulesJSON = require("./modules.json");
-var nrModules = modulesJSON.length;
 
 var stringKeys = [
   "ModuleCode", "ModuleTitle", "Department", "ModuleDescription",
   "ModuleCredit", "Workload", "Preclusion", "ExamDate", "Prerequisite",
   "CrossModule", "Corequisite"
 ];
-var nrStringKeys = stringKeys.length;
 
 // Returns an object that looks like this:
 // {
