@@ -28,7 +28,7 @@
 //             timestamps
 var _ = require("lodash");
 var moment = require("moment");
-var MODULES_ARRAY = require("./modules.json");
+var MODULES_ARRAY = require(__dirname + "/../modules.json");
 var NO_EXAM_DATE_STRING = "0000-01-01T00:00+0800";
 
 console.log("NOTE: Storing \"" + NO_EXAM_DATE_STRING + "\" as integer `-1`\n");

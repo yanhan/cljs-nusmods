@@ -1,5 +1,5 @@
 var _ = require("lodash");
-var MODULES_ARRAY = require("./modules.json");
+var MODULES_ARRAY = require(__dirname + "/../modules.json");
 
 var STRING_KEYS = [
   "ModuleCode", "ModuleTitle", "Department", "ModuleDescription",

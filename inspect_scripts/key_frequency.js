@@ -1,6 +1,6 @@
 // figure out the number of module objects with the keys
 
-var modulesJSON = require("./modules.json");
+var modulesJSON = require(__dirname + "/../modules.json");
 var nrModules = modulesJSON.length;
 
 var moduleKeys = [

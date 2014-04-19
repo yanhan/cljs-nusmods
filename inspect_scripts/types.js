@@ -16,7 +16,7 @@
 //
 //     node inspect_scripts/types.js
 
-var modulesJSON = require("./modules.json");
+var modulesJSON = require(__dirname + "/../modules.json");
 
 var get_type_string = function(o) {
   return (o instanceof Array ? "array" : typeof o);
