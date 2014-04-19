@@ -60,7 +60,14 @@
           };
         });
         window.database = Exhibit.Database.create();
-        window.database.loadData({ items: modulesArray });
+        window.database.loadData({
+          types: {
+            Module: {
+              pluralLabel: "Modules"
+            }
+          },
+          items: modulesArray
+        });
         window.exhibit = Exhibit.create();
         window.exhibit.configureFromDOM();
       });
