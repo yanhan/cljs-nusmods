@@ -1,8 +1,7 @@
 var _ = require("lodash");
-var moment = require("moment");
 var fs = require("fs");
-var ORIGINAL_MODULES_ARRAY = require(__dirname + "/../modules.json");
-var NO_EXAM_DATE_STRING = "0000-01-01T00:00+0800";
+var SharedGlobals = require("./shared_globals.js");
+var ORIGINAL_MODULES_ARRAY = require(__dirname + "/../processed_modules.json");
 
 // This section details the compacted data representation for a Module object.
 // A Module object does not contain all the information for an actual module,
@@ -19,11 +18,7 @@ var NO_EXAM_DATE_STRING = "0000-01-01T00:00+0800";
 //   2   | ModuleCredit         | Integer    | Modular Credits       | 4
 //   3   | ExamDate             | Integer    | Index to array of     | 0
 //       |                      |            | Date Strings of       |
-//       |                      |            | ExamDate; -1 means    |
-//       |                      |            | the module has no     |
-//       |                      |            | exams                 |
-//
-// NOTE: Modules without a field will have a value of -1 for that field
+//       |                      |            | ExamDate              |
 //
 // An array of Module objects, along with an array of ExamDate strings, form
 // the essential module information. This essential module information is
@@ -126,15 +121,13 @@ var compute_StringValuesIndex_for_key_with_string_value = function(
     var auxMod = [];
     mod.push(_.has(orgModule, "ModuleCode") ? orgModule.ModuleCode : -1);
     mod.push(_.has(orgModule, "ModuleTitle") ? orgModule.ModuleTitle : -1);
-    mod.push(_.has(orgModule, "ModuleCredit") ?
-      _.parseInt(orgModule.ModuleCredit) : -1
-    );
-    if (_.has(orgModule, "ExamDate") &&
-        orgModule.ExamDate !== NO_EXAM_DATE_STRING) {
+    mod.push(_.has(orgModule, "ModuleCredit") ? orgModule.ModuleCredit : -1);
+    if (_.has(orgModule, "ExamDate")) {
       mod.push(examDateStringValuesIndex.indexHash[orgModule.ExamDate]);
     } else {
-      // no exam
-      mod.push(-1);
+      mod.push(examDateStringValuesIndex.indexHash[
+        SharedGlobals.PROCESSED_NO_EXAM_DATE_STRING
+      ]);
     }
     modulesArray.push(mod);
 

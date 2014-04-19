@@ -34,11 +34,23 @@ For generating CSS from SCSS:
 
     sass --watch src/scss:resources/public/css
 
-Generating the `modinfo.js` and `auxmodinfo.js` files, and copying them to
-the `resources/public/js/` directory (these files hold compacted module
+### Generating module information
+
+First we need a copy of the `modules.json` file from http://api.nusmods.com/ .
+A concrete example of such a file is
+http://api.nusmods.com/2013-2014/2/modules.json .
+
+Place the `modules.json` file at the root directory of this repository and
+generate a `processed_modules.json` file:
+
+    node helpers/normalize_modules_json.js
+
+Using the `processed_modules.json` file, we generate the `modinfo.js` and
+`auxmodinfo.js` files (which are used by the timetable builder code), and copy
+them to the `resources/public/js/` directory (these files hold compacted module
 information):
 
-    node convert_modules.js
+    node helpers/convert_modules.js
     cp modinfo.js auxmodinfo.js resources/public/js/
 
 ## Running the web server
