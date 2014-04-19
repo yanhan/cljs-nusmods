@@ -1,7 +1,7 @@
 var _ = require("lodash");
 var moment = require("moment");
 var fs = require("fs");
-var ORIGINAL_MODULES_ARRAY = require("./modules.json");
+var ORIGINAL_MODULES_ARRAY = require(__dirname + "/../modules.json");
 var NO_EXAM_DATE_STRING = "0000-01-01T00:00+0800";
 
 // This section details the compacted data representation for a Module object.
