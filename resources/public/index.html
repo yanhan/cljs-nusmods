@@ -27,6 +27,12 @@
              data-ex-sort-mode="value"
              data-ex-scroll="false">
         </div>
+        <div data-ex-role="exhibit-facet"
+             data-ex-expression=".level"
+             data-ex-facet-label="Level"
+             data-ex-sort-mode="value"
+             data-ex-scroll="false">
+        </div>
         <div data-ex-role="exhibit-view"
              data-ex-view-class="Exhibit.TabularView"
              data-ex-paginate="True"
@@ -55,14 +61,34 @@
         var auxModulesArray = AUXMODULES.auxModules;
         var examDateStringsArray = MODULES.examDates;
         var departmentStringsArray = AUXMODULES.departments;
+        var moduleCodeRegex = /^\D+(\d{4})\D*$/;
         var modulesArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
+          var moduleCode = modArrayRep[0];
+          var level;
+          var levelMatchArray;
+          if (moduleCode === "PH2302 / GEK2039") {
+            level = 2000;
+          } else {
+            levelMatchArray = moduleCode.match(moduleCodeRegex);
+            if (levelMatchArray === null) {
+              console.log("Module Code \"" + moduleCode +
+                "\" does not match regex!"
+              );
+              level = 0;
+            } else {
+              level = _.parseInt(levelMatchArray[1]);
+              // subtract unneeded digits
+              level -= level % 1000;
+            }
+          }
           return {
             type: "Module",
-            label: modArrayRep[0],
+            label: moduleCode,
             name: modArrayRep[1],
             description: auxModule[0],
             mc: modArrayRep[2],
+            level: level,
             exam: examDateStringsArray[modArrayRep[3]],
             department: departmentStringsArray[auxModule[1]]
           };
@@ -76,6 +102,9 @@
           },
           properties: {
             mc: {
+              valueType: "number"
+            },
+            level: {
               valueType: "number"
             }
           },
