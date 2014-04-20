@@ -70,3 +70,15 @@ Module object to determine the one with better space efficiency.
 To run it:
 
     node inspect_scripts/exam_date.js
+
+### module_code_format.js
+
+Inspects all `ModuleCode` values to see if they follow this format:
+
+    <1 or more non digit chars><4 digit chars><0 or more non digit chars>
+
+and print out the `ModuleCode`(s) which do not follow the format.
+
+To run it:
+
+    node inspect_scripts/module_code_format.js
