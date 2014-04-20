@@ -22,6 +22,11 @@
       <div class="content active" id="module-finder">
         <div data-ex-role="exhibit-collection" data-ex-item-types="Module"></div>
         <div data-ex-role="exhibit-facet"
+             data-ex-expression=".moduleType.label"
+             data-ex-facet-label="Type"
+             data-ex-scroll="false">
+        </div>
+        <div data-ex-role="exhibit-facet"
              data-ex-expression=".mc"
              data-ex-facet-label="MC"
              data-ex-sort-mode="value"
@@ -61,25 +66,34 @@
         var auxModulesArray = AUXMODULES.auxModules;
         var examDateStringsArray = MODULES.examDates;
         var departmentStringsArray = AUXMODULES.departments;
-        var moduleCodeRegex = /^\D+(\d{4})\D*$/;
+        var moduleCodeRegex = /^(\D+)(\d{4})\D*$/;
         var modulesArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
           var moduleCode = modArrayRep[0];
           var level;
-          var levelMatchArray;
+          var moduleCodeMatchArray;
+          var moduleTypeArray = [];
           if (moduleCode === "PH2302 / GEK2039") {
             level = 2000;
           } else {
-            levelMatchArray = moduleCode.match(moduleCodeRegex);
-            if (levelMatchArray === null) {
+            moduleCodeMatchArray = moduleCode.match(moduleCodeRegex);
+            if (moduleCodeMatchArray === null) {
               console.log("Module Code \"" + moduleCode +
                 "\" does not match regex!"
               );
               level = 0;
             } else {
-              level = _.parseInt(levelMatchArray[1]);
+              level = _.parseInt(moduleCodeMatchArray[2]);
               // subtract unneeded digits
               level -= level % 1000;
+              // Inspect first part of module code
+              if (moduleCodeMatchArray[1] === "SSA" ||
+                  moduleCodeMatchArray[1] === "SSB" ||
+                  moduleCodeMatchArray[1] === "SSD" ||
+                  moduleCodeMatchArray[1] === "SSS" ||
+                  moduleCodeMatchArray[1] === "SSU") {
+                moduleTypeArray.push("Singapore Studies");
+              }
             }
           }
           return {
@@ -89,16 +103,22 @@
             description: auxModule[0],
             mc: modArrayRep[2],
             level: level,
+            moduleType: moduleTypeArray,
             exam: examDateStringsArray[modArrayRep[3]],
             department: departmentStringsArray[auxModule[1]]
           };
+        });
+        // add ModuleTypes
+        modulesArray.push({
+          type: "ModuleType",
+          label: "Singapore Studies"
         });
         window.database = Exhibit.Database.create();
         window.database.loadData({
           types: {
             Module: {
               pluralLabel: "Modules"
-            }
+            },
           },
           properties: {
             mc: {
@@ -106,6 +126,9 @@
             },
             level: {
               valueType: "number"
+            },
+            moduleType: {
+              valueType: "item"
             }
           },
           items: modulesArray
