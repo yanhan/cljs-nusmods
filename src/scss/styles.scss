@@ -38,3 +38,12 @@ body {
     margin-right: 1rem;
   }
 }
+
+// `Module Finder` page Exhibit 3 library table styles
+table.exhibit-tabularView-body tr > td {
+  border: 1px solid #ddd;
+}
+
+table.exhibit-tabularView-body tr > th:not(:last-child) {
+  border-right: 1px solid #ddd;
+}
