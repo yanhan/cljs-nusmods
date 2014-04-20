@@ -36,14 +36,11 @@ For generating CSS from SCSS:
 
 ### Generating module information
 
-We will need some module JSON files from http://api.nusmods.com/ .
+We will need a `modules.json` file from http://api.nusmods.com/ .
+A concrete example of such a file is
+http://api.nusmods.com/2013-2014/2/modules.json .
 
-- `modules.json` . A concrete example of such a file is
-  http://api.nusmods.com/2013-2014/2/modules.json .
-- `corsRaw.json` . A concrete example of such a file is
-  http://api.nusmods.com/2013-2014/2/corsRaw.json .
-
-Place these two JSON files at the root directory of this repository and
+Place this JSON file at the root directory of this repository and
 generate a `processed_modules.json` file:
 
     node helpers/normalize_modules_json.js
