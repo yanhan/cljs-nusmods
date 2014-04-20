@@ -18,3 +18,4 @@ show_all_possible_values_for_key_with_string_value(MODULES_ARRAY,
 );
 show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "ExamDate");
 show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "Department");
+show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "ModuleCredit");
