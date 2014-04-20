@@ -67,7 +67,7 @@
         var examDateStringsArray = MODULES.examDates;
         var departmentStringsArray = AUXMODULES.departments;
         var moduleCodeRegex = /^(\D+)(\d{4})\D*$/;
-        var modulesArray = _.map(MODULES.modules, function(modArrayRep, idx) {
+        var itemsArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
           var moduleCode = modArrayRep[0];
           var level;
@@ -118,23 +118,23 @@
           };
         });
         // add ModuleTypes
-        modulesArray.push({
+        itemsArray.push({
           type: "ModuleType",
           label: "Faculty"
         });
-        modulesArray.push({
+        itemsArray.push({
           type: "ModuleType",
           label: "Breadth / UE"
         });
-        modulesArray.push({
+        itemsArray.push({
           type: "ModuleType",
           label: "Singapore Studies"
         });
-        modulesArray.push({
+        itemsArray.push({
           type: "ModuleType",
           label: "GEM"
         });
-        modulesArray.push({
+        itemsArray.push({
           type: "ModuleType",
           label: "Not in CORS"
         });
@@ -156,7 +156,7 @@
               valueType: "item"
             }
           },
-          items: modulesArray
+          items: itemsArray
         });
         window.exhibit = Exhibit.create();
         window.exhibit.configureFromDOM();
