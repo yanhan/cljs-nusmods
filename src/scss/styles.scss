@@ -11,6 +11,27 @@
           box-sizing: border-box;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+// Clearfix hack
+// From: http://nicolasgallagher.com/micro-clearfix-hack/
+////////////////////////////////////////////////////////////////////////////////
+.cf:before,
+.cf:after {
+  content: " ";
+  display: table;
+}
+
+.cf:after {
+  clear: both;
+}
+
+.cf {
+  *zoom: 1;
+}
+////////////////////////////////////////////////////////////////////////////////
+
+
 body {
   font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 }
@@ -47,3 +68,31 @@ table.exhibit-tabularView-body tr > td {
 table.exhibit-tabularView-body tr > th:not(:last-child) {
   border-right: 1px solid #ddd;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// This section styles the `Module Finder` page's horizontal facets, such as
+// MC
+////////////////////////////////////////////////////////////////////////////////
+div.exhibit-flowingFacet-header {
+  float: left;
+}
+
+// Using this child selector from `div.exhibit-flowingFacet-body` is required
+// for overriding the `facets.css` stylesheet from Exhibit 3.0 .
+// This is a hack, but it's required.
+div.exhibit-flowingFacet-body > div.exhibit-flowingFacet-value {
+  float: left;
+  clear: none;
+}
+
+// Make the checkbox float left, otherwise they will appear below the value link
+// and count
+div.exhibit-flowingFacet-value-checkbox {
+  float: left;
+}
+
+// Apply clearfix hack so this parent div takes up height of floated children
+div.exhibit-flowingFacet {
+  @extend .cf;
+}
+////////////////////////////////////////////////////////////////////////////////
