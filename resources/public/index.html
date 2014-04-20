@@ -75,6 +75,7 @@
           var moduleTypeArray = [];
           if (moduleCode === "PH2302 / GEK2039") {
             level = 2000;
+            moduleTypeArray.push("GEM");
           } else {
             moduleCodeMatchArray = moduleCode.match(moduleCodeRegex);
             if (moduleCodeMatchArray === null) {
@@ -93,6 +94,9 @@
                   moduleCodeMatchArray[1] === "SSS" ||
                   moduleCodeMatchArray[1] === "SSU") {
                 moduleTypeArray.push("Singapore Studies");
+              } else if (moduleCodeMatchArray[1] === "GEK" ||
+                  moduleCodeMatchArray[1] === "GEM") {
+                moduleTypeArray.push("GEM");
               }
             }
           }
@@ -112,6 +116,10 @@
         modulesArray.push({
           type: "ModuleType",
           label: "Singapore Studies"
+        });
+        modulesArray.push({
+          type: "ModuleType",
+          label: "GEM"
         });
         window.database = Exhibit.Database.create();
         window.database.loadData({
