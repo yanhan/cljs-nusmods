@@ -19,7 +19,9 @@ var show_all_possible_values_for_key_with_array_of_strings_value = function(
   console.log("All possible values for Module." + key + ":");
   console.log(_(moduleList)
     .filter(function(mod) { return _.has(mod, key); })
-    .map(function(mod) { return mod[key]; })
+    .map(function(mod) {
+      return _.map(mod[key], function(s) { return s.trim(); });
+    })
     .flatten()
     .uniq()
     .value()
