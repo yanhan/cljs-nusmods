@@ -56,6 +56,11 @@
                 <div data-ex-if-exists=".description">
                   <span data-ex-content=".description"></span>
                 </div>
+                <div data-ex-if-exists=".lecturers">
+                  <strong>Lecturers:</strong>
+                  <span data-ex-content=".lecturers"
+                        data-ex-formats="list { separator: ' & '; last-separator: ' & ' }"></span>
+                </div>
               </td>
               <td><span data-ex-content=".mc"></span></td>
               <td><span data-ex-content=".exam"></span></td>
@@ -81,6 +86,7 @@
         var auxModulesArray = AUXMODULES.auxModules;
         var examDateStringsArray = MODULES.examDates;
         var departmentStringsArray = AUXMODULES.departments;
+        var lecturersStringsArray = AUXMODULES.lecturers;
         var moduleCodeRegex = /^(\D+)(\d{4})\D*$/;
         var itemsArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
@@ -133,6 +139,12 @@
           // only add description if it's present
           if (auxModule[0] !== -1) {
             retModule.description = auxModule[0];
+          }
+          // only add lecturers if the array is non-empty
+          if (auxModule[3].length > 0) {
+            retModule.lecturers = _.map(auxModule[3], function(lecturerIdx) {
+              return lecturersStringsArray[lecturerIdx];
+            });
           }
           return retModule;
         });

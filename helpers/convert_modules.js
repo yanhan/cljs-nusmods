@@ -42,16 +42,21 @@ var MODULE_TYPE = {
 // For information that is not so critical and can be loaded in the
 // `Module Finder` page, we represent them using AuxModule objects.
 //
-// Index | Key in Module Object | Value Type | Meaning                   | Example
-// -----------------------------------------------------------------------------------
-//    0  | ModuleDescription    | String     | Module Description        | An introductory
-//       |                      |            |                           | programming module
-//    1  | Department           | Integer    | Index to array of         |
-//       |                      |            | Department strings        | Computer Science
-//       |                      |            |                           |
-//    2  | Type                 | Integer    | Bitmask used to represent |
-//       |                      |            | module information.       |
-//       |                      |            | See below for explanation |
+// Index | Key in Module Object | Value Type        | Meaning                   | Example
+// -------------------------------------------------------------------------------------------------
+//    0  | ModuleDescription    | String            | Module Description        | An introductory
+//       |                      |                   |                           | programming module
+//    1  | Department           | Integer           | Index to array of         |
+//       |                      |                   | Department strings        | Computer Science
+//       |                      |                   |                           |
+//    2  | Type                 | Integer           | Bitmask used to represent |
+//       |                      |                   | module information.       |
+//       |                      |                   | See below for explanation |
+//       |                      |                   |                           |
+//    3  | Lecturers            | Array of Integers | Each integer in the array |
+//       |                      |                   | is an index to its string |
+//       |                      |                   | value in the `Lecturers`  |
+//       |                      |                   | array.                    |
 //
 // The AuxModule.Type field is a bitmask used to represent the Type of the
 // module. This is required for filtering modules in the Module Finder page
@@ -85,7 +90,8 @@ var MODULE_TYPE = {
 //
 //     AUXMODULES = {
 //       auxModules: array of AuxModule objects,
-//       departments: array of department strings
+//       departments: array of department strings,
+//       lecturers: array of lecturer strings
 //     };
 
 
@@ -141,6 +147,40 @@ var compute_StringValuesIndex_for_key_with_string_value = function(
   };
 };
 
+var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
+    modulesArray, key) {
+  var modulesWithKey = _.filter(modulesArray, function(mod) {
+    return _.has(mod, key);
+  });
+  var freqHash = _.reduce(modulesWithKey, function(fhash, mod) {
+    _.forEach(mod[key], function(value) {
+      if (!_.has(fhash, value)) {
+        fhash[value] = 0;
+      }
+      fhash[value] += 1;
+    });
+    return fhash;
+  }, {});
+  var freqArray = _(freqHash).map(function(count, lecturer) {
+    return {
+      lecturer: lecturer,
+      count: count
+    };
+  })
+  .sort(function(a, b) { return b.count - a.count; })
+  .value();
+  freqHash = _.reduce(freqArray, function(obj, freqObj) {
+    obj.indexHash[freqObj.lecturer] = obj.index;
+    obj.index += 1;
+    obj.stringsArray.push(freqObj.lecturer);
+    return obj;
+  }, { indexHash: {}, stringsArray: [], index: 0 });
+  return {
+    indexHash: freqHash.indexHash,
+    stringsArray: freqHash.stringsArray
+  };
+};
+
 (function() {
   var examDateStringValuesIndex =
     compute_StringValuesIndex_for_key_with_string_value(
@@ -150,6 +190,10 @@ var compute_StringValuesIndex_for_key_with_string_value = function(
     compute_StringValuesIndex_for_key_with_string_value(
       ORIGINAL_MODULES_ARRAY, "Department"
     );
+  var lecturersStringValuesIndex =
+    compute_StringValuesIndex_for_key_with_array_of_strings_value(
+      ORIGINAL_MODULES_ARRAY, "Lecturers"
+    );
   // contains absolutely critical module information
   var modulesArray = [];
   // contains auxiliary module information
@@ -158,6 +202,7 @@ var compute_StringValuesIndex_for_key_with_string_value = function(
     var mod = [];
     var auxMod = [];
     var moduleTypeBitmask = 0;
+    var lecturersArray = [];
     mod.push(_.has(orgModule, "ModuleCode") ? orgModule.ModuleCode : -1);
     mod.push(_.has(orgModule, "ModuleTitle") ? orgModule.ModuleTitle : -1);
     mod.push(_.has(orgModule, "ModuleCredit") ? orgModule.ModuleCredit : -1);
@@ -192,6 +237,19 @@ var compute_StringValuesIndex_for_key_with_string_value = function(
       });
     }
     auxMod.push(moduleTypeBitmask);
+    if (_.has(orgModule, "Lecturers")) {
+      _.forEach(orgModule.Lecturers, function(lecturer) {
+        var lecturerIdx = lecturersStringValuesIndex.indexHash[lecturer];
+        if (lecturerIdx !== null) {
+          lecturersArray.push(lecturerIdx);
+        } else {
+          console.log("Module \"" + orgModule.ModuleCode + "\": Lecturer \"" +
+            lecturer + "\" not found in lecturersStringValuesIndex.indexHash"
+          );
+        }
+      });
+    }
+    auxMod.push(lecturersArray);
     auxModulesArray.push(auxMod);
   });
 
@@ -211,7 +269,8 @@ var compute_StringValuesIndex_for_key_with_string_value = function(
     "var AUXMODULES=" +
       JSON.stringify({
         auxModules: auxModulesArray,
-        departments: departmentStringValuesIndex.stringsArray
+        departments: departmentStringValuesIndex.stringsArray,
+        lecturers: lecturersStringValuesIndex.stringsArray
       }) +
       ";",
     { flag: "w" }
