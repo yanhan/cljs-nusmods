@@ -90,6 +90,11 @@ var STRING_KEYS = [
       }
       mod.Department = department;
     }
+
+    // convert `ModuleCredit` to integer
+    if (_.has(mod, "ModuleCredit")) {
+      mod.ModuleCredit = _.parseInt(mod.ModuleCredit);
+    }
     return mod;
   });
   fs.writeFileSync("processed_modules.json",
