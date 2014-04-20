@@ -11,6 +11,10 @@ var STRING_KEYS = [
   "CrossModule", "Corequisite"
 ];
 
+var ARRAY_OF_STRINGS_KEYS = [
+  "Lecturers"
+];
+
 (function() {
   var examDateRegex = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/;
   var monthArray = [
@@ -26,6 +30,12 @@ var STRING_KEYS = [
     _.forEach(STRING_KEYS, function(stringKey) {
       if (_.has(mod, stringKey)) {
         mod[stringKey] = mod[stringKey].trim();
+      }
+    });
+    // trim keys with array of strings value
+    _.forEach(ARRAY_OF_STRINGS_KEYS, function(aosKey) {
+      if (_.has(mod, aosKey)) {
+        mod[aosKey] = _.map(mod[aosKey], function(s) { return s.trim(); });
       }
     });
     // convert `ExamDate` to
