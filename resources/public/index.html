@@ -87,17 +87,12 @@
               level = _.parseInt(moduleCodeMatchArray[2]);
               // subtract unneeded digits
               level -= level % 1000;
-              // Inspect first part of module code
-              if (moduleCodeMatchArray[1] === "SSA" ||
-                  moduleCodeMatchArray[1] === "SSB" ||
-                  moduleCodeMatchArray[1] === "SSD" ||
-                  moduleCodeMatchArray[1] === "SSS" ||
-                  moduleCodeMatchArray[1] === "SSU") {
-                moduleTypeArray.push("Singapore Studies");
-              } else if (moduleCodeMatchArray[1] === "GEK" ||
-                  moduleCodeMatchArray[1] === "GEM") {
-                moduleTypeArray.push("GEM");
-              }
+            }
+            if ((auxModule[2] & MODULE_TYPE.SS) === MODULE_TYPE.SS) {
+              moduleTypeArray.push("Singapore Studies");
+            }
+            if ((auxModule[2] & MODULE_TYPE.GEM) === MODULE_TYPE.GEM) {
+              moduleTypeArray.push("GEM");
             }
           }
           return {
