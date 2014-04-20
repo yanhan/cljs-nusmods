@@ -111,18 +111,18 @@
               level -= level % 1000;
             }
           }
-	  if ((moduleType & MODULE_TYPE.Faculty) === MODULE_TYPE.Faculty) {
-	    moduleTypeArray.push("Faculty");
-	  }
-	  if ((moduleType & MODULE_TYPE.UE) === MODULE_TYPE.UE) {
-	    moduleTypeArray.push("Breadth / UE");
-	  }
-	  if ((moduleType & MODULE_TYPE.SS) === MODULE_TYPE.SS) {
-	    moduleTypeArray.push("Singapore Studies");
-	  }
-	  if ((moduleType & MODULE_TYPE.GEM) === MODULE_TYPE.GEM) {
-	    moduleTypeArray.push("GEM");
-	  }
+          if ((moduleType & MODULE_TYPE.Faculty) === MODULE_TYPE.Faculty) {
+            moduleTypeArray.push("Faculty");
+          }
+          if ((moduleType & MODULE_TYPE.UE) === MODULE_TYPE.UE) {
+            moduleTypeArray.push("Breadth / UE");
+          }
+          if ((moduleType & MODULE_TYPE.SS) === MODULE_TYPE.SS) {
+            moduleTypeArray.push("Singapore Studies");
+          }
+          if ((moduleType & MODULE_TYPE.GEM) === MODULE_TYPE.GEM) {
+            moduleTypeArray.push("GEM");
+          }
           if (moduleTypeArray.length === 0) {
             moduleTypeArray.push("Not in CORS");
           }
