@@ -6,8 +6,10 @@ var CORS_MODULES_ARRAY = require(__dirname + "/../corsRaw.json")
 
 // Module Type information. This is written to `auxmodinfo.js`
 var MODULE_TYPE = {
+  Faculty: 1 << 0,
+  UE: 1 << 1,
   GEM: 1 << 2,
-  SS: 1 << 3
+  SS: 1 << 3,
 };
 
 // This section details the compacted data representation for a Module object.
@@ -184,7 +186,7 @@ var compute_StringValuesIndex_for_key_with_string_value = function(
     function(modType) { return modType === "Module"; },
     moduleCodeDoesNotMatchSSAndGem
   );
-  var corsUEMModules = buildHashOfModulesMatching(corsModulesWithType,
+  var corsUEModules = buildHashOfModulesMatching(corsModulesWithType,
     function(modType) { return modType === "UEM" || modType === "CFM"; },
     moduleCodeDoesNotMatchSSAndGem
   );
@@ -225,6 +227,12 @@ var compute_StringValuesIndex_for_key_with_string_value = function(
       auxMod.push(departmentStringValuesIndex.indexHash[orgModule.Department]);
     } else {
       auxMod.push(-1);
+    }
+    if (_.has(corsFacultyModules, orgModule.ModuleCode)) {
+      moduleTypeBitmask |= MODULE_TYPE.Faculty;
+    }
+    if (_.has(corsUEModules, orgModule.ModuleCode)) {
+      moduleTypeBitmask |= MODULE_TYPE.UE;
     }
     if (_.has(corsSSModules, orgModule.ModuleCode)) {
       moduleTypeBitmask |= MODULE_TYPE.SS;

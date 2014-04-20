@@ -73,6 +73,7 @@
           var level;
           var moduleCodeMatchArray;
           var moduleTypeArray = [];
+          var moduleType = auxModule[2];
           if (moduleCode === "PH2302 / GEK2039") {
             level = 2000;
             moduleTypeArray.push("GEM");
@@ -88,12 +89,21 @@
               // subtract unneeded digits
               level -= level % 1000;
             }
-            if ((auxModule[2] & MODULE_TYPE.SS) === MODULE_TYPE.SS) {
+            if ((moduleType & MODULE_TYPE.Faculty) === MODULE_TYPE.Faculty) {
+              moduleTypeArray.push("Faculty");
+            }
+            if ((moduleType & MODULE_TYPE.UE) === MODULE_TYPE.UE) {
+              moduleTypeArray.push("Breadth / UE");
+            }
+            if ((moduleType & MODULE_TYPE.SS) === MODULE_TYPE.SS) {
               moduleTypeArray.push("Singapore Studies");
             }
-            if ((auxModule[2] & MODULE_TYPE.GEM) === MODULE_TYPE.GEM) {
+            if ((moduleType & MODULE_TYPE.GEM) === MODULE_TYPE.GEM) {
               moduleTypeArray.push("GEM");
             }
+          }
+          if (moduleTypeArray.length === 0) {
+            moduleTypeArray.push("Not in CORS");
           }
           return {
             type: "Module",
@@ -110,11 +120,23 @@
         // add ModuleTypes
         modulesArray.push({
           type: "ModuleType",
+          label: "Faculty"
+        });
+        modulesArray.push({
+          type: "ModuleType",
+          label: "Breadth / UE"
+        });
+        modulesArray.push({
+          type: "ModuleType",
           label: "Singapore Studies"
         });
         modulesArray.push({
           type: "ModuleType",
           label: "GEM"
+        });
+        modulesArray.push({
+          type: "ModuleType",
+          label: "Not in CORS"
         });
         window.database = Exhibit.Database.create();
         window.database.loadData({
