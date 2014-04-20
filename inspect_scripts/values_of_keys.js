@@ -13,9 +13,25 @@ var show_all_possible_values_for_key_with_string_value = function(moduleList,
   }, []).sort(), true));
 };
 
+var show_all_possible_values_for_key_with_array_of_strings_value = function(
+    moduleList, key) {
+  console.log();
+  console.log("All possible values for Module." + key + ":");
+  console.log(_(moduleList)
+    .filter(function(mod) { return _.has(mod, "Types"); })
+    .map(function(mod) { return mod.Types; })
+    .flatten()
+    .uniq()
+    .value()
+  );
+};
+
 show_all_possible_values_for_key_with_string_value(MODULES_ARRAY,
   "ModuleCredit"
 );
 show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "ExamDate");
 show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "Department");
 show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "ModuleCredit");
+show_all_possible_values_for_key_with_array_of_strings_value(MODULES_ARRAY,
+  "Types"
+);
