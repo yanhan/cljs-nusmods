@@ -53,7 +53,9 @@
                 <div>
                   <strong><span data-ex-content=".name"></span></strong>
                 </div>
-                <div data-ex-content=".description"></div>
+                <div data-ex-if-exists=".description">
+                  <span data-ex-content=".description"></span>
+                </div>
               </td>
               <td><span data-ex-content=".mc"></span></td>
               <td><span data-ex-content=".exam"></span></td>
@@ -87,6 +89,7 @@
           var moduleCodeMatchArray;
           var moduleTypeArray = [];
           var moduleType = auxModule[2];
+          var retModule;
           if (moduleCode === "PH2302 / GEK2039") {
             level = 2000;
             moduleTypeArray.push("GEM");
@@ -118,17 +121,21 @@
           if (moduleTypeArray.length === 0) {
             moduleTypeArray.push("Not in CORS");
           }
-          return {
+          retModule = {
             type: "Module",
             label: moduleCode,
             name: modArrayRep[1],
-            description: auxModule[0],
             mc: modArrayRep[2],
             level: level,
             moduleType: moduleTypeArray,
             exam: examDateStringsArray[modArrayRep[3]],
             department: departmentStringsArray[auxModule[1]]
           };
+          // only add description if it's present
+          if (auxModule[0] !== -1) {
+            retModule.description = auxModule[0];
+          }
+          return retModule;
         });
         // add ModuleTypes
         itemsArray.push({
