@@ -57,6 +57,9 @@ var MODULE_TYPE = {
 //       |                      |                   | is an index to its string |
 //       |                      |                   | value in the `Lecturers`  |
 //       |                      |                   | array.                    |
+//       |                      |                   |                           |
+//    4  | Prerequisites        | Integer           | Index to array of         |
+//       |                      |                   | prerequisites strings     |
 //
 // The AuxModule.Type field is a bitmask used to represent the Type of the
 // module. This is required for filtering modules in the Module Finder page
@@ -87,6 +90,7 @@ var MODULE_TYPE = {
 // An array of AuxModule objects, along with the following:
 // - an array of `departments` strings
 // - an array of `lecturers` strings
+// - an array of `prereqs` strings
 //
 // constitute the auxiliary module information. This auxiliary module
 // information is assigned to the global `AUXMODULES` array, like so:
@@ -94,7 +98,8 @@ var MODULE_TYPE = {
 //     AUXMODULES = {
 //       auxModules: array of AuxModule objects,
 //       departments: array of department strings,
-//       lecturers: array of lecturer strings
+//       lecturers: array of lecturer strings,
+//       prereqs: array of prerequisite strings
 //     };
 
 
@@ -197,6 +202,10 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
     compute_StringValuesIndex_for_key_with_array_of_strings_value(
       ORIGINAL_MODULES_ARRAY, "Lecturers"
     );
+  var prereqStringValuesIndex =
+    compute_StringValuesIndex_for_key_with_string_value(
+      ORIGINAL_MODULES_ARRAY, "Prerequisite"
+    );
   // contains absolutely critical module information
   var modulesArray = [];
   // contains auxiliary module information
@@ -253,6 +262,11 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
       });
     }
     auxMod.push(lecturersArray);
+    if (_.has(orgModule, "Prerequisite")) {
+      auxMod.push(prereqStringValuesIndex.indexHash[orgModule.Prerequisite]);
+    } else {
+      auxMod.push(-1);
+    }
     auxModulesArray.push(auxMod);
   });
 
@@ -273,7 +287,8 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
       JSON.stringify({
         auxModules: auxModulesArray,
         departments: departmentStringValuesIndex.stringsArray,
-        lecturers: lecturersStringValuesIndex.stringsArray
+        lecturers: lecturersStringValuesIndex.stringsArray,
+        prereqs: prereqStringValuesIndex.stringsArray
       }) +
       ";",
     { flag: "w" }
