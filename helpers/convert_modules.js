@@ -84,7 +84,10 @@ var MODULE_TYPE = {
 //       is, is there an object in the `processed_modules.json` file with "SSM"
 //       in its `.Type` array and `.ModuleCode` equivalent to the module's code?
 //
-// An array of AuxModule objects, along with an array of `Department` strings,
+// An array of AuxModule objects, along with the following:
+// - an array of `departments` strings
+// - an array of `lecturers` strings
+//
 // constitute the auxiliary module information. This auxiliary module
 // information is assigned to the global `AUXMODULES` array, like so:
 //
