@@ -65,6 +65,10 @@
                   <strong>Prerequisites:</strong>
                   <span data-ex-content=".prereqs"></span>
                 </div>
+                <div data-ex-if-exists=".preclusions">
+                  <strong>Preclusions:</strong>
+                  <span data-ex-content=".preclusions"></span>
+                </div>
               </td>
               <td><span data-ex-content=".mc"></span></td>
               <td><span data-ex-content=".exam"></span></td>
@@ -92,6 +96,7 @@
         var departmentStringsArray = AUXMODULES.departments;
         var lecturersStringsArray = AUXMODULES.lecturers;
         var prereqsStringsArray = AUXMODULES.prereqs;
+        var preclusionsStringsArray = AUXMODULES.preclusions;
         var moduleCodeRegex = /^(\D+)(\d{4})\D*$/;
         var itemsArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
@@ -154,6 +159,10 @@
           // add prerequisites if it exists
           if (auxModule[4] !== -1) {
             retModule.prereqs = prereqsStringsArray[auxModule[4]];
+          }
+          // add preclusions if it exists
+          if (auxModule[5] !== -1) {
+            retModule.preclusions = preclusionsStringsArray[auxModule[5]];
           }
           return retModule;
         });

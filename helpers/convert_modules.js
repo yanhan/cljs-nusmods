@@ -60,6 +60,9 @@ var MODULE_TYPE = {
 //       |                      |                   |                           |
 //    4  | Prerequisites        | Integer           | Index to array of         |
 //       |                      |                   | prerequisites strings     |
+//       |                      |                   |                           |
+//    5  | Preclusions          | Integer           | Index to array of         |
+//       |                      |                   | preclusions strings       |
 //
 // The AuxModule.Type field is a bitmask used to represent the Type of the
 // module. This is required for filtering modules in the Module Finder page
@@ -91,6 +94,7 @@ var MODULE_TYPE = {
 // - an array of `departments` strings
 // - an array of `lecturers` strings
 // - an array of `prereqs` strings
+// - an array of `preclusions` strings
 //
 // constitute the auxiliary module information. This auxiliary module
 // information is assigned to the global `AUXMODULES` array, like so:
@@ -99,7 +103,8 @@ var MODULE_TYPE = {
 //       auxModules: array of AuxModule objects,
 //       departments: array of department strings,
 //       lecturers: array of lecturer strings,
-//       prereqs: array of prerequisite strings
+//       prereqs: array of prerequisite strings,
+//       preclusions: array of preclusions strings,
 //     };
 
 
@@ -206,6 +211,10 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
     compute_StringValuesIndex_for_key_with_string_value(
       ORIGINAL_MODULES_ARRAY, "Prerequisite"
     );
+  var preclusionsStringValuesIndex =
+    compute_StringValuesIndex_for_key_with_string_value(
+      ORIGINAL_MODULES_ARRAY, "Preclusion"
+    );
   // contains absolutely critical module information
   var modulesArray = [];
   // contains auxiliary module information
@@ -267,6 +276,11 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
     } else {
       auxMod.push(-1);
     }
+    if (_.has(orgModule, "Preclusion")) {
+      auxMod.push(preclusionsStringValuesIndex.indexHash[orgModule.Preclusion]);
+    } else {
+      auxMod.push(-1);
+    }
     auxModulesArray.push(auxMod);
   });
 
@@ -288,7 +302,8 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
         auxModules: auxModulesArray,
         departments: departmentStringValuesIndex.stringsArray,
         lecturers: lecturersStringValuesIndex.stringsArray,
-        prereqs: prereqStringValuesIndex.stringsArray
+        prereqs: prereqStringValuesIndex.stringsArray,
+        preclusions: preclusionsStringValuesIndex.stringsArray
       }) +
       ";",
     { flag: "w" }
