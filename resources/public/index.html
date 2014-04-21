@@ -69,6 +69,10 @@
                   <strong>Preclusions:</strong>
                   <span data-ex-content=".preclusions"></span>
                 </div>
+                <div data-ex-if-exists=".workload">
+                  <strong>Workload:</strong>
+                  <span data-ex-content=".workload"></span>
+                </div>
               </td>
               <td><span data-ex-content=".mc"></span></td>
               <td><span data-ex-content=".exam"></span></td>
@@ -97,6 +101,7 @@
         var lecturersStringsArray = AUXMODULES.lecturers;
         var prereqsStringsArray = AUXMODULES.prereqs;
         var preclusionsStringsArray = AUXMODULES.preclusions;
+        var workloadStringsArray = AUXMODULES.workload;
         var moduleCodeRegex = /^(\D+)(\d{4})\D*$/;
         var itemsArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
@@ -163,6 +168,10 @@
           // add preclusions if it exists
           if (auxModule[5] !== -1) {
             retModule.preclusions = preclusionsStringsArray[auxModule[5]];
+          }
+          // add workload if it exists
+          if (auxModule[6] !== -1) {
+            retModule.workload = workloadStringsArray[auxModule[6]];
           }
           return retModule;
         });
