@@ -29,8 +29,17 @@ exports.normalize_department_string = function (department) {
     department = "Yale-NUS College";
   } else {
     department = department.replace(/\w\S*/g, function(txt) {
-      txt = txt.trim();
-      return txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
+      txt = txt.trim().toUpperCase();
+      if (txt === "AND") {
+        txt = "and";
+      } else if (txt === "FOR") {
+        txt = "for";
+      } else if (txt === "OF") {
+        txt = "of";
+      } else {
+        txt = txt.charAt(0).toUpperCase() + txt.slice(1).toLowerCase();
+      }
+      return txt;
     });
   }
   return department;
