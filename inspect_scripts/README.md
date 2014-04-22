@@ -62,6 +62,11 @@ To run it:
 
     node inspect_scripts/values_of_keys.js
 
+To inspect the values of keys of Module objects in `processed_modules.json`,
+supply the `-p` flag like so:
+
+    node inspect_scripts/values_of_keys.js -p
+
 ### exam_date.js
 
 Compares 3 different data storage representations for the `ExamDate` field of a
