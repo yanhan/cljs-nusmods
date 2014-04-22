@@ -20,65 +20,79 @@
     </div>
     <div class="tabs-content">
       <div class="content active" id="module-finder">
-        <div data-ex-role="exhibit-collection" data-ex-item-types="Module"></div>
-        <div data-ex-role="exhibit-facet"
-             data-ex-expression=".moduleType.label"
-             data-ex-facet-label="Type"
-             data-ex-scroll="false">
-        </div>
-        <div data-ex-role="exhibit-facet"
-             data-ex-expression=".mc"
-             data-ex-facet-label="MC"
-             data-ex-sort-mode="value"
-             data-ex-scroll="false">
-        </div>
-        <div data-ex-role="exhibit-facet"
-             data-ex-expression=".level"
-             data-ex-facet-label="Level"
-             data-ex-sort-mode="value"
-             data-ex-scroll="false">
-        </div>
-        <div data-ex-role="exhibit-view"
-             data-ex-view-class="Exhibit.TabularView"
-             data-ex-paginate="True"
-             data-ex-show-toolbox="False"
-             data-ex-label="Table"
-             data-ex-border="0"
-             data-ex-columns=".label, .details, .mc, .exam, .department"
-             data-ex-column-labels="Module Code, Module Details, MC, Exam, Department">
-          <table data-ex-role="lens" style="display:none;">
-            <tr>
-              <td><span data-ex-content=".label"></span></td>
-              <td>
-                <div>
-                  <strong><span data-ex-content=".name"></span></strong>
-                </div>
-                <div data-ex-if-exists=".description">
-                  <span data-ex-content=".description"></span>
-                </div>
-                <div data-ex-if-exists=".lecturers">
-                  <strong>Lecturers:</strong>
-                  <span data-ex-content=".lecturers"
-                        data-ex-formats="list { separator: ' & '; last-separator: ' & ' }"></span>
-                </div>
-                <div data-ex-if-exists=".prereqs">
-                  <strong>Prerequisites:</strong>
-                  <span data-ex-content=".prereqs"></span>
-                </div>
-                <div data-ex-if-exists=".preclusions">
-                  <strong>Preclusions:</strong>
-                  <span data-ex-content=".preclusions"></span>
-                </div>
-                <div data-ex-if-exists=".workload">
-                  <strong>Workload:</strong>
-                  <span data-ex-content=".workload"></span>
-                </div>
-              </td>
-              <td><span data-ex-content=".mc"></span></td>
-              <td><span data-ex-content=".exam"></span></td>
-              <td><span data-ex-content=".department"></span></td>
-            </tr>
-          </table>
+        <div class="row">
+          <div class="medium-3 columns">
+            <div data-ex-role="exhibit-facet"
+                 data-ex-facet-class="Exhibit.HierarchicalFacet"
+                 data-ex-expression=".department"
+                 data-ex-uniform-grouping=".subtopicOf"
+                 data-ex-facet-label="Faculty / Department"
+                 data-ex-collapsible="true"
+                 data-ex-height="30rem">
+            </div>
+          </div>
+          <div class="medium-9 columns">
+            <div data-ex-role="exhibit-collection" data-ex-item-types="Module"></div>
+            <div data-ex-role="exhibit-facet"
+                 data-ex-expression=".moduleType.label"
+                 data-ex-facet-label="Type"
+                 data-ex-scroll="false">
+            </div>
+            <div data-ex-role="exhibit-facet"
+                 data-ex-expression=".mc"
+                 data-ex-facet-label="MC"
+                 data-ex-sort-mode="value"
+                 data-ex-scroll="false">
+            </div>
+            <div data-ex-role="exhibit-facet"
+                 data-ex-expression=".level"
+                 data-ex-facet-label="Level"
+                 data-ex-sort-mode="value"
+                 data-ex-scroll="false">
+            </div>
+            <div data-ex-role="exhibit-view"
+                 data-ex-view-class="Exhibit.TabularView"
+                 data-ex-paginate="True"
+                 data-ex-show-toolbox="False"
+                 data-ex-label="Table"
+                 data-ex-border="0"
+                 data-ex-columns=".label, .details, .mc, .exam, .department"
+                 data-ex-column-labels="Module Code, Module Details, MC, Exam, Department">
+              <table data-ex-role="lens" style="display:none;">
+                <tr>
+                  <td><span data-ex-content=".label"></span></td>
+                  <td>
+                    <div>
+                      <strong><span data-ex-content=".name"></span></strong>
+                    </div>
+                    <div data-ex-if-exists=".description">
+                      <span data-ex-content=".description"></span>
+                    </div>
+                    <div data-ex-if-exists=".lecturers">
+                      <strong>Lecturers:</strong>
+                      <span data-ex-content=".lecturers"
+                            data-ex-formats="list { separator: ' & '; last-separator: ' & ' }"></span>
+                    </div>
+                    <div data-ex-if-exists=".prereqs">
+                      <strong>Prerequisites:</strong>
+                      <span data-ex-content=".prereqs"></span>
+                    </div>
+                    <div data-ex-if-exists=".preclusions">
+                      <strong>Preclusions:</strong>
+                      <span data-ex-content=".preclusions"></span>
+                    </div>
+                    <div data-ex-if-exists=".workload">
+                      <strong>Workload:</strong>
+                      <span data-ex-content=".workload"></span>
+                    </div>
+                  </td>
+                  <td><span data-ex-content=".mc"></span></td>
+                  <td><span data-ex-content=".exam"></span></td>
+                  <td><span data-ex-content=".department"></span></td>
+                </tr>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
       <div class="content" id="timetable-builder">
@@ -102,6 +116,7 @@
         var prereqsStringsArray = AUXMODULES.prereqs;
         var preclusionsStringsArray = AUXMODULES.preclusions;
         var workloadStringsArray = AUXMODULES.workload;
+        var departmentToFacultyIndexHash = AUXMODULES.departmentToFaculty;
         var moduleCodeRegex = /^(\D+)(\d{4})\D*$/;
         var itemsArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
@@ -148,9 +163,17 @@
             mc: modArrayRep[2],
             level: level,
             moduleType: moduleTypeArray,
-            exam: examDateStringsArray[modArrayRep[3]],
-            department: departmentStringsArray[auxModule[1]]
+            exam: examDateStringsArray[modArrayRep[3]]
           };
+          // add department
+          if (auxModule[1] === departmentToFacultyIndexHash[auxModule[1]]) {
+            // no faculty
+            retModule.department = departmentStringsArray[auxModule[1]];
+          } else {
+            // has faculty
+            // NOTE: Using an array is the key to having a nested hierarchy
+            retModule.department = [departmentStringsArray[auxModule[1]]];
+          }
           // only add description if it's present
           if (auxModule[0] !== -1) {
             retModule.description = auxModule[0];
@@ -195,6 +218,17 @@
         itemsArray.push({
           type: "ModuleType",
           label: "Not in CORS"
+        });
+        // add Department to Faculty structure for Facet
+        _.forEach(departmentToFacultyIndexHash, function(faculty, department) {
+          department = _.parseInt(department);
+          if (faculty !== department) {
+            itemsArray.push({
+              type: "ModuleDepartment",
+              label: departmentStringsArray[department],
+              subtopicOf: departmentStringsArray[faculty]
+            });
+          }
         });
         window.database = Exhibit.Database.create();
         window.database.loadData({

@@ -1,7 +1,23 @@
 var _ = require("lodash");
 var fs = require("fs");
 var SharedGlobals = require("./shared_globals.js");
+var NormalizeDepartment = require("./normalize_department.js");
 var ORIGINAL_MODULES_ARRAY = require(__dirname + "/../processed_modules.json");
+var FACULTY_DEPARTMENTS_OBJECT = require(
+  __dirname + "/../facultyDepartments.json"
+);
+// String mapping of Department to Faculty
+var DEPARTMENT_TO_FACULTY_HASH = _.reduce(FACULTY_DEPARTMENTS_OBJECT,
+  function(deptToFacHash, facultyArray, department) {
+    department = NormalizeDepartment.normalize_department_string(department);
+    _.forEach(facultyArray, function(faculty) {
+      faculty = NormalizeDepartment.normalize_department_string(faculty);
+      deptToFacHash[faculty] = department;
+    });
+    return deptToFacHash;
+  },
+  {}
+);
 
 // Module Type information. This is written to `auxmodinfo.js`
 var MODULE_TYPE = {
@@ -99,6 +115,8 @@ var MODULE_TYPE = {
 // - an array of `prereqs` strings
 // - an array of `preclusions` strings
 // - an array of `workload` strings
+// - a hash of department index -> faculty index [this index is to the
+//   `departments` array of strings]
 //
 // constitute the auxiliary module information. This auxiliary module
 // information is assigned to the global `AUXMODULES` array, like so:
@@ -206,7 +224,17 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
     );
   var departmentStringValuesIndex =
     compute_StringValuesIndex_for_key_with_string_value(
-      ORIGINAL_MODULES_ARRAY, "Department"
+      // we factor the strings involved in `DEPARTMENTS_TO_FACULTY_HASH` into
+      // the counts so as to achieve better compression
+      ORIGINAL_MODULES_ARRAY.concat(
+        _(DEPARTMENT_TO_FACULTY_HASH)
+          .map(function(faculty, department) {
+            return [{ Department: faculty }, { Department: department }]
+          })
+          .flatten()
+          .value()
+      ),
+      "Department"
     );
   var lecturersStringValuesIndex =
     compute_StringValuesIndex_for_key_with_array_of_strings_value(
@@ -318,7 +346,16 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
         lecturers: lecturersStringValuesIndex.stringsArray,
         prereqs: prereqStringValuesIndex.stringsArray,
         preclusions: preclusionsStringValuesIndex.stringsArray,
-        workload: workloadStringValuesIndex.stringsArray
+        workload: workloadStringValuesIndex.stringsArray,
+        departmentToFaculty:
+          _.reduce(DEPARTMENT_TO_FACULTY_HASH,
+            function(deptToFacHash, faculty, dept) {
+              deptToFacHash[departmentStringValuesIndex.indexHash[dept]] =
+                departmentStringValuesIndex.indexHash[faculty]
+              return deptToFacHash;
+            },
+            {}
+          )
       }) +
       ";",
     { flag: "w" }
