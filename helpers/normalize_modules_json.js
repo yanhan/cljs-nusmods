@@ -73,6 +73,19 @@ var ARRAY_OF_STRINGS_KEYS = [
     if (_.has(mod, "ModuleCredit")) {
       mod.ModuleCredit = _.parseInt(mod.ModuleCredit);
     }
+    // normalize WeekText in Lessons
+    if (_.has(mod, "Timetable")) {
+      mod.Timetable = _.map(mod.Timetable, function(lesson) {
+        if (lesson.WeekText === "EVEN&nbsp;WEEK") {
+          lesson.WeekText = "EVEN WEEK";
+        } else if (lesson.WeekText === "EVERY&nbsp;WEEK") {
+          lesson.WeekText = "EVERY WEEK";
+        } else if (lesson.WeekText === "ODD&nbsp;WEEK") {
+          lesson.WeekText = "ODD WEEK";
+        }
+        return lesson;
+      });
+    }
     return mod;
   });
   fs.writeFileSync("processed_modules.json",
