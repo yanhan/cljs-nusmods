@@ -48,3 +48,32 @@ show_all_possible_values_for_key_with_string_value(MODULES_ARRAY,
 show_all_possible_values_for_key_with_array_of_strings_value(MODULES_ARRAY,
   "Types"
 );
+
+// timetable values
+(function() {
+  var arrayOfLessonObjects = _(MODULES_ARRAY)
+    .filter(function(mod) {
+      return _.has(mod, "Timetable");
+    })
+    .map(function(mod) {
+      return mod.Timetable;
+    })
+    .flatten()
+    .value();
+  console.log("\nModule.Timetable lesson objects:");
+  show_all_possible_values_for_key_with_string_value(arrayOfLessonObjects,
+    "LessonType", "\nAll possible values for Lesson.LessonType:"
+  );
+  show_all_possible_values_for_key_with_string_value(arrayOfLessonObjects,
+    "WeekText", "\nAll possible values for Lesson.WeekText:"
+  );
+  show_all_possible_values_for_key_with_string_value(arrayOfLessonObjects,
+    "DayText", "\nAll possible values for Lesson.DayText:"
+  );
+  show_all_possible_values_for_key_with_string_value(arrayOfLessonObjects,
+    "StartTime", "\nAll possible values for Lesson.StartTime:"
+  );
+  show_all_possible_values_for_key_with_string_value(arrayOfLessonObjects,
+    "EndTime", "\nAll possible values for Lesson.EndTime:"
+  );
+})();
