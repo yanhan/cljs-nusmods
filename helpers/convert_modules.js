@@ -43,14 +43,62 @@ var MODULE_TYPE = {
 //   3   | ExamDate             | Integer    | Index to array of     | 0
 //       |                      |            | Date Strings of       |
 //       |                      |            | ExamDate              |
+//       |                      |            |                       |
+//   4   | Timetable            | Array of   | See below for more    |
+//       |                      | Arrays of  | information           |
+//       |                      | Integers & |                       |
+//       |                      | Strings    |                       |
 //
-// An array of Module objects, along with an array of ExamDate strings, form
-// the essential module information. This essential module information is
+//
+// The Timetable array above stores arrays of integers and strings. Each of
+// those arrays represent a Lesson. Their indices and meaning of values are as
+// follows:
+//
+// Index | Key in Lesson Object | Value Type | Meaning               
+// ----------------------------------------------------------------------------
+//   0   | ClassNo              | String     | Class Label           
+//       |                      |            |
+//   1   | LessonType           | Integer    | Integer into array of LessonType
+//       |                      |            | Strings
+//       |                      |            |
+//   2   | DayText              | Integer    | 0 = Monday, 1 = Tuesday, etc
+//       |                      |            | until 5 = Saturday
+//       |                      |            |
+//   3   | StartTime            | Integer    | Starting time of the lesson.
+//       |                      |            | 0 = 0800, 1 = 0830, 2 = 0900,
+//       |                      |            | with increments of 1 per half
+//       |                      |            | hour interval, until 2359
+//       |                      |            | In addition, there are the
+//       |                      |            | following special values:
+//       |                      |            | -4 = 0600, -3 = 0630, -2 = 0700,
+//       |                      |            | -1 = 0730 .
+//       |                      |            | These are for timings that we do
+//       |                      |            | not display in the timetable
+//       |                      |            | builder
+//       |                      |            |
+//   4   | EndTime              | Integer    | Ending time of the lesson.
+//       |                      |            | Same convention as EndTime.
+//       |                      |            |
+//   5   | Venue                | Integer    | Integer into array of Venue
+//       |                      |            | Strings
+//       |                      |            |
+//   6   | WeekText             | Integer    | Integer into array of WeekText
+//       |                      |            | Strings
+//
+// An array of Module objects, along with the following:
+// - an array of ExamDate strings
+// - an array of LessonType strings
+// - an array of Venue strings
+// - an array of WeekText strings
+// form the essential module information. This essential module information is
 // assigned to the global `MODULES` array, like so:
 //
 //     MODULES = {
 //       modules: array of Module objects,
-//       examDates: array of exam date strings
+//       examDates: array of exam date strings,
+//       lessonType: array of LessonType strings,
+//       venues: array of Venue strings
+//       weekText: array of WeekText strings
 //     };
 //
 //
