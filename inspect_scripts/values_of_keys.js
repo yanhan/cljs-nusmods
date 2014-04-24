@@ -5,10 +5,11 @@ var MODULES_ARRAY = require(
   __dirname + "/../" + (argv["p"] ? "processed_modules.json" : "modules.json")
 );
 
-var show_all_possible_values_for_key_with_string_value = function(moduleList,
-    key) {
-  console.log();
-  console.log("All possible values for Module." + key + ":");
+var show_all_possible_values_for_key_with_string_value = function(
+    moduleList, key, prefixText) {
+  if (prefixText) {
+    console.log(prefixText);
+  }
   console.log(_.uniq(_.reduce(moduleList, function(valueArray, mod) {
     if (_.has(mod, key)) {
       valueArray.push(mod[key]);
@@ -33,11 +34,17 @@ var show_all_possible_values_for_key_with_array_of_strings_value = function(
 };
 
 show_all_possible_values_for_key_with_string_value(MODULES_ARRAY,
-  "ModuleCredit"
+  "ModuleCredit", "All possible values for Module.ModuleCredit:"
 );
-show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "ExamDate");
-show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "Department");
-show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "ModuleCredit");
+show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "ExamDate",
+  "All possible values for Module.ExamDate:"
+);
+show_all_possible_values_for_key_with_string_value(MODULES_ARRAY, "Department",
+  "All possible values for Module.Department:"
+);
+show_all_possible_values_for_key_with_string_value(MODULES_ARRAY,
+  "ModuleCredit", "All possible values for Module.ModuleCredit:"
+);
 show_all_possible_values_for_key_with_array_of_strings_value(MODULES_ARRAY,
   "Types"
 );
