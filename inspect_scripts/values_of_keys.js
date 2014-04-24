@@ -6,13 +6,13 @@ var MODULES_ARRAY = require(
 );
 
 var show_all_possible_values_for_key_with_string_value = function(
-    moduleList, key, prefixText) {
+    objList, key, prefixText) {
   if (prefixText) {
     console.log(prefixText);
   }
-  console.log(_.uniq(_.reduce(moduleList, function(valueArray, mod) {
-    if (_.has(mod, key)) {
-      valueArray.push(mod[key]);
+  console.log(_.uniq(_.reduce(objList, function(valueArray, obj) {
+    if (_.has(obj, key)) {
+      valueArray.push(obj[key]);
     }
     return valueArray;
   }, []).sort(), true));
