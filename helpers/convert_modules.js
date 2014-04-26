@@ -27,6 +27,49 @@ var MODULE_TYPE = {
   SS: 1 << 3,
 };
 
+// Lesson object keys that we should find a more compact representation for,
+// based on a space efficiency comparison from
+// `inspect_scripts/value_frequency.js`
+var LESSON_KEYS_TO_HASH = [
+  "LessonType", "WeekText", "Venue"
+];
+
+// Index of string representation of a lesson's day to its integer
+// representation
+var DAY_STRING_TO_INTEGER = {
+  MONDAY: 0,
+  TUESDAY: 1,
+  WEDNESDAY: 2,
+  THURSDAY: 3,
+  FRIDAY: 4,
+  SATURDAY: 5
+};
+
+// Converts a Lesson time to its integer representation
+var lesson_time_to_integer_repr = function(time) {
+  var timeInt = _.parseInt(time, 10);
+  if (timeInt % 100 === 30) {
+    // For timings which are "X-thirty" (eg. 0630 [six-thirty],
+    // 0930 [nine-thirty]), add 20 so that we can divide them by 50 and simplify
+    // computation
+    timeInt += 20;
+  }
+  if (timeInt < 800) {
+    // 0600 = -4, 0630 = -3, 0700 = -2, 0730 = -1
+    return -(800 - timeInt / 50);
+  } else {
+    // Turn 2359 into 2400 for easier computation
+    if (timeInt === 2359) {
+      timeInt += 1;
+    }
+    // 0800 = 0, 0850 = 1 (represents 0830 in actuality), 0900 = 2,
+    // 0950 = 3 (represents 0930 in actuality), until 2400 (2359 in reality,
+    // converted to 2400 in `if` statement above to help simplify things)
+    return (timeInt - 800) / 50;
+  }
+  return retVal;
+};
+
 // This section details the compacted data representation for a Module object.
 // A Module object does not contain all the information for an actual module,
 // only the critical information which is required for the `Timetable Builder`
@@ -54,9 +97,9 @@ var MODULE_TYPE = {
 // those arrays represent a Lesson. Their indices and meaning of values are as
 // follows:
 //
-// Index | Key in Lesson Object | Value Type | Meaning               
+// Index | Key in Lesson Object | Value Type | Meaning
 // ----------------------------------------------------------------------------
-//   0   | ClassNo              | String     | Class Label           
+//   0   | ClassNo              | String     | Class Label
 //       |                      |            |
 //   1   | LessonType           | Integer    | Integer into array of LessonType
 //       |                      |            | Strings
@@ -300,12 +343,30 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
     compute_StringValuesIndex_for_key_with_string_value(
       ORIGINAL_MODULES_ARRAY, "Workload"
     );
+  var lessonsArray = _(ORIGINAL_MODULES_ARRAY)
+    .filter(function(module) {
+      return _.has(module, "Timetable");
+    })
+    .map(function(module) {
+      return module.Timetable;
+    })
+    .flatten()
+    .value();
+  var lessonsKeysStringValuesIndex =
+    _.reduce(LESSON_KEYS_TO_HASH, function(lessonsKeySVIndex, lessonKey) {
+      lessonsKeySVIndex[lessonKey] =
+        compute_StringValuesIndex_for_key_with_string_value(lessonsArray,
+          lessonKey
+        );
+      return lessonsKeySVIndex;
+    }, {});
   // contains absolutely critical module information
   var modulesArray = [];
   // contains auxiliary module information
   var auxModulesArray = [];
   _.forEach(ORIGINAL_MODULES_ARRAY, function(orgModule) {
     var mod = [];
+    var lessonsArray;
     var auxMod = [];
     var moduleTypeBitmask = 0;
     var lecturersArray = [];
@@ -318,6 +379,26 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
       mod.push(examDateStringValuesIndex.indexHash[
         SharedGlobals.PROCESSED_NO_EXAM_DATE_STRING
       ]);
+    }
+    if (_.has(orgModule, "Timetable")) {
+      mod.push(_.map(orgModule.Timetable, function(lesson) {
+        // lesson representation
+        var lessonRepr = [];
+        lessonRepr.push(lesson.ClassNo);
+        lessonRepr.push(lessonsKeysStringValuesIndex.LessonType.indexHash[
+          lesson.LessonType
+        ]);
+        lessonRepr.push(DAY_STRING_TO_INTEGER[lesson.DayText]);
+        lessonRepr.push(lesson_time_to_integer_repr(lesson.StartTime));
+        lessonRepr.push(lesson_time_to_integer_repr(lesson.EndTime));
+        lessonRepr.push(lessonsKeysStringValuesIndex.Venue.indexHash[
+          lesson.Venue
+        ]);
+        lessonRepr.push(lessonsKeysStringValuesIndex.WeekText.indexHash[
+          lesson.WeekText
+        ]);
+        return lessonRepr;
+      }));
     }
     modulesArray.push(mod);
 
@@ -379,7 +460,10 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
     "var MODULES=" +
       JSON.stringify({
         modules: modulesArray,
-        examDates: examDateStringValuesIndex.stringsArray
+        examDates: examDateStringValuesIndex.stringsArray,
+        lessonType: lessonsKeysStringValuesIndex.LessonType.stringsArray,
+        venues: lessonsKeysStringValuesIndex.Venue.stringsArray,
+        weekText: lessonsKeysStringValuesIndex.WeekText.stringsArray
       }) +
       ";",
     { flag: "w" }
