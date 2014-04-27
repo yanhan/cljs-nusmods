@@ -39,8 +39,17 @@
                  data-ex-facet-label="Lecture Timings"
                  data-ex-collapsible="true">
             </div>
+            <div data-ex-role="exhibit-facet"
+                 data-ex-facet-class="Exhibit.HierarchicalFacet"
+                 data-ex-expression=".tutorialTimings"
+                 data-ex-uniform-grouping=".subtopicOf"
+                 data-ex-fixed-order="Monday;Monday Morning;Monday Afternoon;Monday Evening;Tuesday;Tuesday Morning;Tuesday Afternoon;Tuesday Evening;Wednesday;Wednesday Morning;Wednesday Afternoon;Wednesday Evening;Thursday;Thursday Morning;Thursday Afternoon;Thursday Evening;Friday;Friday Morning;Friday Afternoon;Friday Evening;Saturday;Saturday Morning;Saturday Afternoon;Saturday Evening"
+                 data-ex-others-label="No Tutorials"
+                 data-ex-facet-label="Tutorial Timings"
+                 data-ex-collapsible="true">
+            </div>
             <div>
-              For lecture timing filter:
+              For lecture / tutorial timing filters:
               <ul>
                 <li>
                   <strong>Morning:</strong>
@@ -176,6 +185,7 @@
           var retModule;
           var timetableArray = modArrayRep[4];
           var lectureTimings = [];
+          var tutorialTimings = [];
           if (moduleCode === "PH2302 / GEK2039") {
             level = 2000;
           } else {
@@ -215,6 +225,7 @@
               lectureTimings.push(lesson_time_to_facet_string(lessonArray));
               break;
             case "Tutorial":
+              tutorialTimings.push(lesson_time_to_facet_string(lessonArray));
               break;
             }
           });
@@ -226,7 +237,8 @@
             level: level,
             moduleType: moduleTypeArray,
             exam: examDateStringsArray[modArrayRep[3]],
-            lectureTimings: lectureTimings
+            lectureTimings: lectureTimings,
+            tutorialTimings: tutorialTimings
           };
           // add department
           if (auxModule[1] === departmentToFacultyIndexHash[auxModule[1]]) {
