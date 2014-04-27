@@ -402,6 +402,8 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
         ]);
         return lessonRepr;
       }));
+    } else {
+      mod.push([]);
     }
     modulesArray.push(mod);
 
