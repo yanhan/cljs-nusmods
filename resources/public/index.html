@@ -30,6 +30,35 @@
                  data-ex-collapsible="true"
                  data-ex-height="30rem">
             </div>
+            <div data-ex-role="exhibit-facet"
+                 data-ex-facet-class="Exhibit.HierarchicalFacet"
+                 data-ex-expression=".lectureTimings"
+                 data-ex-uniform-grouping=".subtopicOf"
+                 data-ex-fixed-order="Monday;Monday Morning;Monday Afternoon;Monday Evening;Tuesday;Tuesday Morning;Tuesday Afternoon;Tuesday Evening;Wednesday;Wednesday Morning;Wednesday Afternoon;Wednesday Evening;Thursday;Thursday Morning;Thursday Afternoon;Thursday Evening;Friday;Friday Morning;Friday Afternoon;Friday Evening;Saturday;Saturday Morning;Saturday Afternoon;Saturday Evening"
+                 data-ex-others-label="No Lectures"
+                 data-ex-facet-label="Lecture Timings"
+                 data-ex-collapsible="true">
+            </div>
+            <div>
+              For lecture timing filter:
+              <ul>
+                <li>
+                  <strong>Morning:</strong>
+                  Lesson begins strictly before 12pm (Lessons beginning at 12pm
+                  are considered as Afternoon lessons)
+                </li>
+                <li>
+                  <strong>Afternoon:</strong>
+                  Lesson begins at any time from 12pm onwards but strictly
+                  before 6pm (Lessons beginning at 6pm are considered as Evening
+                  lessons)
+                </li>
+                <li>
+                  <strong>Evening:</strong>
+                  Lesson begins at 6pm or after
+                </li>
+              </ul>
+            </div>
           </div>
           <div class="medium-9 columns">
             <div data-ex-role="exhibit-collection" data-ex-item-types="Module"></div>
@@ -109,6 +138,23 @@
     <script>
       $(document).foundation();
       $(document).one("scriptsLoaded.exhibit", function() {
+        var DAY_INTEGER_TO_STRING = [
+          "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+        ];
+        // TODO: Centralize the lesson time conversion formula in a single file
+        var lesson_time_to_facet_string = function(lesson) {
+          var dayString = DAY_INTEGER_TO_STRING[lesson[2]];
+          var startTime = 800 + 50 * lesson[3];
+          var endTime = 800 + 50 * lesson[4];
+          if (startTime <= 1150) {
+            return dayString + " Morning";
+          } else if (startTime >= 1800) {
+            return dayString + " Evening";
+          } else {
+            return dayString + " Afternoon";
+          }
+        };
+
         var auxModulesArray = AUXMODULES.auxModules;
         var examDateStringsArray = MODULES.examDates;
         var departmentStringsArray = AUXMODULES.departments;
@@ -118,6 +164,8 @@
         var workloadStringsArray = AUXMODULES.workload;
         var departmentToFacultyIndexHash = AUXMODULES.departmentToFaculty;
         var moduleCodeRegex = /^(\D+)(\d{4})\D*$/;
+        var lessonTypesHash = AUXMODULES.lessonTypes;
+        var lessonTypesStringsArray = MODULES.lessonType;
         var itemsArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
           var moduleCode = modArrayRep[0];
@@ -126,6 +174,8 @@
           var moduleTypeArray = [];
           var moduleType = auxModule[2];
           var retModule;
+          var timetableArray = modArrayRep[4];
+          var lectureTimings = [];
           if (moduleCode === "PH2302 / GEK2039") {
             level = 2000;
           } else {
@@ -156,6 +206,18 @@
           if (moduleTypeArray.length === 0) {
             moduleTypeArray.push("Not in CORS");
           }
+          // add lecture timings
+          _.filter(timetableArray, function(lessonArray) {
+            switch (lessonTypesHash[
+              lessonTypesStringsArray[lessonArray[1]]
+            ]) {
+            case "Lecture":
+              lectureTimings.push(lesson_time_to_facet_string(lessonArray));
+              break;
+            case "Tutorial":
+              break;
+            }
+          });
           retModule = {
             type: "Module",
             label: moduleCode,
@@ -163,7 +225,8 @@
             mc: modArrayRep[2],
             level: level,
             moduleType: moduleTypeArray,
-            exam: examDateStringsArray[modArrayRep[3]]
+            exam: examDateStringsArray[modArrayRep[3]],
+            lectureTimings: lectureTimings
           };
           // add department
           if (auxModule[1] === departmentToFacultyIndexHash[auxModule[1]]) {
@@ -174,6 +237,7 @@
             // NOTE: Using an array is the key to having a nested hierarchy
             retModule.department = [departmentStringsArray[auxModule[1]]];
           }
+          // add lecture timings
           // only add description if it's present
           if (auxModule[0] !== -1) {
             retModule.description = auxModule[0];
@@ -229,6 +293,15 @@
               subtopicOf: departmentStringsArray[faculty]
             });
           }
+        });
+        _.forEach(DAY_INTEGER_TO_STRING, function(dayString) {
+          _.forEach(["Morning", "Afternoon", "Evening"], function(s) {
+            itemsArray.push({
+              type: "LessonTime",
+              label: dayString + " " + s,
+              subtopicOf: dayString
+            });
+          });
         });
         window.database = Exhibit.Database.create();
         window.database.loadData({
