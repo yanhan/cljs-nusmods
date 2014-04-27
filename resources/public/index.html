@@ -21,138 +21,136 @@
     </div>
     <div class="tabs-content">
       <div class="content active" id="module-finder">
-        <div class="row">
-          <div class="medium-3 columns">
-            <div style="width: 100%;">
-              <div id="search-modules-none-selected-div">
-                <span class="exhibit-facet-header-title">Select Modules for Timetable</span>
-              </div>
-              <div id="search-modules-selected-div">
-                <span class="exhibit-facet-header-title" id="search-modules-nr-selected"></span>
-                <span>
-                  <a href="#" id="search-modules-clear-all-modules">(Clear All)</a>
-                </span>
-              </div>
-              <input type="hidden" id="search_modules" />
+        <div class="medium-3 columns">
+          <div style="width: 100%;">
+            <div id="search-modules-none-selected-div">
+              <span class="exhibit-facet-header-title">Select Modules for Timetable</span>
             </div>
-            <div data-ex-role="exhibit-facet"
-                 data-ex-facet-class="Exhibit.TextSearchFacet"
-                 data-ex-expressions=".label, .name, .description, .lecturers"
-                 data-ex-facet-label="Filter by Code / Title / Description / Lecturer">
+            <div id="search-modules-selected-div">
+              <span class="exhibit-facet-header-title" id="search-modules-nr-selected"></span>
+              <span>
+                <a href="#" id="search-modules-clear-all-modules">(Clear All)</a>
+              </span>
             </div>
-            <div data-ex-role="exhibit-facet"
-                 data-ex-facet-class="Exhibit.TextSearchFacet"
-                 data-ex-expressions=".prereqs"
-                 data-ex-facet-label="Filter by Prerequisite">
-            </div>
-            <div data-ex-role="exhibit-facet"
-                 data-ex-facet-class="Exhibit.HierarchicalFacet"
-                 data-ex-expression=".department"
-                 data-ex-uniform-grouping=".subtopicOf"
-                 data-ex-facet-label="Faculty / Department"
-                 data-ex-collapsible="true"
-                 data-ex-height="30rem">
-            </div>
-            <div data-ex-role="exhibit-facet"
-                 data-ex-facet-class="Exhibit.HierarchicalFacet"
-                 data-ex-expression=".lectureTimings"
-                 data-ex-uniform-grouping=".subtopicOf"
-                 data-ex-fixed-order="Monday;Monday Morning;Monday Afternoon;Monday Evening;Tuesday;Tuesday Morning;Tuesday Afternoon;Tuesday Evening;Wednesday;Wednesday Morning;Wednesday Afternoon;Wednesday Evening;Thursday;Thursday Morning;Thursday Afternoon;Thursday Evening;Friday;Friday Morning;Friday Afternoon;Friday Evening;Saturday;Saturday Morning;Saturday Afternoon;Saturday Evening"
-                 data-ex-others-label="No Lectures"
-                 data-ex-facet-label="Lecture Timings"
-                 data-ex-collapsible="true">
-            </div>
-            <div data-ex-role="exhibit-facet"
-                 data-ex-facet-class="Exhibit.HierarchicalFacet"
-                 data-ex-expression=".tutorialTimings"
-                 data-ex-uniform-grouping=".subtopicOf"
-                 data-ex-fixed-order="Monday;Monday Morning;Monday Afternoon;Monday Evening;Tuesday;Tuesday Morning;Tuesday Afternoon;Tuesday Evening;Wednesday;Wednesday Morning;Wednesday Afternoon;Wednesday Evening;Thursday;Thursday Morning;Thursday Afternoon;Thursday Evening;Friday;Friday Morning;Friday Afternoon;Friday Evening;Saturday;Saturday Morning;Saturday Afternoon;Saturday Evening"
-                 data-ex-others-label="No Tutorials"
-                 data-ex-facet-label="Tutorial Timings"
-                 data-ex-collapsible="true">
-            </div>
-            <div>
-              For lecture / tutorial timing filters:
-              <ul>
-                <li>
-                  <strong>Morning:</strong>
-                  Lesson begins strictly before 12pm (Lessons beginning at 12pm
-                  are considered as Afternoon lessons)
-                </li>
-                <li>
-                  <strong>Afternoon:</strong>
-                  Lesson begins at any time from 12pm onwards but strictly
-                  before 6pm (Lessons beginning at 6pm are considered as Evening
-                  lessons)
-                </li>
-                <li>
-                  <strong>Evening:</strong>
-                  Lesson begins at 6pm or after
-                </li>
-              </ul>
-            </div>
+            <input type="hidden" id="search_modules" />
           </div>
-          <div class="medium-9 columns">
-            <div data-ex-role="exhibit-collection" data-ex-item-types="Module"></div>
-            <div data-ex-role="exhibit-facet"
-                 data-ex-expression=".moduleType.label"
-                 data-ex-facet-label="Type"
-                 data-ex-scroll="false">
-            </div>
-            <div data-ex-role="exhibit-facet"
-                 data-ex-expression=".mc"
-                 data-ex-facet-label="MC"
-                 data-ex-sort-mode="value"
-                 data-ex-scroll="false">
-            </div>
-            <div data-ex-role="exhibit-facet"
-                 data-ex-expression=".level"
-                 data-ex-facet-label="Level"
-                 data-ex-sort-mode="value"
-                 data-ex-scroll="false">
-            </div>
-            <div data-ex-role="exhibit-view"
-                 data-ex-view-class="Exhibit.TabularView"
-                 data-ex-paginate="True"
-                 data-ex-show-toolbox="False"
-                 data-ex-label="Table"
-                 data-ex-border="0"
-                 data-ex-columns=".label, .details, .mc, .exam, .department"
-                 data-ex-column-labels="Module Code, Module Details, MC, Exam, Department">
-              <table data-ex-role="lens" style="display:none;">
-                <tr>
-                  <td><span data-ex-content=".label"></span></td>
-                  <td>
-                    <div>
-                      <strong><span data-ex-content=".name"></span></strong>
-                    </div>
-                    <div data-ex-if-exists=".description">
-                      <span data-ex-content=".description"></span>
-                    </div>
-                    <div data-ex-if-exists=".lecturers">
-                      <strong>Lecturers:</strong>
-                      <span data-ex-content=".lecturers"
-                            data-ex-formats="list { separator: ' & '; last-separator: ' & ' }"></span>
-                    </div>
-                    <div data-ex-if-exists=".prereqs">
-                      <strong>Prerequisites:</strong>
-                      <span data-ex-content=".prereqs"></span>
-                    </div>
-                    <div data-ex-if-exists=".preclusions">
-                      <strong>Preclusions:</strong>
-                      <span data-ex-content=".preclusions"></span>
-                    </div>
-                    <div data-ex-if-exists=".workload">
-                      <strong>Workload:</strong>
-                      <span data-ex-content=".workload"></span>
-                    </div>
-                  </td>
-                  <td><span data-ex-content=".mc"></span></td>
-                  <td><span data-ex-content=".exam"></span></td>
-                  <td><span data-ex-content=".department"></span></td>
-                </tr>
-              </table>
-            </div>
+          <div data-ex-role="exhibit-facet"
+               data-ex-facet-class="Exhibit.TextSearchFacet"
+               data-ex-expressions=".label, .name, .description, .lecturers"
+               data-ex-facet-label="Filter by Code / Title / Description / Lecturer">
+          </div>
+          <div data-ex-role="exhibit-facet"
+               data-ex-facet-class="Exhibit.TextSearchFacet"
+               data-ex-expressions=".prereqs"
+               data-ex-facet-label="Filter by Prerequisite">
+          </div>
+          <div data-ex-role="exhibit-facet"
+               data-ex-facet-class="Exhibit.HierarchicalFacet"
+               data-ex-expression=".department"
+               data-ex-uniform-grouping=".subtopicOf"
+               data-ex-facet-label="Faculty / Department"
+               data-ex-collapsible="true"
+               data-ex-height="30rem">
+          </div>
+          <div data-ex-role="exhibit-facet"
+               data-ex-facet-class="Exhibit.HierarchicalFacet"
+               data-ex-expression=".lectureTimings"
+               data-ex-uniform-grouping=".subtopicOf"
+               data-ex-fixed-order="Monday;Monday Morning;Monday Afternoon;Monday Evening;Tuesday;Tuesday Morning;Tuesday Afternoon;Tuesday Evening;Wednesday;Wednesday Morning;Wednesday Afternoon;Wednesday Evening;Thursday;Thursday Morning;Thursday Afternoon;Thursday Evening;Friday;Friday Morning;Friday Afternoon;Friday Evening;Saturday;Saturday Morning;Saturday Afternoon;Saturday Evening"
+               data-ex-others-label="No Lectures"
+               data-ex-facet-label="Lecture Timings"
+               data-ex-collapsible="true">
+          </div>
+          <div data-ex-role="exhibit-facet"
+               data-ex-facet-class="Exhibit.HierarchicalFacet"
+               data-ex-expression=".tutorialTimings"
+               data-ex-uniform-grouping=".subtopicOf"
+               data-ex-fixed-order="Monday;Monday Morning;Monday Afternoon;Monday Evening;Tuesday;Tuesday Morning;Tuesday Afternoon;Tuesday Evening;Wednesday;Wednesday Morning;Wednesday Afternoon;Wednesday Evening;Thursday;Thursday Morning;Thursday Afternoon;Thursday Evening;Friday;Friday Morning;Friday Afternoon;Friday Evening;Saturday;Saturday Morning;Saturday Afternoon;Saturday Evening"
+               data-ex-others-label="No Tutorials"
+               data-ex-facet-label="Tutorial Timings"
+               data-ex-collapsible="true">
+          </div>
+          <div>
+            For lecture / tutorial timing filters:
+            <ul>
+              <li>
+                <strong>Morning:</strong>
+                Lesson begins strictly before 12pm (Lessons beginning at 12pm
+                are considered as Afternoon lessons)
+              </li>
+              <li>
+                <strong>Afternoon:</strong>
+                Lesson begins at any time from 12pm onwards but strictly
+                before 6pm (Lessons beginning at 6pm are considered as Evening
+                lessons)
+              </li>
+              <li>
+                <strong>Evening:</strong>
+                Lesson begins at 6pm or after
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="medium-9 columns">
+          <div data-ex-role="exhibit-collection" data-ex-item-types="Module"></div>
+          <div data-ex-role="exhibit-facet"
+               data-ex-expression=".moduleType.label"
+               data-ex-facet-label="Type"
+               data-ex-scroll="false">
+          </div>
+          <div data-ex-role="exhibit-facet"
+               data-ex-expression=".mc"
+               data-ex-facet-label="MC"
+               data-ex-sort-mode="value"
+               data-ex-scroll="false">
+          </div>
+          <div data-ex-role="exhibit-facet"
+               data-ex-expression=".level"
+               data-ex-facet-label="Level"
+               data-ex-sort-mode="value"
+               data-ex-scroll="false">
+          </div>
+          <div data-ex-role="exhibit-view"
+               data-ex-view-class="Exhibit.TabularView"
+               data-ex-paginate="True"
+               data-ex-show-toolbox="False"
+               data-ex-label="Table"
+               data-ex-border="0"
+               data-ex-columns=".label, .details, .mc, .exam, .department"
+               data-ex-column-labels="Module Code, Module Details, MC, Exam, Department">
+            <table data-ex-role="lens" style="display:none;">
+              <tr>
+                <td><span data-ex-content=".label"></span></td>
+                <td>
+                  <div>
+                    <strong><span data-ex-content=".name"></span></strong>
+                  </div>
+                  <div data-ex-if-exists=".description">
+                    <span data-ex-content=".description"></span>
+                  </div>
+                  <div data-ex-if-exists=".lecturers">
+                    <strong>Lecturers:</strong>
+                    <span data-ex-content=".lecturers"
+                          data-ex-formats="list { separator: ' & '; last-separator: ' & ' }"></span>
+                  </div>
+                  <div data-ex-if-exists=".prereqs">
+                    <strong>Prerequisites:</strong>
+                    <span data-ex-content=".prereqs"></span>
+                  </div>
+                  <div data-ex-if-exists=".preclusions">
+                    <strong>Preclusions:</strong>
+                    <span data-ex-content=".preclusions"></span>
+                  </div>
+                  <div data-ex-if-exists=".workload">
+                    <strong>Workload:</strong>
+                    <span data-ex-content=".workload"></span>
+                  </div>
+                </td>
+                <td><span data-ex-content=".mc"></span></td>
+                <td><span data-ex-content=".exam"></span></td>
+                <td><span data-ex-content=".department"></span></td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>
