@@ -3,6 +3,9 @@ var fs = require("fs");
 var SharedGlobals = require("./shared_globals.js");
 var NormalizeDepartment = require("./normalize_department.js");
 var ORIGINAL_MODULES_ARRAY = require(__dirname + "/../processed_modules.json");
+// An object that maps the value of the `Lesson.LessonType` attribute
+// to either the string 'Lecture' or 'Tutorial'
+var LESSON_TYPES_OBJECT = require(__dirname + "/../lessonTypes.json");
 var FACULTY_DEPARTMENTS_OBJECT = require(
   __dirname + "/../facultyDepartments.json"
 );
@@ -487,7 +490,8 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
               return deptToFacHash;
             },
             {}
-          )
+          ),
+        lessonTypes: LESSON_TYPES_OBJECT
       }) +
       ";",
     { flag: "w" }

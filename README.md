@@ -42,6 +42,8 @@ We will need several files from http://api.nusmods.com/
 http://api.nusmods.com/2013-2014/2/modules.json
 - `facultyDepartments.json` A concrete example of such a file is
 http://api.nusmods.com/2013-2014/2/facultyDepartments.json
+- `lessonTypes.json`. A concrete example of such a file is
+http://api.nusmods.com/2013-2014/2/lessonTypes.json
 
 Place these JSON files at the root directory of this repository and
 generate a `processed_modules.json` file:
