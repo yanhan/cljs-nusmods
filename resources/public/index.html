@@ -24,6 +24,15 @@
         <div class="row">
           <div class="medium-3 columns">
             <div style="width: 100%;">
+              <div id="search-modules-none-selected-div">
+                <span class="exhibit-facet-header-title">Select Modules for Timetable</span>
+              </div>
+              <div id="search-modules-selected-div">
+                <span class="exhibit-facet-header-title" id="search-modules-nr-selected"></span>
+                <span>
+                  <a href="#" id="search-modules-clear-all-modules">(Clear All)</a>
+                </span>
+              </div>
               <input type="hidden" id="search_modules" />
             </div>
             <div data-ex-role="exhibit-facet"
@@ -160,6 +169,7 @@
     <script src="js/vendor/exhibit3/exhibit-api.js?bundle=false&autoCreate=false"></script>
     <script src="https://cdn.jsdelivr.net/select2/3.4.6/select2.min.js"></script>
     <script>
+      window.MODULES_SELECTED = {};
       $(document).foundation();
       $(document).one("scriptsLoaded.exhibit", function() {
         var DAY_INTEGER_TO_STRING = [
@@ -359,6 +369,7 @@
           multiple: true,
           width: "100%",
           placeholder: "Type code/title to add mods",
+          initSelection: function() {},
           query: function(options) {
             var i;
             var nrModules;
@@ -402,6 +413,55 @@
             options.callback(result);
           }
         });
+        (function() {
+          var noneSelectedDiv = $("#search-modules-none-selected-div");
+          var someSelectedDiv = $("#search-modules-selected-div");
+          var someSelectedDivText = $("#search-modules-nr-selected");
+          someSelectedDiv.hide();
+          $("#search_modules").change(function(evt) {
+            var nrModulesSelected;
+            if (evt.added) {
+              if (noneSelectedDiv.is(":visible")) {
+                noneSelectedDiv.hide();
+              }
+              window.MODULES_SELECTED[evt.added.id] = true;
+              nrModulesSelected = _.keys(window.MODULES_SELECTED).length;
+              if (!someSelectedDiv.is(":visible")) {
+                // 0 modules -> 1 module
+                someSelectedDivText.text("Selected 1 Module");
+                someSelectedDiv.show();
+              } else {
+                someSelectedDivText.text("Selected " + nrModulesSelected +
+                  " Modules"
+                );
+              }
+            } else if (evt.removed) {
+              delete window.MODULES_SELECTED[evt.removed.id];
+              nrModulesSelected = _.keys(window.MODULES_SELECTED).length;
+              if (nrModulesSelected <= 0) {
+                someSelectedDiv.hide();
+                noneSelectedDiv.show();
+              } else if (nrModulesSelected === 1) {
+                someSelectedDivText.text("Selected 1 module");
+              } else {
+                someSelectedDivText.text("Selected " + nrModulesSelected +
+                  " Modules"
+                );
+              }
+            }
+          });
+          $("#search-modules-clear-all-modules").click(function(evt) {
+            evt.preventDefault();
+            if (confirm(
+                "Are you sure you want to clear all selected modules?"
+            )) {
+              window.MODULES_SELECTED = {};
+              $("#search_modules").select2("val", "");
+              someSelectedDiv.hide();
+              noneSelectedDiv.show();
+            }
+          });
+        })();
       });
     </script>
   </body>
