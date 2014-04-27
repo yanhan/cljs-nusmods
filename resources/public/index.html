@@ -385,7 +385,7 @@
               for (i = 0; i < nrModules; i += 1) {
                 haystack = modulesArray[i].label.toUpperCase() + " " +
                   modulesArray[i].name.toUpperCase();
-                if (haystack.indexOf(options.term) !== -1) {
+                if (haystack.indexOf(searchTerm) !== -1) {
                   firstResults.push({
                     id: modulesArray[i].label,
                     text: modulesArray[i].label + " " + modulesArray[i].name
