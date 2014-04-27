@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="css/normalize.css" />
     <link rel="stylesheet" href="css/foundation.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/select2/3.4.6/select2.css" />
     <link rel="stylesheet" href="css/styles.css" />
 
     <script src="js/vendor/modernizr.js"></script>
@@ -22,6 +23,9 @@
       <div class="content active" id="module-finder">
         <div class="row">
           <div class="medium-3 columns">
+            <div style="width: 100%;">
+              <input type="hidden" id="search_modules" />
+            </div>
             <div data-ex-role="exhibit-facet"
                  data-ex-facet-class="Exhibit.TextSearchFacet"
                  data-ex-expressions=".label, .name, .description, .lecturers"
@@ -154,6 +158,7 @@
     <script src="js/vendor/lodash.min.js"></script>
     <script src="js/vendor/foundation.min.js"></script>
     <script src="js/vendor/exhibit3/exhibit-api.js?bundle=false&autoCreate=false"></script>
+    <script src="https://cdn.jsdelivr.net/select2/3.4.6/select2.min.js"></script>
     <script>
       $(document).foundation();
       $(document).one("scriptsLoaded.exhibit", function() {
@@ -185,9 +190,11 @@
         var moduleCodeRegex = /^(\D+)(\d{4})\D*$/;
         var lessonTypesHash = AUXMODULES.lessonTypes;
         var lessonTypesStringsArray = MODULES.lessonType;
-        var itemsArray = _.map(MODULES.modules, function(modArrayRep, idx) {
+        var itemsArray = [];
+        var modulesArray = _.map(MODULES.modules, function(modArrayRep, idx) {
           var auxModule = auxModulesArray[idx];
           var moduleCode = modArrayRep[0];
+          var moduleName = modArrayRep[1];
           var level;
           var moduleCodeMatchArray;
           var moduleTypeArray = [];
@@ -242,7 +249,7 @@
           retModule = {
             type: "Module",
             label: moduleCode,
-            name: modArrayRep[1],
+            name: moduleName,
             mc: modArrayRep[2],
             level: level,
             moduleType: moduleTypeArray,
@@ -283,6 +290,7 @@
           }
           return retModule;
         });
+        itemsArray = modulesArray.concat(itemsArray);
         // add ModuleTypes
         itemsArray.push({
           type: "ModuleType",
@@ -346,6 +354,54 @@
         });
         window.exhibit = Exhibit.create();
         window.exhibit.configureFromDOM();
+        // initialize select2
+        $("#search_modules").select2({
+          multiple: true,
+          width: "100%",
+          placeholder: "Type code/title to add mods",
+          query: function(options) {
+            var i;
+            var nrModules;
+            var firstResults;
+            var haystack;
+            var searchTerm;
+            var result = { results: [] }
+            var resultsPerPage = 20;
+            if (options.context === null) {
+              nrModules = modulesArray.length;
+              searchTerm = options.term.toUpperCase();
+              firstResults = [];
+              for (i = 0; i < nrModules; i += 1) {
+                haystack = modulesArray[i].label.toUpperCase() + " " +
+                  modulesArray[i].name.toUpperCase();
+                if (haystack.indexOf(options.term) !== -1) {
+                  firstResults.push({
+                    id: modulesArray[i].label,
+                    text: modulesArray[i].label + " " + modulesArray[i].name
+                  });
+                }
+              }
+              options.context = {
+                searchResults: firstResults,
+                nrResults: firstResults.length
+              };
+            }
+            // options.page starts counting from 1
+            if ((options.page - 1) * resultsPerPage < options.context.nrResults) {
+              result.more = true;
+              for (i = (options.page - 1) * resultsPerPage,
+                   limit = Math.min(i + resultsPerPage, options.context.nrResults);
+                   i < limit;
+                   i += 1) {
+                result.results.push(options.context.searchResults[i]);
+              }
+            } else {
+              result.more = false;
+            }
+            result.context = options.context;
+            options.callback(result);
+          }
+        });
       });
     </script>
   </body>
