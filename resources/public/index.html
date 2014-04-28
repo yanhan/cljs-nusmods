@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="css/normalize.css" />
     <link rel="stylesheet" href="css/foundation.min.css" />
+    <link rel="stylesheet" href="css/exhibit3-all-styles.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/select2/3.4.6/select2.css" />
     <link rel="stylesheet" href="css/styles.css" />
 
@@ -164,7 +165,6 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
     <script src="js/vendor/lodash.min.js"></script>
     <script src="js/vendor/foundation.min.js"></script>
-    <script src="js/vendor/exhibit3/exhibit-api.js?bundle=false&autoCreate=false"></script>
     <script src="https://cdn.jsdelivr.net/select2/3.4.6/select2.min.js"></script>
     <script>
       window.MODULES_SELECTED = {};
@@ -461,6 +461,10 @@
           });
         })();
       });
+
+      // Load concatenated Exhibit3 library.
+      // Somehow things don't work if we load it using a <script> tag.
+      $.getScript("js/vendor/exhibit3-all.js", function() {});
     </script>
   </body>
 </html>

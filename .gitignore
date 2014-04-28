@@ -12,3 +12,6 @@ pom.xml.asc
 *.swp
 /.lein-*
 /.nrepl-port
+/resources/public/js/vendor/exhibit3-all.js
+/resources/public/css/exhibit3-all-styles.css
+/resources/public/exhibit3

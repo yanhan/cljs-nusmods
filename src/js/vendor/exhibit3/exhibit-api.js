@@ -44,30 +44,34 @@ var Exhibit = {
     /**
      * Where Exhibit is served from.
      */
-    urlPrefix: undefined,
+    //urlPrefix: undefined,
+
+    // This is the path where the images and locale are served from
+    urlPrefix: "exhibit3/",
 
     /**
      * Where to find Babel, if at all.
      */
-    babelPrefix: undefined,
+    //babelPrefix: undefined,
 
     /**
      * Where to submit JSON for validation.  Uses jsonlint.com by
      * default, will use Babel instead of babelPrefix is given.
      */
-    validateJSON: "http://jsonlint.com/?json=",
+    //validateJSON: "http://jsonlint.com/?json=",
 
     /**
      * Where to find out more about Exhibit.
      */
-    exhibitLink: "http://www.simile-widgets.org/exhibit/",
+    //exhibitLink: "http://www.simile-widgets.org/exhibit/",
 
     /**
      * Settable parameters within the query string of loading this file.
      */
     params: {
         "bundle": true,
-        "autoCreate": true,
+        //"autoCreate": true,
+        "autoCreate": false,
         "safe": false,
         "babel": undefined,
         "backstage": undefined,
@@ -80,6 +84,7 @@ var Exhibit = {
      */
     Extension: {},
 
+    /*
     _dependencies: {
         "lib/jquery-1.7.2.min.js": "jQuery",
         "lib/json2.js": "JSON",
@@ -94,6 +99,7 @@ var Exhibit = {
         "lib/jquery.simile.bubble.js": undefined, // "jQuery.simileBubble",
         "lib/es5-shim.js": undefined
     },
+    */
 
     /**
      * One instance of LABjs to coordinate all loading in series
@@ -113,6 +119,8 @@ var Exhibit = {
     /**
      * Scripts Exhibit will load.
      */
+    scripts: [],
+    /*
     scripts: [
         "scripts/exhibit.js",
         "scripts/bc/bc.js",
@@ -204,7 +212,10 @@ var Exhibit = {
         "locales/manifest.js",
         "scripts/final.js"
     ],
+    */
 
+    "styles": [],
+    /*
     "styles": [
         "styles/graphics.css",
         "styles/exhibit.css",
@@ -225,6 +236,7 @@ var Exhibit = {
         "styles/widgets/option-widget.css",
         "styles/widgets/reset-history-widget.css"
     ],
+    */
 
     /**
      * @constant An Exhibit.Registry of static components.
@@ -600,4 +612,12 @@ Exhibit.load = function() {
     }
 };
 
-Exhibit.load();
+//Exhibit.load();
+
+$LAB.setGlobalDefaults({
+    AllowDuplicates: false,
+    AlwaysPreserveOrder: true,
+    UseLocalXHR: false
+});
+
+Exhibit.loader = $LAB.setOptions({ AlwaysPreserveOrder: true });
