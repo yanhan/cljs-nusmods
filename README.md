@@ -79,3 +79,41 @@ library and places them under the same directory hierarchy at
     lein ring server-headless
 
 And go to http://127.0.0.1:3000/index.html
+
+## Credits
+
+First and foremost, to [Eu Beng Hee](https://github.com/ahbeng) for making
+his wonderful [NUSMods](https://github.com/ahbeng/NUSMods) library open source.
+This project would probably have taken a very different route without using it
+as a reference.
+
+### Libraries Used
+
+This project will probably be impossible without the following awesome
+libraries (even though the documentation may not be so awesome for some of
+them):
+
+#### JavaScript libraries (front end):
+- [jQuery](http://jquery.com/)
+- [jQuery UI](https://jqueryui.com/)
+- [lodash](http://lodash.com/)
+(more modern version of [Underscore.js](http://underscorejs.org/); use this and
+you may very well not see any `for` loops in your JavaScript for a start)
+- [Exhibit 3.0](http://www.simile-widgets.org/exhibit3/)
+(**THE** main library in the Module Finder page; documentation can be hard to
+find)
+- [Select 2](http://ivaynberg.github.io/select2/)
+(For the `Select Modules for Timetable` input box)
+
+#### CSS libraries / tools:
+- [Zurb Foundation 5](http://foundation.zurb.com/)
+- [Compass](http://compass-style.org/)
+(Enables us to write SCSS instead of CSS, huge boon)
+
+#### JavaScript libraries (back end):
+- [gulp.js](http://gulpjs.com/) (Making Grunt obsolete, kind of)
+- [gulp-concat](https://github.com/wearefractal/gulp-concat)
+- [gulp-uglify](https://www.npmjs.org/package/gulp-uglify)
+- [gulp-minify-css](https://github.com/jonathanepollack/gulp-minify-css)
+- [Moment.js](http://momentjs.com/)
+- [minimist](https://github.com/substack/minimist)
