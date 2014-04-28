@@ -1,5 +1,7 @@
 var gulp = require("gulp");
 var concat = require("gulp-concat");
+var uglify = require("gulp-uglify");
+var minifyCSS = require("gulp-minify-css");
 
 gulp.task("exhibit3", function() {
   return gulp.src([
@@ -101,7 +103,8 @@ gulp.task("exhibit3", function() {
       "src/js/vendor/exhibit3/locales/manifest.js",
       "src/js/vendor/exhibit3/scripts/final.js"
     ])
-    .pipe(concat("exhibit3-all.js"))
+    .pipe(concat("exhibit3-all.min.js"))
+    .pipe(uglify())
     .pipe(gulp.dest("resources/public/js/vendor/"));
 });
 
@@ -126,7 +129,8 @@ gulp.task("exhibit3-css", function() {
       "src/js/vendor/exhibit3/styles/widgets/option-widget.css",
       "src/js/vendor/exhibit3/styles/widgets/reset-history-widget.css"
     ])
-    .pipe(concat("exhibit3-all-styles.css"))
+    .pipe(concat("exhibit3-styles.min.css"))
+    .pipe(minifyCSS())
     .pipe(gulp.dest("resources/public/css/"));
 });
 

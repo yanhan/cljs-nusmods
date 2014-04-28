@@ -58,6 +58,22 @@ information):
     node helpers/convert_modules.js
     cp modinfo.js auxmodinfo.js resources/public/js/
 
+### Building minified libraries
+
+Execute this command to build the minified libraries:
+
+    gulp
+
+The default gulp task does the following:
+
+- Concatenates all Exhibit 3.0 JavaScript files and minifies it, then copies it
+to `resources/public/js/vendor/exhibit3-all.min.js`
+- Concatenates all Exhibit 3.0 CSS files and minifies it, then copies it to
+`resources/public/css/exhibit3-styles.min.css`
+- Copies the `images` folder and the English locale file of the Exhibit 3.0
+library and places them under the same directory hierarchy at
+`resources/public/exhibit3/`
+
 ## Running the web server
 
     lein ring server-headless
