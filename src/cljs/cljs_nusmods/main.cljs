@@ -1,7 +1,8 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
   (:use [jayq.core :only [$ one]])
-  (:require [cljs-nusmods.module-array-repr :as module-array-repr]))
+  (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
+            [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]))
 
 ; Initialize window.MODULES_SELECTED
 (aset js/window "MODULES_SELECTED" (js-obj))
@@ -31,10 +32,17 @@
         ; Exhibit 3.0 library
         modulesArray                 (array)
        ]
-    (doseq [[idx moduleArrayRepr] (map vector (range) (aget MODULES "modules"))]
-      (let [moduleLevel (module-array-repr/get-module-level moduleArrayRepr)]
+    (doseq [[idx moduleArrayRepr auxModuleArrayRepr]
+              (map vector (range) (aget MODULES "modules") auxModulesArray)]
+      (let [moduleLevel     (module-array-repr/get-module-level moduleArrayRepr)
+            moduleTypeArray (aux-module-array-repr/get-module-types
+                             auxModuleArrayRepr)]
         (if (< idx 10)
-          (.log js/console (str "Level of module " (nth moduleArrayRepr 0) " is " moduleLevel)))))
+          (do
+            (.log js/console
+              (str "Level of module " (nth moduleArrayRepr 0) " is " moduleLevel))
+            (.log js/console
+              (str "Types of module: " moduleTypeArray))))))
     ; Return the modulesArray
     modulesArray))
 
