@@ -4,20 +4,14 @@
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]))
 
-; Initialize window.MODULES_SELECTED
-(aset js/window "MODULES_SELECTED" (js-obj))
+(defn ^{:doc "Wrapper for $.getScript"
+        :private true}
+  getScript [scriptUrl cb]
+  (.getScript js/jQuery scriptUrl cb))
 
-; $(document)
-(def $document ($ js/document))
-
-; Globals
-(def AUXMODULES (aget js/window "AUXMODULES"))
-(def MODULES    (aget js/window "MODULES"))
-
-; initialize Zurb Foundation
-(.foundation $document)
-
-(defn build-modules-array []
+(defn ^{:doc "Builds a JavaScript Array of Modules for the Exhibit 3.0 library"
+        :private true}
+  build-modules-array [MODULES AUXMODULES]
   (let [auxModulesArray              (aget AUXMODULES "auxModules")
         examDateStringsArray         (aget MODULES "examDates")
         departmentStringsArray       (aget AUXMODULES "departments")
@@ -46,14 +40,24 @@
     ; Return the modulesArray
     modulesArray))
 
-; Create modules
-(one $document "scriptsLoaded.exhibit"
-  (fn []
-    (let [modulesArray (build-modules-array)]
-      (.log js/console modulesArray))))
+; Main entry point of the program
+(defn ^:export init []
+  ; Globals
+  (let [$document  ($ js/document)
+        AUXMODULES (aget js/window "AUXMODULES")
+        MODULES    (aget js/window "MODULES")]
 
-; Retrieve Exhibit 3.0 Library
-(defn getScript [scriptUrl cb]
-  (.getScript js/jQuery scriptUrl cb))
+    ; Initialize window.MODULES_SELECTED
+    (aset js/window "MODULES_SELECTED" (js-obj))
 
-(getScript "js/vendor/exhibit3-all.min.js" (fn []))
+    ; initialize Zurb Foundation
+    (.foundation $document)
+
+    ; Create modules
+    (one $document "scriptsLoaded.exhibit"
+      (fn []
+        (let [modulesArray (build-modules-array MODULES AUXMODULES)]
+          (.log js/console modulesArray))))
+
+    ; Retrieve Exhibit 3.0 Library
+    (getScript "js/vendor/exhibit3-all.min.js" (fn []))))
