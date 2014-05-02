@@ -80,6 +80,16 @@ library and places them under the same directory hierarchy at
 
 And go to http://127.0.0.1:3000/index.html
 
+## Running Tests
+
+To build the test files:
+
+    test_helpers/build_test.sh
+
+Running the tests:
+
+    lein cljsbuild test
+
 ## Credits
 
 First and foremost, to [Eu Beng Hee](https://github.com/ahbeng) for making

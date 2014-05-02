@@ -16,3 +16,4 @@ pom.xml.asc
 /resources/public/js/vendor/exhibit3-all.min.js
 /resources/public/css/exhibit3-styles.min.css
 /resources/public/exhibit3
+/test/js/globals.js

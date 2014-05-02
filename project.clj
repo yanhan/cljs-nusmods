@@ -9,7 +9,8 @@
                  [org.clojure/clojurescript "0.0-2202"]
                  [jayq "2.5.0"]]
   :plugins [[lein-cljsbuild "1.0.3"]
-            [lein-ring "0.8.10"]]
+            [lein-ring "0.8.10"]
+            [com.cemerick/clojurescript.test "0.3.0"]]
   :ring {:handler cljs-nusmods.server/app}
   :cljsbuild {
     :builds [{
@@ -17,4 +18,24 @@
       :compiler {
         :output-to "resources/public/js/main.js"
         :optimizations :advanced
-        :externs ["externs/jquery-1.9.js" "externs/foundation.js"]}}]})
+        :externs ["externs/jquery-1.9.js" "externs/foundation.js"]}
+    } {
+      :source-paths ["src/cljs" "test/cljs"]
+      :compiler {
+        :output-to "target/testable.js"
+        :optimizations :whitespace }}]
+
+    :test-commands {
+      "unit-tests" [
+        ; Command to run the tests
+        "phantomjs"
+        ; The symbol :runner must be the 2nd argument
+        :runner
+        ; JavaScript libraries
+        "test/js/vendor/jquery-2.1.0.min.js"
+        ; JavaScript globals required by tests
+        "test/js/globals.js"
+        ; Actual compiled test file
+        "target/testable.js"]
+    }
+  })

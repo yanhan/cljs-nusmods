@@ -23,12 +23,9 @@ var DEPARTMENT_TO_FACULTY_HASH = _.reduce(FACULTY_DEPARTMENTS_OBJECT,
 );
 
 // Module Type information. This is written to `auxmodinfo.js`
-var MODULE_TYPE = {
-  Faculty: 1 << 0,
-  UE: 1 << 1,
-  GEM: 1 << 2,
-  SS: 1 << 3,
-};
+var MODULE_TYPE = require(
+  __dirname + "/../module-data/module_type.js"
+).MODULE_TYPE;
 
 // Lesson object keys that we should find a more compact representation for,
 // based on a space efficiency comparison from
