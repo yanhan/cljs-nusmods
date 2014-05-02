@@ -28,13 +28,14 @@
        ]
     (doseq [[idx moduleArrayRepr auxModuleArrayRepr]
               (map vector (range) (aget MODULES "modules") auxModulesArray)]
-      (let [moduleLevel     (module-array-repr/get-module-level moduleArrayRepr)
+      (let [moduleCode      (module-array-repr/get-module-code moduleArrayRepr)
+            moduleLevel     (module-array-repr/get-module-level moduleArrayRepr)
             moduleTypeArray (aux-module-array-repr/get-module-types
                              auxModuleArrayRepr)]
         (if (< idx 10)
           (do
             (.log js/console
-              (str "Level of module " (nth moduleArrayRepr 0) " is " moduleLevel))
+              (str "Level of module " moduleCode " is " moduleLevel))
             (.log js/console
               (str "Types of module: " moduleTypeArray))))))
     ; Return the modulesArray
