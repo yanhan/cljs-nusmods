@@ -8,6 +8,11 @@
   [moduleArrayRepr]
   (nth moduleArrayRepr 0))
 
+(defn get-module-name
+  "Obtains the name of a module from its array representation"
+  [moduleArrayRepr]
+  (nth moduleArrayRepr 1))
+
 (defn get-module-level 
   "Obtains the level of a module from its array representation"
   [moduleArrayRepr]
