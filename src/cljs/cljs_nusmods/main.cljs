@@ -20,7 +20,7 @@
         preclusionsStringsArray      (aget AUXMODULES "preclusions")
         workloadStringsArray         (aget AUXMODULES "workload")
         departmentToFacultyIndexHash (aget AUXMODULES "departmentToFaculty")
-        lessonTypesHash              (aget MODULES "lessonTypes")
+        lessonTypesHash              (aget AUXMODULES "lessonTypes")
         lessonTypesStringsArray      (aget MODULES "lessonType")
         ; return value, a JavaScript array of modules for the
         ; Exhibit 3.0 library
@@ -35,7 +35,10 @@
             moduleTypeArray (aux-module-array-repr/get-module-types
                              auxModuleArrayRepr)
             moduleExamDate  (module-array-repr/get-module-exam-date
-                              examDateStringsArray moduleArrayRepr)]
+                              examDateStringsArray moduleArrayRepr)
+            lectureTimings  (module-array-repr/get-module-lecture-timings
+                              lessonTypesHash lessonTypesStringsArray
+                              moduleArrayRepr)]
         (if (< idx 10)
           (do
             (.log js/console
@@ -44,7 +47,9 @@
             (.log js/console
               (str "Types of module: " moduleTypeArray))
             (.log js/console
-              (str "Module Exam Date: " moduleExamDate))))))
+              (str "Module Exam Date: " moduleExamDate))
+            (.log js/console
+              (str "Lecture Timings: " lectureTimings))))))
     ; Return the modulesArray
     modulesArray))
 

@@ -1,5 +1,6 @@
 (ns ^{:doc "Helper functions for array representation of Module object"}
-  cljs-nusmods.module-array-repr)
+  cljs-nusmods.module-array-repr
+  (:require [cljs-nusmods.lesson-array-repr :as lesson-array-repr]))
 
 (def MODULE_CODE_REGEX #"^\D+(\d{4})\D*$")
 
@@ -33,3 +34,22 @@
   "Retrieves the exam date string of a module from its array representation"
   [examDateStringsArray moduleArrayRepr]
   (nth examDateStringsArray (nth moduleArrayRepr 3)))
+
+(defn- get-module-timetable
+  "Retrieves the timetable of a module from its array representation"
+  [moduleArrayRepr]
+  (nth moduleArrayRepr 4))
+
+(defn get-module-lecture-timings
+  "Retrieves a JavaScript array of strings of the lecture timings of a module
+   from its array representation"
+  [lessonTypesHash lessonTypesStringsArray moduleArrayRepr]
+  (let [timetable (get-module-timetable moduleArrayRepr)]
+    (clj->js
+      (map lesson-array-repr/get-lesson-start-time-string-for-exhibit-filter
+           (filter
+             (fn [lessonArrayRepr]
+               (= "Lecture"
+                  (lesson-array-repr/get-lesson-type-string
+                    lessonTypesHash lessonTypesStringsArray lessonArrayRepr)))
+             timetable)))))

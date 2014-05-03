@@ -20,3 +20,30 @@
            (array "29 Apr 2014 13:00" "8 May 2014 09:00" "5 May 2014 17:00"
                   "30 Apr 2014 17:00")
            (array 0 0 0 2)))))
+
+(deftest test-get-module-lecture-timings
+  (is (= ["Monday Afternoon" "Wednesday Evening" "Friday Morning"]
+         (js->clj
+           (module-array-repr/get-module-lecture-timings
+             (js-obj "Seminar" "Lecture"
+                     "Laboratory" "Tutorial"
+                     "Tutorial" "Tutorial"
+                     "Lecture" "Lecture"
+                     "Recitation" "Lecture")
+             (array "Lecture" "Recitation" "Laboratory" "Seminar" "Tutorial")
+             (array 0 0 0 0
+                    (array
+                      ; Lecture, Monday 1230
+                      (array 0 0 0 9)
+                      ; Tutorial, Thursday 0800
+                      (array 0 4 3 0)
+                      ; Laboratory, Wednesday 0900
+                      (array 0 2 2 2)
+                      ; Tutorial, Saturday 1630
+                      (array 0 4 5 17)
+                      ; Seminar (Lecture), Wednesday 1800
+                      (array 0 3 2 20)
+                      ; Laboratory, Friday 1100
+                      (array 0 2 4 6)
+                      ; Recitation (Lecture), Friday 1000
+                      (array 0 1 4 4))))))))
