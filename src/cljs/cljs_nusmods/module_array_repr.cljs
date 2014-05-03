@@ -23,3 +23,8 @@
             ; TODO: Handle case where module code does not match regex
             moduleDigitsInt (js/parseInt (nth matchArray 1))]
         (- moduleDigitsInt (mod moduleDigitsInt 1000))))))
+
+(defn get-module-mc
+  "Retrieves the mcs of a module from its array representation"
+  [moduleArrayRepr]
+  (nth moduleArrayRepr 2))

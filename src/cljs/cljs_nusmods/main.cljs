@@ -30,14 +30,15 @@
               (map vector (range) (aget MODULES "modules") auxModulesArray)]
       (let [moduleCode      (module-array-repr/get-module-code moduleArrayRepr)
             moduleName      (module-array-repr/get-module-name moduleArrayRepr)
+            moduleMc        (module-array-repr/get-module-mc moduleArrayRepr)
             moduleLevel     (module-array-repr/get-module-level moduleArrayRepr)
             moduleTypeArray (aux-module-array-repr/get-module-types
                              auxModuleArrayRepr)]
         (if (< idx 10)
           (do
             (.log js/console
-              (str "Level of module " moduleCode " " moduleName " is "
-                   moduleLevel))
+              (str "Level of module " moduleCode " " moduleName " (" moduleMc
+                   "Mcs) is " moduleLevel))
             (.log js/console
               (str "Types of module: " moduleTypeArray))))))
     ; Return the modulesArray

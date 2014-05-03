@@ -10,3 +10,6 @@
   (is (= "Programming Methodology (Scheme)"
          (module-array-repr/get-module-name
            (array "CS1101S" "Programming Methodology (Scheme)")))))
+
+(deftest test-get-module-mc
+  (is (= 4 (module-array-repr/get-module-mc (array 0 0 4)))))
