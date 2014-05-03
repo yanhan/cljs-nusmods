@@ -139,7 +139,7 @@ var lesson_time_to_integer_repr = function(time) {
 //     MODULES = {
 //       modules: array of Module objects,
 //       examDates: array of exam date strings,
-//       lessonType: array of LessonType strings,
+//       lessonTypesStringsArray: array of LessonType strings,
 //       venues: array of Venue strings
 //       weekText: array of WeekText strings
 //     };
@@ -463,7 +463,8 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
       JSON.stringify({
         modules: modulesArray,
         examDates: examDateStringValuesIndex.stringsArray,
-        lessonType: lessonsKeysStringValuesIndex.LessonType.stringsArray,
+        lessonTypesStringsArray:
+          lessonsKeysStringValuesIndex.LessonType.stringsArray,
         venues: lessonsKeysStringValuesIndex.Venue.stringsArray,
         weekText: lessonsKeysStringValuesIndex.WeekText.stringsArray
       }) +

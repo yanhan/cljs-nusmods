@@ -21,7 +21,7 @@
         workloadStringsArray         (aget AUXMODULES "workload")
         departmentToFacultyIndexHash (aget AUXMODULES "departmentToFaculty")
         lessonTypesHash              (aget AUXMODULES "lessonTypes")
-        lessonTypesStringsArray      (aget MODULES "lessonType")
+        lessonTypesStringsArray      (aget MODULES "lessonTypesStringsArray")
         ; return value, a JavaScript array of modules for the
         ; Exhibit 3.0 library
         modulesArray                 (array)
