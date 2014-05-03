@@ -200,25 +200,25 @@ var lesson_time_to_integer_repr = function(time) {
 //       is, is there an object in the `processed_modules.json` file with "SSM"
 //       in its `.Type` array and `.ModuleCode` equivalent to the module's code?
 //
-// An array of AuxModule objects, along with the following:
-// - an array of `departments` strings
-// - an array of `lecturers` strings
-// - an array of `prereqs` strings
-// - an array of `preclusions` strings
-// - an array of `workload` strings
-// - a hash of department index -> faculty index [this index is to the
-//   `departments` array of strings]
-//
+// An array of AuxModule objects, along with some other information below,
 // constitute the auxiliary module information. This auxiliary module
-// information is assigned to the global `AUXMODULES` array, like so:
+// information is assigned to the global `AUXMODULES` object, like so:
 //
 //     AUXMODULES = {
-//       auxModules: array of AuxModule objects,
-//       departments: array of department strings,
-//       lecturers: array of lecturer strings,
-//       prereqs: array of prerequisite strings,
+//       auxModules: array of AuxModule objects
+//       departments: array of department strings. This contains both department
+//                    AND faculty strings
+//       lecturers: array of lecturer strings
+//       prereqs: array of prerequisite strings
 //       preclusions: array of preclusions strings
-//       workload: array of preclusions strings,
+//       workload: array of preclusions strings
+//       departmentToFaculty: hash of department index -> faculty index. Both
+//                            these indices are to strings in the `departments`
+//                            strings array in this same `AUXMODULES` object
+//       lessonTypes: hash of different types of lesson string -> either the
+//                    string 'Lecture' or 'Tutorial'. This hash is obtained
+//                    from api.nusmods.com ; a concrete example is
+//                    http://api.nusmods.com/2013-2014/2/lessonTypes.json
 //     };
 
 
