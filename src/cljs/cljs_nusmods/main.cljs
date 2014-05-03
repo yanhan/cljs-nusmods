@@ -33,14 +33,18 @@
             moduleMc        (module-array-repr/get-module-mc moduleArrayRepr)
             moduleLevel     (module-array-repr/get-module-level moduleArrayRepr)
             moduleTypeArray (aux-module-array-repr/get-module-types
-                             auxModuleArrayRepr)]
+                             auxModuleArrayRepr)
+            moduleExamDate  (module-array-repr/get-module-exam-date
+                              examDateStringsArray moduleArrayRepr)]
         (if (< idx 10)
           (do
             (.log js/console
               (str "Level of module " moduleCode " " moduleName " (" moduleMc
                    "Mcs) is " moduleLevel))
             (.log js/console
-              (str "Types of module: " moduleTypeArray))))))
+              (str "Types of module: " moduleTypeArray))
+            (.log js/console
+              (str "Module Exam Date: " moduleExamDate))))))
     ; Return the modulesArray
     modulesArray))
 

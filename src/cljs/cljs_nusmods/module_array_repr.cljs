@@ -28,3 +28,8 @@
   "Retrieves the mcs of a module from its array representation"
   [moduleArrayRepr]
   (nth moduleArrayRepr 2))
+
+(defn get-module-exam-date
+  "Retrieves the exam date string of a module from its array representation"
+  [examDateStringsArray moduleArrayRepr]
+  (nth examDateStringsArray (nth moduleArrayRepr 3)))
