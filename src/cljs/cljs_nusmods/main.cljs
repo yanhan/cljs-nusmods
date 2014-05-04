@@ -85,8 +85,8 @@
     modulesArray))
 
 (defn- add-module-types-to-exhibit-items
-  "Given a JavaScript Array used as the `items` value for an Exhibit database,
-   adds all the `ModuleType` to the Array and returns it"
+  "Adds `ModuleType` information to a JavaScript Array used as the `items`
+   value for an Exhibit database, and returns the Array."
   [itemsArray]
   (.push itemsArray (js-obj "type" "ModuleType", "label" "Faculty"))
   (.push itemsArray (js-obj "type" "ModuleType", "label" "Breadth / UE"))
