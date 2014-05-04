@@ -127,3 +127,17 @@
     (if (= modulePreclusionsIndex -1)
         -1
         (nth preclusionsStringsArray modulePreclusionsIndex))))
+
+(defn- get-module-workload
+  "Returns an integer index to a JavaScript Array of Module Workload Strings."
+  [auxModuleArrayRepr]
+  (nth auxModuleArrayRepr 6))
+
+(defn get-module-workload-string
+  "Returns a String of the workload of a Module or the integer -1 if it has no
+   workload, given a Module's auxiliary array representation."
+  [workloadStringsArray auxModuleArrayRepr]
+  (let [workloadIndex (get-module-workload auxModuleArrayRepr)]
+    (if (= workloadIndex -1)
+        -1
+        (nth workloadStringsArray workloadIndex))))

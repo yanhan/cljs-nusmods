@@ -58,6 +58,8 @@
             modulePreclusions
               (aux-module-array-repr/get-module-preclusions-string
                 preclusionsStringsArray auxModuleArrayRepr)
+            moduleWorkload    (aux-module-array-repr/get-module-workload-string
+                                workloadStringsArray auxModuleArrayRepr)
             ; This will be pushed onto the `modulesArray` to be returned by
             ; the function
             jsModule          (js-obj "type" "Module", "label" moduleCode,
@@ -76,6 +78,8 @@
             (aset jsModule "prereqs" modulePrereqs))
         (if (not= modulePreclusions -1)
             (aset jsModule "preclusions" modulePreclusions))
+        (if (not= moduleWorkload -1)
+            (aset jsModule "workload" moduleWorkload))
         (if (< idx 10)
             (.log js/console (.stringify js/JSON jsModule)))))
     ; Return the modulesArray

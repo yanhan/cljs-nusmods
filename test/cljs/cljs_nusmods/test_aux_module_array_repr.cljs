@@ -87,3 +87,14 @@
   (is (= -1 (aux-module-array-repr/get-module-preclusions-string
               (array "String One" "String Two" "String Three")
               (array 0 0 0 0 0 -1)))))
+
+(deftest test-get-module-workload-string-has-workload
+  (is (= "4-4-2-4-8"
+         (aux-module-array-repr/get-module-workload-string
+           (array "1-2-3-4-5" "3-4-5" "6-8-9-1-3" "4-4-2-4-8" "5-6-9-1-3")
+           (array 0 0 0 0 0 0 3)))))
+
+(deftest test-get-module-workload-string-no-workload
+  (is (= -1 (aux-module-array-repr/get-module-workload-string
+              (array "workload1" "workload2")
+              (array 0 0 0 0 0 0 -1)))))
