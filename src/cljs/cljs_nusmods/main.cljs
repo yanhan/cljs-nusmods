@@ -49,6 +49,8 @@
                                 departmentToFacultyIndexHash
                                 departmentStringsArray
                                 auxModuleArrayRepr)
+            moduleDescription (aux-module-array-repr/get-module-description
+                                auxModuleArrayRepr)
             ; This will be pushed onto the `modulesArray` to be returned by
             ; the function
             jsModule          (js-obj "type" "Module", "label" moduleCode,
@@ -58,9 +60,7 @@
                                       "exam" moduleExamDate,
                                       "lectureTimings" lectureTimings,
                                       "tutorialTimings" tutorialTimings,
-                                      "department" moduleDepartment)
-            moduleDescription (aux-module-array-repr/get-module-description
-                                auxModuleArrayRepr)]
+                                      "department" moduleDepartment)]
         (if (not= moduleDescription -1)
             (aset jsModule "description" moduleDescription))
         (if (< idx 10)
