@@ -2,7 +2,8 @@
   cljs-nusmods.main
   (:use [jayq.core :only [$ one]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
-            [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]))
+            [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
+            [cljs-nusmods.time                  :as time-helper]))
 
 (defn ^{:doc "Wrapper for $.getScript"
         :private true}
@@ -117,12 +118,27 @@
                                   "subtopicOf" facultyString))))
     itemsArray))
 
+(defn- add-lesson-time-to-exhibit-items
+  "Adds `LessonTime` information to a JavaScript Array used as the `items`
+   value for an Exhibit 3 database, and returns the Array.
+   This enables the filter by `Lecture Timings` and filter by `Tutorial Timings`
+   HierarchicalFacets on the Module Finder page."
+  [itemsArray]
+  (let [timeOfDayVec ["Morning" "Afternoon" "Evening"]]
+    (doseq [day time-helper/DAY_INTEGER_TO_STRING]
+      (doseq [timeOfDay timeOfDayVec]
+        (.push itemsArray (js-obj "type"       "LessonTime"
+                                  "label"      (str day " " timeOfDay)
+                                  "subtopicOf" day))))
+    itemsArray))
+
 (defn- add-aux-info-to-exhibit-items
   "Add `ModuleType` and `ModuleDepartment` information to a JavaScript Array
    used as the `items` value for an Exhibit 3 database, and returns the Array."
   [AUXMODULES itemsArray]
   (add-module-types-to-exhibit-items itemsArray)
   (add-module-departments-to-exhibit-items AUXMODULES itemsArray)
+  (add-lesson-time-to-exhibit-items itemsArray)
   itemsArray)
 
 ; Main entry point of the program
