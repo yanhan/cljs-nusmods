@@ -112,3 +112,18 @@
     (if (= modulePrereqsIndex -1)
         -1
         (nth prereqsStringsArray modulePrereqsIndex))))
+
+(defn- get-module-preclusions
+  "Returns an integer index to a JavaScript Array of Module Preclusions
+   Strings."
+  [auxModuleArrayRepr]
+  (nth auxModuleArrayRepr 5))
+
+(defn get-module-preclusions-string
+  "Returns a String of the preclusions of a Module or the integer -1 if it has
+   no preclusions, given a Module's auxiliary array representation."
+  [preclusionsStringsArray auxModuleArrayRepr]
+  (let [modulePreclusionsIndex (get-module-preclusions auxModuleArrayRepr)]
+    (if (= modulePreclusionsIndex -1)
+        -1
+        (nth preclusionsStringsArray modulePreclusionsIndex))))

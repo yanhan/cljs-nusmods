@@ -55,6 +55,9 @@
                                 lecturersStringsArray auxModuleArrayRepr)
             modulePrereqs     (aux-module-array-repr/get-module-prereqs-string
                                 prereqsStringsArray auxModuleArrayRepr)
+            modulePreclusions
+              (aux-module-array-repr/get-module-preclusions-string
+                preclusionsStringsArray auxModuleArrayRepr)
             ; This will be pushed onto the `modulesArray` to be returned by
             ; the function
             jsModule          (js-obj "type" "Module", "label" moduleCode,
@@ -71,6 +74,8 @@
             (aset jsModule "lecturers" moduleLecturers))
         (if (not= modulePrereqs -1)
             (aset jsModule "prereqs" modulePrereqs))
+        (if (not= modulePreclusions -1)
+            (aset jsModule "preclusions" modulePreclusions))
         (if (< idx 10)
             (.log js/console (.stringify js/JSON jsModule)))))
     ; Return the modulesArray

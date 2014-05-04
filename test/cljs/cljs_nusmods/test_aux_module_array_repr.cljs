@@ -76,3 +76,14 @@
   (is (= -1 (aux-module-array-repr/get-module-prereqs-string
               (array "A1" "A2" "A3")
               (array 0 0 0 0 -1)))))
+
+(deftest test-get-module-preclusions-string-has-preclusions
+  (is (= "ModOneA, ModOneB, ModOneE"
+         (aux-module-array-repr/get-module-preclusions-string
+           (array "String One" "ModOneA, ModOneB, ModOneE", "ModTwo")
+           (array 0 0 0 0 0 1)))))
+
+(deftest test-get-module-preclusions-string-no-preclusions
+  (is (= -1 (aux-module-array-repr/get-module-preclusions-string
+              (array "String One" "String Two" "String Three")
+              (array 0 0 0 0 0 -1)))))
