@@ -33,3 +33,22 @@
   (let [resultArray (aux-module-array-repr/get-module-types (array 0 0 0))]
     (is (and (= (.-length resultArray) 1)
              (= aux-module-array-repr/NOT_IN_CORS (nth resultArray 0))))))
+
+(deftest test-get-module-department-has-faculty
+  (let [moduleDepartment (aux-module-array-repr/get-module-department
+                           (js-obj 0 1, 1 1, 2 2, 3 1, 4 2, 5 1)
+                           (array "Chemistry" "Science" "Engineering"
+                                  "Mathematics" "Electrical Engineering"
+                                  "Statistics")
+                           (array 0 3))]
+    (and (is (= 1 (.-length moduleDepartment)))
+         (is (= "Mathematics" (first moduleDepartment))))))
+
+(deftest test-get-module-department-no-faculty
+  (let [moduleDepartment (aux-module-array-repr/get-module-department
+                           (js-obj 0 2, 1 2, 2 2, 3 5, 4 5, 5 5, 6 6)
+                           (array "Computer Science" "Information Systems"
+                                  "School of Computing" "Economics" "Philosophy"
+                                  "Arts & Social Sciences" "Law")
+                           (array 0 6))]
+    (is (= "Law" moduleDepartment))))

@@ -28,20 +28,25 @@
        ]
     (doseq [[idx moduleArrayRepr auxModuleArrayRepr]
               (map vector (range) (aget MODULES "modules") auxModulesArray)]
-      (let [moduleCode      (module-array-repr/get-module-code moduleArrayRepr)
-            moduleName      (module-array-repr/get-module-name moduleArrayRepr)
-            moduleMc        (module-array-repr/get-module-mc moduleArrayRepr)
-            moduleLevel     (module-array-repr/get-module-level moduleArrayRepr)
-            moduleTypeArray (aux-module-array-repr/get-module-types
-                             auxModuleArrayRepr)
-            moduleExamDate  (module-array-repr/get-module-exam-date
-                              examDateStringsArray moduleArrayRepr)
-            lectureTimings  (module-array-repr/get-module-lecture-timings
-                              lessonTypesHash lessonTypesStringsArray
-                              moduleArrayRepr)
-            tutorialTimings (module-array-repr/get-module-tutorial-timings
-                              lessonTypesHash lessonTypesStringsArray
-                              moduleArrayRepr)]
+      (let [moduleCode       (module-array-repr/get-module-code moduleArrayRepr)
+            moduleName       (module-array-repr/get-module-name moduleArrayRepr)
+            moduleMc         (module-array-repr/get-module-mc moduleArrayRepr)
+            moduleLevel      (module-array-repr/get-module-level
+                               moduleArrayRepr)
+            moduleTypeArray  (aux-module-array-repr/get-module-types
+                              auxModuleArrayRepr)
+            moduleExamDate   (module-array-repr/get-module-exam-date
+                               examDateStringsArray moduleArrayRepr)
+            lectureTimings   (module-array-repr/get-module-lecture-timings
+                               lessonTypesHash lessonTypesStringsArray
+                               moduleArrayRepr)
+            tutorialTimings  (module-array-repr/get-module-tutorial-timings
+                               lessonTypesHash lessonTypesStringsArray
+                               moduleArrayRepr)
+            moduleDepartment (aux-module-array-repr/get-module-department
+                               departmentToFacultyIndexHash
+                               departmentStringsArray
+                               auxModuleArrayRepr)]
         (if (< idx 10)
           (do
             (.log js/console
@@ -54,7 +59,8 @@
             (.log js/console
               (str "Lecture Timings: " lectureTimings))
             (.log js/console
-              (str "Tutorial Timings: " tutorialTimings))))))
+              (str "Tutorial Timings: " tutorialTimings))
+            (.log js/console (str "Department: " moduleDepartment))))))
     ; Return the modulesArray
     modulesArray))
 

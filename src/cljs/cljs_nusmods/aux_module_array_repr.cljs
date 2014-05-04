@@ -52,3 +52,26 @@
       (array NOT_IN_CORS)
       (clj->js (map (fn [moduleType] (get MODULE_TYPES_MAP moduleType))
                     moduleTypeVec)))))
+
+(defn- get-module-department-index
+  "Returns the department index (to an array of department strings) of a module
+   given its auxiliary array representation"
+  [auxModuleArrayRepr]
+  (nth auxModuleArrayRepr 1))
+
+(defn get-module-department
+  "Returns a String of the module's department if it has no faculty, else
+   returns a JavaScript Array with a single String of the module's department"
+  [departmentToFacultyIndexHash departmentStringsArray auxModuleArrayRepr]
+  (let [moduleDepartmentIndex (get-module-department-index auxModuleArrayRepr)
+        departmentString      (nth departmentStringsArray
+                                   moduleDepartmentIndex)]
+    (if (= moduleDepartmentIndex
+           (aget departmentToFacultyIndexHash moduleDepartmentIndex))
+      ; Module has no Faculty, return the Department String
+      departmentString
+      ; Module has a Faculty.
+      ; Return a JavaScript array of the Department String.
+      ; It turns out that using a JavaScript array is the key to having a nested
+      ; hierarchy for an Exhibit 3 HierarchicalFacet
+      (array departmentString))))
