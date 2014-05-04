@@ -98,3 +98,17 @@
       (map (fn [lecturerIdx]
              (nth lecturersStringsArray lecturerIdx))
            lecturersIndexArray))))
+
+(defn- get-module-prereqs
+  "Returns an integer index to an Array of Module Prerequisites Strings."
+  [auxModuleArrayRepr]
+  (nth auxModuleArrayRepr 4))
+
+(defn get-module-prereqs-string
+  "Returns a String of the prerequisites of a Module or the integer -1 if it has
+   no prerequisites, given the Module's auxiliary array representation."
+  [prereqsStringsArray auxModuleArrayRepr]
+  (let [modulePrereqsIndex (get-module-prereqs auxModuleArrayRepr)]
+    (if (= modulePrereqsIndex -1)
+        -1
+        (nth prereqsStringsArray modulePrereqsIndex))))

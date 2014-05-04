@@ -65,3 +65,14 @@
                           (array 0 0 0 (array 4 2 0 6)))]
     (is (= ["Sir Peter" "Miss Soft" "Mr Funny" "Lady Ace"]
            (js->clj moduleLecturers)))))
+
+(deftest test-get-module-prereqs-string-has-prereqs
+  (is (= "CS1010 or equivalent"
+         (aux-module-array-repr/get-module-prereqs-string
+           (array "String One" "String Two" "CS1010 or equivalent" "String 3")
+           (array 0 0 0 0 2)))))
+
+(deftest test-get-module-prereqs-string-no-prereqs
+  (is (= -1 (aux-module-array-repr/get-module-prereqs-string
+              (array "A1" "A2" "A3")
+              (array 0 0 0 0 -1)))))
