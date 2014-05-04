@@ -61,3 +61,9 @@
           from its array representation"}
   get-module-lecture-timings
   (module-lesson-timings-for-exhibit-filter-fn-maker "Lecture"))
+
+(def
+  ^{:doc "Returns a JavaScript array of strings of Tutorial timings of a module
+          from its array representation"}
+  get-module-tutorial-timings
+  (module-lesson-timings-for-exhibit-filter-fn-maker "Tutorial"))

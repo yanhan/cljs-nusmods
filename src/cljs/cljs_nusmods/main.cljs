@@ -38,6 +38,9 @@
                               examDateStringsArray moduleArrayRepr)
             lectureTimings  (module-array-repr/get-module-lecture-timings
                               lessonTypesHash lessonTypesStringsArray
+                              moduleArrayRepr)
+            tutorialTimings (module-array-repr/get-module-tutorial-timings
+                              lessonTypesHash lessonTypesStringsArray
                               moduleArrayRepr)]
         (if (< idx 10)
           (do
@@ -49,7 +52,9 @@
             (.log js/console
               (str "Module Exam Date: " moduleExamDate))
             (.log js/console
-              (str "Lecture Timings: " lectureTimings))))))
+              (str "Lecture Timings: " lectureTimings))
+            (.log js/console
+              (str "Tutorial Timings: " tutorialTimings))))))
     ; Return the modulesArray
     modulesArray))
 

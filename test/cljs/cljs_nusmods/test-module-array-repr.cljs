@@ -47,3 +47,31 @@
                       (array 0 2 4 6)
                       ; Recitation (Lecture), Friday 1000
                       (array 0 1 4 4))))))))
+
+(deftest test-get-module-tutorial-timings
+  (is (= ["Tuesday Afternoon" "Monday Morning" "Saturday Evening"
+          "Monday Evening"]
+         (js->clj
+           (module-array-repr/get-module-tutorial-timings
+             (js-obj "Seminar" "Lecture"
+                     "Laboratory" "Tutorial"
+                     "Tutorial" "Tutorial"
+                     "Lecture" "Lecture"
+                     "Recitation" "Lecture")
+             (array "Lecture" "Recitation" "Laboratory" "Seminar" "Tutorial")
+             (array 0 0 0 0
+                    (array
+                      ; Lecture, Monday 1230
+                      (array 0 0 0 9)
+                      ; Tutorial, Tuesday 1300
+                      (array 0 4 1 10)
+                      ; Laboratory (Tutorial), Monday 0900
+                      (array 0 2 0 2)
+                      ; Tutorial, Saturday 1800
+                      (array 0 4 5 20)
+                      ; Seminar, Wednesday 1800
+                      (array 0 3 2 20)
+                      ; Laboratory (Tutorial), Monday 1900
+                      (array 0 2 0 22)
+                      ; Recitation, Friday 1000
+                      (array 0 1 4 4))))))))
