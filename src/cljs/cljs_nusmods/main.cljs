@@ -28,35 +28,41 @@
        ]
     (doseq [[idx moduleArrayRepr auxModuleArrayRepr]
               (map vector (range) (aget MODULES "modules") auxModulesArray)]
-      (let [moduleCode       (module-array-repr/get-module-code moduleArrayRepr)
-            moduleName       (module-array-repr/get-module-name moduleArrayRepr)
-            moduleMc         (module-array-repr/get-module-mc moduleArrayRepr)
-            moduleLevel      (module-array-repr/get-module-level
-                               moduleArrayRepr)
-            moduleTypeArray  (aux-module-array-repr/get-module-types
-                              auxModuleArrayRepr)
-            moduleExamDate   (module-array-repr/get-module-exam-date
-                               examDateStringsArray moduleArrayRepr)
-            lectureTimings   (module-array-repr/get-module-lecture-timings
-                               lessonTypesHash lessonTypesStringsArray
-                               moduleArrayRepr)
-            tutorialTimings  (module-array-repr/get-module-tutorial-timings
-                               lessonTypesHash lessonTypesStringsArray
-                               moduleArrayRepr)
-            moduleDepartment (aux-module-array-repr/get-module-department
-                               departmentToFacultyIndexHash
-                               departmentStringsArray
+      (let [moduleCode        (module-array-repr/get-module-code
+                                moduleArrayRepr)
+            moduleName        (module-array-repr/get-module-name
+                                moduleArrayRepr)
+            moduleMc          (module-array-repr/get-module-mc moduleArrayRepr)
+            moduleLevel       (module-array-repr/get-module-level
+                                moduleArrayRepr)
+            moduleTypeArray   (aux-module-array-repr/get-module-types
                                auxModuleArrayRepr)
+            moduleExamDate    (module-array-repr/get-module-exam-date
+                                examDateStringsArray moduleArrayRepr)
+            lectureTimings    (module-array-repr/get-module-lecture-timings
+                                lessonTypesHash lessonTypesStringsArray
+                                moduleArrayRepr)
+            tutorialTimings   (module-array-repr/get-module-tutorial-timings
+                                lessonTypesHash lessonTypesStringsArray
+                                moduleArrayRepr)
+            moduleDepartment  (aux-module-array-repr/get-module-department
+                                departmentToFacultyIndexHash
+                                departmentStringsArray
+                                auxModuleArrayRepr)
             ; This will be pushed onto the `modulesArray` to be returned by
             ; the function
-            jsModule         (js-obj "type" "Module", "label" moduleCode,
-                                     "name" moduleName, "mc" moduleMc,
-                                     "level" moduleLevel,
-                                     "moduleType" moduleTypeArray,
-                                     "exam" moduleExamDate,
-                                     "lectureTimings" lectureTimings,
-                                     "tutorialTimings" tutorialTimings,
-                                     "department" moduleDepartment)]
+            jsModule          (js-obj "type" "Module", "label" moduleCode,
+                                      "name" moduleName, "mc" moduleMc,
+                                      "level" moduleLevel,
+                                      "moduleType" moduleTypeArray,
+                                      "exam" moduleExamDate,
+                                      "lectureTimings" lectureTimings,
+                                      "tutorialTimings" tutorialTimings,
+                                      "department" moduleDepartment)
+            moduleDescription (aux-module-array-repr/get-module-description
+                                auxModuleArrayRepr)]
+        (if (not= moduleDescription -1)
+            (aset jsModule "description" moduleDescription))
         (if (< idx 10)
             (.log js/console (.stringify js/JSON jsModule)))))
     ; Return the modulesArray

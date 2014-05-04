@@ -34,6 +34,11 @@
     (is (and (= (.-length resultArray) 1)
              (= aux-module-array-repr/NOT_IN_CORS (nth resultArray 0))))))
 
+(deftest test-get-module-description
+  (is (= "Basic culinary skills in 3 months =)"
+         (aux-module-array-repr/get-module-description
+           (array "Basic culinary skills in 3 months =)")))))
+
 (deftest test-get-module-department-has-faculty
   (let [moduleDepartment (aux-module-array-repr/get-module-department
                            (js-obj 0 1, 1 1, 2 2, 3 1, 4 2, 5 1)

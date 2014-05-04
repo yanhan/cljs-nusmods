@@ -53,6 +53,12 @@
       (clj->js (map (fn [moduleType] (get MODULE_TYPES_MAP moduleType))
                     moduleTypeVec)))))
 
+(defn get-module-description
+  "Returns the description of a Module, given its auxiliary array
+   representation"
+  [auxArrayRepr]
+  (nth auxArrayRepr 0))
+
 (defn- get-module-department-index
   "Returns the department index (to an array of department strings) of a module
    given its auxiliary array representation"
