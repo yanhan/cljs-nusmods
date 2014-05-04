@@ -164,7 +164,15 @@
               database     (aset js/window "database"
                                  (.create (.-Database Exhibit)))
               myExhibit    (aset js/window "exhibit" (.create Exhibit))]
-          (.loadData database (js-obj "items" modulesArray))
+          (.loadData
+            database
+            (js-obj "types"      (js-obj
+                                   "Module" (js-obj "pluralLabel" "Modules"))
+                    "properties" (js-obj
+                                   "mc"         (js-obj "valueType" "number")
+                                   "level"      (js-obj "valueType" "number")
+                                   "moduleType" (js-obj "valueType" "item"))
+                    "items"      itemsArray))
           (.configureFromDOM myExhibit))))
 
     ; Retrieve Exhibit 3.0 Library
