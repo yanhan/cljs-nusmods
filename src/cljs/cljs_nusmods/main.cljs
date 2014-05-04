@@ -95,6 +95,36 @@
   (.push itemsArray (js-obj "type" "ModuleType", "label" "Not in CORS"))
   itemsArray)
 
+(defn- add-module-departments-to-exhibit-items
+  "Adds `ModuleDepartment` information to a JavaScript Array used as the `items`
+   value for an Exhibit 3 database, and returns the Array.
+   This enables the HierarchicalFacet on the Module Finder page which filters
+   modules by Faculty / Department"
+  [AUXMODULES itemsArray]
+  (let [departmentToFacultyIndexHash (aget AUXMODULES "departmentToFaculty")
+        departmentStringsArray       (aget AUXMODULES "departments")]
+    (doseq [[departmentIdxString facultyIdx]
+              (filter (fn [kv]
+                        (let [departmentIdx (int (first kv))
+                              facultyIdx    (second kv)]
+                          (not= departmentIdx facultyIdx)))
+                      (js->clj departmentToFacultyIndexHash))]
+      (let [departmentIdx    (int departmentIdxString)
+            departmentString (nth departmentStringsArray departmentIdx)
+            facultyString    (nth departmentStringsArray facultyIdx)]
+        (.push itemsArray (js-obj "type"       "ModuleDepartment"
+                                  "label"      departmentString
+                                  "subtopicOf" facultyString))))
+    itemsArray))
+
+(defn- add-aux-info-to-exhibit-items
+  "Add `ModuleType` and `ModuleDepartment` information to a JavaScript Array
+   used as the `items` value for an Exhibit 3 database, and returns the Array."
+  [AUXMODULES itemsArray]
+  (add-module-types-to-exhibit-items itemsArray)
+  (add-module-departments-to-exhibit-items AUXMODULES itemsArray)
+  itemsArray)
+
 ; Main entry point of the program
 (defn ^:export init []
   ; Globals
@@ -112,7 +142,8 @@
     (one $document "scriptsLoaded.exhibit"
       (fn []
         (let [modulesArray (build-modules-array MODULES AUXMODULES)
-              itemsArray   (add-module-types-to-exhibit-items modulesArray)
+              itemsArray   (add-aux-info-to-exhibit-items AUXMODULES
+                                                          modulesArray)
               Exhibit      (aget js/window "Exhibit")
               database     (aset js/window "database"
                                  (.create (.-Database Exhibit)))
