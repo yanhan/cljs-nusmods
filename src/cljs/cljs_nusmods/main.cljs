@@ -141,6 +141,57 @@
   (add-lesson-time-to-exhibit-items itemsArray)
   itemsArray)
 
+(defn- select2-query-fn
+  "query function for the Select2 `Select Modules for Timetable` input"
+  [modulesArray]
+  (fn [options]
+    (let [result         (js-obj "results" (array))
+          resultsPerPage 20]
+      (if (nil? (aget options "context"))
+          (let [nrModules    (.-length modulesArray)
+                searchTerm   (.toUpperCase (aget options "term"))
+                firstResults (array)
+                modsSatisfyingSearchTerm
+                  (filter
+                    (fn [modObj]
+                      (let [haystack (str (.toUpperCase (aget modObj "label"))
+                                          " "
+                                          (.toUpperCase (aget modObj "name")))]
+                        (not= -1 (.indexOf haystack searchTerm))))
+                    modulesArray)]
+            (doseq [modObj modsSatisfyingSearchTerm]
+              (.push firstResults (js-obj "id"   (aget modObj "label"),
+                                          "text" (str (aget modObj "label")
+                                                      " "
+                                                      (aget modObj "name")))))
+            (aset options "context"
+                  (js-obj "searchResults" firstResults,
+                          "nrResults"     (.-length firstResults)))))
+      ; options.page starts counting from 1
+      (if (< (* resultsPerPage (- (aget options "page") 1))
+             (aget (aget options "context") "nrResults"))
+          (let [i     (* resultsPerPage (- (aget options "page") 1))
+                limit (min (+ i resultsPerPage)
+                           (aget (aget options "context") "nrResults"))]
+            (aset result "more" true)
+            (doseq [k (range i limit)]
+              (.push (aget result "results")
+                     (nth (aget (aget options "context") "searchResults") k))))
+          (aset result "more" false))
+      (aset result "context" (aget options "context"))
+      ((aget options "callback") result))))
+
+(defn- init-select2-input-box
+  "Initialize the Select2 `Select Modules for Timetable` input"
+  [modulesArray]
+  (let [$searchModules ($ :#search_modules)]
+    (.select2 $searchModules
+              (js-obj "multiple"      true
+                      "width"         "100%"
+                      "placeholder"   "Type code/title to add mods"
+                      "initSelection" (fn [])
+                      "query"         (select2-query-fn modulesArray)))))
+
 ; Main entry point of the program
 (defn ^:export init []
   ; Globals
@@ -158,8 +209,9 @@
     (one $document "scriptsLoaded.exhibit"
       (fn []
         (let [modulesArray (build-modules-array MODULES AUXMODULES)
-              itemsArray   (add-aux-info-to-exhibit-items AUXMODULES
-                                                          modulesArray)
+              itemsArray   (add-aux-info-to-exhibit-items
+                             AUXMODULES
+                             (.concat modulesArray (array)))
               Exhibit      (aget js/window "Exhibit")
               database     (aset js/window "database"
                                  (.create (.-Database Exhibit)))
@@ -173,7 +225,8 @@
                                    "level"      (js-obj "valueType" "number")
                                    "moduleType" (js-obj "valueType" "item"))
                     "items"      itemsArray))
-          (.configureFromDOM myExhibit))))
+          (.configureFromDOM myExhibit)
+          (init-select2-input-box modulesArray))))
 
     ; Retrieve Exhibit 3.0 Library
     (getScript "js/vendor/exhibit3-all.min.js" (fn []))))
