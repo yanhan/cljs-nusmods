@@ -40,16 +40,24 @@
   [moduleArrayRepr]
   (nth moduleArrayRepr 4))
 
-(defn get-module-lecture-timings
-  "Retrieves a JavaScript array of strings of the lecture timings of a module
-   from its array representation"
-  [lessonTypesHash lessonTypesStringsArray moduleArrayRepr]
-  (let [timetable (get-module-timetable moduleArrayRepr)]
-    (clj->js
-      (map lesson-array-repr/get-lesson-start-time-string-for-exhibit-filter
-           (filter
-             (fn [lessonArrayRepr]
-               (= "Lecture"
-                  (lesson-array-repr/get-lesson-type-string
-                    lessonTypesHash lessonTypesStringsArray lessonArrayRepr)))
-             timetable)))))
+(defn- module-lesson-timings-for-exhibit-filter-fn-maker
+  "Given a lesson type (the string 'Lecture' or 'Tutorial'), returns a function
+   which when given the array representation of a Module, returns a JavaScript
+   array of strings of lesson timings for that type of lesson"
+  [lessonType]
+  (fn [lessonTypesHash lessonTypesStringsArray moduleArrayRepr]
+    (let [timetable (get-module-timetable moduleArrayRepr)]
+      (clj->js
+        (map lesson-array-repr/get-lesson-start-time-string-for-exhibit-filter
+             (filter
+               (fn [lessonArrayRepr]
+                 (= lessonType
+                    (lesson-array-repr/get-lesson-type-string
+                      lessonTypesHash lessonTypesStringsArray lessonArrayRepr)))
+               timetable))))))
+
+(def
+  ^{:doc "Returns a JavaScript array of strings of Lecture timings of a module
+          from its array representation"}
+  get-module-lecture-timings
+  (module-lesson-timings-for-exhibit-filter-fn-maker "Lecture"))
