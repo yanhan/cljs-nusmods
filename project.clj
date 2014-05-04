@@ -18,7 +18,8 @@
       :compiler {
         :output-to "resources/public/js/main.js"
         :optimizations :advanced
-        :externs ["externs/jquery-1.9.js" "externs/foundation.js"]}
+        :externs ["externs/jquery-1.9.js" "externs/foundation.js"
+                  "externs/exhibit3.js"]}
     } {
       :source-paths ["src/cljs" "test/cljs"]
       :compiler {

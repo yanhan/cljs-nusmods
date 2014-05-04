@@ -80,8 +80,7 @@
             (aset jsModule "preclusions" modulePreclusions))
         (if (not= moduleWorkload -1)
             (aset jsModule "workload" moduleWorkload))
-        (if (< idx 10)
-            (.log js/console (.stringify js/JSON jsModule)))))
+        (.push modulesArray jsModule)))
     ; Return the modulesArray
     modulesArray))
 
@@ -101,8 +100,13 @@
     ; Create modules
     (one $document "scriptsLoaded.exhibit"
       (fn []
-        (let [modulesArray (build-modules-array MODULES AUXMODULES)]
-          (.log js/console modulesArray))))
+        (let [modulesArray (build-modules-array MODULES AUXMODULES)
+              Exhibit      (aget js/window "Exhibit")
+              database     (aset js/window "database"
+                                 (.create (.-Database Exhibit)))
+              myExhibit    (aset js/window "exhibit" (.create Exhibit))]
+          (.loadData database (js-obj "items" modulesArray))
+          (.configureFromDOM myExhibit))))
 
     ; Retrieve Exhibit 3.0 Library
     (getScript "js/vendor/exhibit3-all.min.js" (fn []))))
