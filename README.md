@@ -74,6 +74,16 @@ to `resources/public/js/vendor/exhibit3-all.min.js`
 library and places them under the same directory hierarchy at
 `resources/public/exhibit3/`
 
+### Compiling ClojureScript
+
+To clean any compiled files:
+
+    lein cljsbuild clean
+
+To compile the ClojureScript code into JavaScript:
+
+    lein cljsbuild once
+
 ## Running the web server
 
     lein ring server-headless
