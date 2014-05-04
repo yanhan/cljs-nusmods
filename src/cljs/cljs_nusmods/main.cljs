@@ -84,6 +84,17 @@
     ; Return the modulesArray
     modulesArray))
 
+(defn- add-module-types-to-exhibit-items
+  "Given a JavaScript Array used as the `items` value for an Exhibit database,
+   adds all the `ModuleType` to the Array and returns it"
+  [itemsArray]
+  (.push itemsArray (js-obj "type" "ModuleType", "label" "Faculty"))
+  (.push itemsArray (js-obj "type" "ModuleType", "label" "Breadth / UE"))
+  (.push itemsArray (js-obj "type" "ModuleType", "label" "Singapore Studies"))
+  (.push itemsArray (js-obj "type" "ModuleType", "label" "GEM"))
+  (.push itemsArray (js-obj "type" "ModuleType", "label" "Not in CORS"))
+  itemsArray)
+
 ; Main entry point of the program
 (defn ^:export init []
   ; Globals
@@ -101,6 +112,7 @@
     (one $document "scriptsLoaded.exhibit"
       (fn []
         (let [modulesArray (build-modules-array MODULES AUXMODULES)
+              itemsArray   (add-module-types-to-exhibit-items modulesArray)
               Exhibit      (aget js/window "Exhibit")
               database     (aset js/window "database"
                                  (.create (.-Database Exhibit)))
