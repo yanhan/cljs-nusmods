@@ -184,7 +184,7 @@
 (defn- init-select2-input-box
   "Initialize the Select2 `Select Modules for Timetable` input"
   [modulesArray]
-  (let [$searchModules ($ :#search_modules)]
+  (let [$searchModules ($ :#search-modules)]
     (.select2 $searchModules
               (js-obj "multiple"      true
                       "width"         "100%"
@@ -196,7 +196,7 @@
   "Code for `(Clear Modules)` button on top of the `Select Modules for
    Timetable` input box"
   []
-  (let [$searchModules       ($ :#search_modules)
+  (let [$searchModules       ($ :#search-modules)
         $noneSelectedDiv     ($ :#search-modules-none-selected-div)
         $someSelectedDiv     ($ :#search-modules-selected-div)
         $someSelectedDivText ($ :#search-modules-nr-selected)]
