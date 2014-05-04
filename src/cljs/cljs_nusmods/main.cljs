@@ -1,6 +1,6 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
-  (:use [jayq.core :only [$ one]])
+  (:use [jayq.core :only [$ hide is one prevent show]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.time                  :as time-helper]))
@@ -192,6 +192,68 @@
                       "initSelection" (fn [])
                       "query"         (select2-query-fn modulesArray)))))
 
+(defn- init-dom-clear-modules
+  "Code for `(Clear Modules)` button on top of the `Select Modules for
+   Timetable` input box"
+  []
+  (let [$searchModules       ($ :#search_modules)
+        $noneSelectedDiv     ($ :#search-modules-none-selected-div)
+        $someSelectedDiv     ($ :#search-modules-selected-div)
+        $someSelectedDivText ($ :#search-modules-nr-selected)]
+    (hide $someSelectedDiv)
+    (.change
+      $searchModules
+      (fn [evt]
+        (cond
+          ; some module has just been added
+          (aget evt "added")
+          (do
+            (if (is $noneSelectedDiv ":visible")
+                (hide $noneSelectedDiv))
+            ; Add the new module to the `MODULES_SELECTED` global
+            (aset (aget js/window "MODULES_SELECTED")
+                  (aget (aget evt "added") "id")
+                  true)
+            (if (is $someSelectedDiv ":visible")
+                (.text $someSelectedDivText
+                       (str "Selected "
+                            (.-length (goog.object.getKeys
+                                        (aget js/window "MODULES_SELECTED")))
+                            " Modules"))
+                ; 0 modules -> 1 module
+                (do (.text $someSelectedDivText "Selected 1 Module")
+                    (show $someSelectedDiv))))
+
+          ; some module was removed
+          (aget evt "removed")
+          (do
+            (js-delete (aget js/window "MODULES_SELECTED")
+                       (aget (aget evt "removed") "id"))
+            (let [nrModulesSelected
+                  (.-length (goog.object.getKeys
+                              (aget js/window "MODULES_SELECTED")))]
+              (cond
+                (<= nrModulesSelected 0)
+                (do (hide $someSelectedDiv)
+                    (show $noneSelectedDiv))
+
+                (= nrModulesSelected 1)
+                (.text $someSelectedDivText "Selected 1 Module")
+
+                :else
+                (.text $someSelectedDivText
+                       (str "Selected " nrModulesSelected " Modules"))))))))
+
+    (.click ($ :#search-modules-clear-all-modules)
+            (fn [evt]
+              (prevent evt)
+              (if (js/confirm
+                     "Are you sure you want to clear all selected modules?")
+                  (do (aset js/window "MODULES_SELECTED" (js-obj))
+                      (.select2 $searchModules "val" "")
+                      (hide $someSelectedDiv)
+                      (show $noneSelectedDiv)))))))
+
 ; Main entry point of the program
 (defn ^:export init []
   ; Globals
@@ -226,7 +288,8 @@
                                    "moduleType" (js-obj "valueType" "item"))
                     "items"      itemsArray))
           (.configureFromDOM myExhibit)
-          (init-select2-input-box modulesArray))))
+          (init-select2-input-box modulesArray)
+          (init-dom-clear-modules))))
 
     ; Retrieve Exhibit 3.0 Library
     (getScript "js/vendor/exhibit3-all.min.js" (fn []))))
