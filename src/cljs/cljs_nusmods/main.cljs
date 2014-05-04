@@ -46,21 +46,19 @@
             moduleDepartment (aux-module-array-repr/get-module-department
                                departmentToFacultyIndexHash
                                departmentStringsArray
-                               auxModuleArrayRepr)]
+                               auxModuleArrayRepr)
+            ; This will be pushed onto the `modulesArray` to be returned by
+            ; the function
+            jsModule         (js-obj "type" "Module", "label" moduleCode,
+                                     "name" moduleName, "mc" moduleMc,
+                                     "level" moduleLevel,
+                                     "moduleType" moduleTypeArray,
+                                     "exam" moduleExamDate,
+                                     "lectureTimings" lectureTimings,
+                                     "tutorialTimings" tutorialTimings,
+                                     "department" moduleDepartment)]
         (if (< idx 10)
-          (do
-            (.log js/console
-              (str "Level of module " moduleCode " " moduleName " (" moduleMc
-                   "Mcs) is " moduleLevel))
-            (.log js/console
-              (str "Types of module: " moduleTypeArray))
-            (.log js/console
-              (str "Module Exam Date: " moduleExamDate))
-            (.log js/console
-              (str "Lecture Timings: " lectureTimings))
-            (.log js/console
-              (str "Tutorial Timings: " tutorialTimings))
-            (.log js/console (str "Department: " moduleDepartment))))))
+            (.log js/console (.stringify js/JSON jsModule)))))
     ; Return the modulesArray
     modulesArray))
 
