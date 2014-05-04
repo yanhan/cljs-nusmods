@@ -81,3 +81,20 @@
       ; It turns out that using a JavaScript array is the key to having a nested
       ; hierarchy for an Exhibit 3 HierarchicalFacet
       (array departmentString))))
+
+(defn- get-module-lecturers-index-array
+  "Returns a JavaScript Array of indices to an array of Lecturer Strings of a
+   module given its auxiliary array representation"
+  [auxModuleArrayRepr]
+  (nth auxModuleArrayRepr 3))
+
+(defn get-module-lecturers
+  "Returns a JavaScript Array of Strings, where each String is the name of a
+   Lecturer of the module."
+  [lecturersStringsArray auxModuleArrayRepr]
+  (let [lecturersIndexArray (get-module-lecturers-index-array
+                              auxModuleArrayRepr)]
+    (clj->js
+      (map (fn [lecturerIdx]
+             (nth lecturersStringsArray lecturerIdx))
+           lecturersIndexArray))))

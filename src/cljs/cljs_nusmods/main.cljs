@@ -51,6 +51,8 @@
                                 auxModuleArrayRepr)
             moduleDescription (aux-module-array-repr/get-module-description
                                 auxModuleArrayRepr)
+            moduleLecturers   (aux-module-array-repr/get-module-lecturers
+                                lecturersStringsArray auxModuleArrayRepr)
             ; This will be pushed onto the `modulesArray` to be returned by
             ; the function
             jsModule          (js-obj "type" "Module", "label" moduleCode,
@@ -63,6 +65,8 @@
                                       "department" moduleDepartment)]
         (if (not= moduleDescription -1)
             (aset jsModule "description" moduleDescription))
+        (if (not (empty? moduleLecturers))
+            (aset jsModule "lecturers" moduleLecturers))
         (if (< idx 10)
             (.log js/console (.stringify js/JSON jsModule)))))
     ; Return the modulesArray

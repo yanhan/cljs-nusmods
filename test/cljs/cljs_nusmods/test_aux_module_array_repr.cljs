@@ -57,3 +57,11 @@
                                   "Arts & Social Sciences" "Law")
                            (array 0 6))]
     (is (= "Law" moduleDepartment))))
+
+(deftest test-get-module-lecturers
+  (let [moduleLecturers (aux-module-array-repr/get-module-lecturers
+                          (array "Mr Funny" "Mr Boring" "Miss Soft" "Mr Strong"
+                                 "Sir Peter" "King Danny" "Lady Ace")
+                          (array 0 0 0 (array 4 2 0 6)))]
+    (is (= ["Sir Peter" "Miss Soft" "Mr Funny" "Lady Ace"]
+           (js->clj moduleLecturers)))))
