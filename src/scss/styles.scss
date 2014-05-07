@@ -99,12 +99,10 @@ div.exhibit-flowingFacet {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#timetable {
-  border: 0;
-}
+$half-hour-width: 35px;
 
-#timetable-times {
-  border: 0;
+#timetable {
+  width: $half-hour-width * 32;
 }
 
 .m00 {
@@ -112,5 +110,6 @@ div.exhibit-flowingFacet {
 }
 
 .day-row > td {
-  width: 50px;
+  width: $half-hour-width;
+  height: 40px;
 }

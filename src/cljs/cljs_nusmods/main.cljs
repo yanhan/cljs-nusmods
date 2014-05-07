@@ -264,9 +264,6 @@
     ; Initialize window.MODULES_SELECTED
     (aset js/window "MODULES_SELECTED" (js-obj))
 
-    ; initialize Zurb Foundation
-    (.foundation $document)
-
     ; Create modules
     (one $document "scriptsLoaded.exhibit"
       (fn []
