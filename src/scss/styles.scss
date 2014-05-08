@@ -113,3 +113,7 @@ $half-hour-width: 35px;
   width: $half-hour-width;
   height: 40px;
 }
+
+div.tab-content.hide {
+  display: none;
+}

@@ -13,14 +13,14 @@
     <script src="js/vendor/modernizr.js"></script>
   </head>
   <body>
-    <div class="nav-div">
-      <dl class="tabs dl-nav-tab" data-tab>
-        <dd class="active"><a href="#module-finder">Module Finder</a></dd>
-        <dd><a href="#timetable-builder">Timetable Builder</a></dd>
-      </dl>
+    <div id="nav-tabs">
+      <ul>
+        <li><a id="module-finder-tab-link" href="#module-finder">Module Finder</a></li>
+        <li><a id="timetable-builder-tab-link" href="#timetable-builder">Timetable Builder</a></li>
+      </ul>
     </div>
-    <div class="tabs-content">
-      <div class="content active" id="module-finder">
+    <div>
+      <div class="tab-content" id="module-finder">
         <div class="medium-3 columns">
           <div style="width: 100%;">
             <div id="search-modules-none-selected-div">
@@ -154,7 +154,7 @@
           </div>
         </div>
       </div>
-      <div class="content" id="timetable-builder">
+      <div class="tab-content" id="timetable-builder">
         <table id="timetable">
           <tbody>
             <tr id="timetable-times">

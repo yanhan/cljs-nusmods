@@ -1,6 +1,6 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
-  (:use [jayq.core :only [$ hide is one prevent show]])
+  (:use [jayq.core :only [$ document-ready hide is one prevent show]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.time                  :as time-helper]))
@@ -254,39 +254,76 @@
                       (hide $someSelectedDiv)
                       (show $noneSelectedDiv)))))))
 
+(def ^{:doc "Index for the Module Finder tab"
+       :private true}
+  MODULEFINDER-TAB-INDEX 0)
+
+(def ^{:doc "Index for the Timetable Builder tab"
+       :private true}
+  TIMETABLE-TAB-INDEX 1)
+
+(defn- initialize-exhibit3 [MODULES AUXMODULES]
+  "Initialize Exhibit3 database and UI for Module Finder page"
+  (if (and (not (aget js/window "Exhibit3_Initialized"))
+           (aget js/window "Exhibit3_Loaded")
+           (= (aget js/window "ActiveTab") MODULEFINDER-TAB-INDEX)
+           )
+    (let [modulesArray (build-modules-array MODULES AUXMODULES)
+          itemsArray   (add-aux-info-to-exhibit-items
+                         AUXMODULES
+                         (.concat modulesArray (array)))
+          Exhibit      (aget js/window "Exhibit")
+          database     (aset js/window "database"
+                             (.create (.-Database Exhibit)))
+          myExhibit    (aset js/window "exhibit" (.create Exhibit))]
+      (.loadData
+        database
+        (js-obj "types"      (js-obj
+                               "Module" (js-obj "pluralLabel" "Modules"))
+                "properties" (js-obj
+                               "mc"         (js-obj "valueType" "number")
+                               "level"      (js-obj "valueType" "number")
+                               "moduleType" (js-obj "valueType" "item"))
+                "items"      itemsArray))
+      (.configureFromDOM myExhibit)
+      (init-select2-input-box modulesArray)
+      (init-dom-clear-modules)
+      (aset js/window "Exhibit3_Initialized" true))))
+
 ; Main entry point of the program
 (defn ^:export init []
   ; Globals
-  (let [$document  ($ js/document)
-        AUXMODULES (aget js/window "AUXMODULES")
-        MODULES    (aget js/window "MODULES")]
+  (let [$document     ($ js/document)
+        AUXMODULES    (aget js/window "AUXMODULES")
+        MODULES       (aget js/window "MODULES")]
 
     ; Initialize window.MODULES_SELECTED
     (aset js/window "MODULES_SELECTED" (js-obj))
 
+    (aset js/window "Exhibit3_Initialized" false)
+    (aset js/window "Exhibit3_Loaded" false)
+    (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
+
+    ; Code for tabs
+    (hide ($ :#module-finder))
+    (.click ($ :#module-finder-tab-link)
+            (fn []
+              (hide ($ :#timetable-builder))
+              (show ($ :#module-finder))
+              (aset js/window "ActiveTab" MODULEFINDER-TAB-INDEX)
+              (initialize-exhibit3 MODULES AUXMODULES)))
+
+    (.click ($ :#timetable-builder-tab-link)
+            (fn []
+              (hide ($ :#module-finder))
+              (show ($ :#timetable-builder))
+              (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)))
+
     ; Create modules
     (one $document "scriptsLoaded.exhibit"
-      (fn []
-        (let [modulesArray (build-modules-array MODULES AUXMODULES)
-              itemsArray   (add-aux-info-to-exhibit-items
-                             AUXMODULES
-                             (.concat modulesArray (array)))
-              Exhibit      (aget js/window "Exhibit")
-              database     (aset js/window "database"
-                                 (.create (.-Database Exhibit)))
-              myExhibit    (aset js/window "exhibit" (.create Exhibit))]
-          (.loadData
-            database
-            (js-obj "types"      (js-obj
-                                   "Module" (js-obj "pluralLabel" "Modules"))
-                    "properties" (js-obj
-                                   "mc"         (js-obj "valueType" "number")
-                                   "level"      (js-obj "valueType" "number")
-                                   "moduleType" (js-obj "valueType" "item"))
-                    "items"      itemsArray))
-          (.configureFromDOM myExhibit)
-          (init-select2-input-box modulesArray)
-          (init-dom-clear-modules))))
+         (fn []
+           (aset js/window "Exhibit3_Loaded" true)
+           (initialize-exhibit3 MODULES AUXMODULES)))
 
     ; Retrieve Exhibit 3.0 Library
     (getScript "js/vendor/exhibit3-all.min.js" (fn []))))
