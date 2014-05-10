@@ -289,8 +289,6 @@
                                "moduleType" (js-obj "valueType" "item"))
                 "items"      itemsArray))
       (.configureFromDOM myExhibit)
-      (init-select2-element :#search-modules)
-      (init-dom-clear-modules)
       (aset js/window "Exhibit3_Initialized" true))))
 
 (defn- build-lessons-map-from-module-timetable
@@ -389,6 +387,10 @@
     (aset js/window "Exhibit3_Loaded" false)
     (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
     (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
+
+    ; Iniialize Select2
+    (init-select2-element :#search-modules)
+    (init-dom-clear-modules)
 
     ; Code for tabs
     (hide ($ :#module-finder))
