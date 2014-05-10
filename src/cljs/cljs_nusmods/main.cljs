@@ -342,6 +342,8 @@
    Lessons contain the following keys and values:
 
        :venue        String of the lesson venue
+       :day          0-indexed Integer of the day, where 0 = Monday,
+                       1 = Tuesday, etc, until 4 = Friday
        :startTime    0-indexed Integer of the time, where 0 = 0800, 1 = 0830,
                        and so on.
        :endTime      0-indexed Integer, similar meaning as :startTime
@@ -353,14 +355,15 @@
                                 lessonArrayRepr)
                   lessonType  (lesson-array-repr/get-lesson-type-string
                                 lessonArrayRepr lessonTypesStringsArray)
+                  lessonDay   (lesson-array-repr/get-lesson-day lessonArrayRepr)
                   lessonVenue (lesson-array-repr/get-lesson-venue-string
                                 lessonArrayRepr venuesStringsArray)
                   startTime   (lesson-array-repr/get-lesson-start-time
                                 lessonArrayRepr)
                   endTime     (lesson-array-repr/get-lesson-end-time
                                 lessonArrayRepr)
-                  lessonRepr  {:venue lessonVenue, :startTime startTime,
-                               :endTime endTime}]
+                  lessonRepr  {:venue lessonVenue, :day lessonDay,
+                               :startTime startTime, :endTime endTime}]
               (update-in lessonsMap ["lessons" lessonType lessonLabel]
                          (fn [lessonsVec]
                            (if (empty? lessonsVec)
