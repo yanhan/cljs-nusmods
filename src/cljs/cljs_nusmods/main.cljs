@@ -152,39 +152,36 @@
     (if (nil? (aget options "context"))
         (let [nrModules    (count ModulesMap)
               searchTerm   (.toUpperCase (aget options "term"))
+              ; vector of initial search results
               firstResults
                 (reduce
-                  (fn [resultsArray [moduleCode module]]
+                  (fn [resultsVec [moduleCode module]]
                     (let [moduleName (get module "name")
                           haystack   (str (.toUpperCase moduleCode)
                                           " "
                                           (.toUpperCase moduleName))]
                       (if (not= -1 (.indexOf haystack searchTerm))
-                          (.push resultsArray
-                                 (js-obj "id"   moduleCode
-                                         "text" (str moduleCode " "
-                                                     moduleName))))
-                      resultsArray))
-                  (array)
-                  ModulesMap)]
+                          (conj resultsVec
+                                {:id   moduleCode
+                                 :text (str moduleCode " " moduleName)})
+                          resultsVec)))
+                  []
+                  ModulesMap)
+              sortedSearchResults
+                (sort (fn [modA modB] (< (:id modA) (:id modB))) firstResults)]
           (aset options "context"
-                (js-obj "searchResults"
-                        (sort (fn [modA modB]
-                                (< (aget modA "id") (aget modB "id")))
-                              firstResults),
-                        "nrResults"
-                        (.-length firstResults)))))
-    ; options.page starts counting from 1
-    (if (< (* resultsPerPage (- (aget options "page") 1))
-           (aget (aget options "context") "nrResults"))
-        (let [i     (* resultsPerPage (- (aget options "page") 1))
-              limit (min (+ i resultsPerPage)
-                         (aget (aget options "context") "nrResults"))]
-          (aset result "more" true)
-          (doseq [k (range i limit)]
-            (.push (aget result "results")
-                   (nth (aget (aget options "context") "searchResults") k))))
-        (aset result "more" false))
+                (js-obj "searchResults" sortedSearchResults))))
+
+    (let [ctx           (aget options "context")
+          searchResults (aget ctx "searchResults")]
+      (if (not (empty? searchResults))
+          (let [resultsForCurrentPage (take resultsPerPage searchResults)
+                remSearchResults      (drop resultsPerPage searchResults)]
+            (aset result "more" true)
+            (aset (aget options "context") "searchResults" remSearchResults)
+            (doseq [r resultsForCurrentPage]
+              (.push (aget result "results")
+                     (js-obj "id" (:id r), "text" (:text r)))))))
     (aset result "context" (aget options "context"))
     ((aget options "callback") result)))
 
