@@ -201,9 +201,9 @@
    Timetable` input box"
   []
   (let [$searchModules       ($ :#search-modules)
-        $noneSelectedDiv     ($ :#search-modules-none-selected-div)
-        $someSelectedDiv     ($ :#search-modules-selected-div)
-        $someSelectedDivText ($ :#search-modules-nr-selected)]
+        $noneSelectedDiv     ($ :.search-modules-none-selected-div)
+        $someSelectedDiv     ($ :.search-modules-selected-div)
+        $someSelectedDivText ($ :.search-modules-nr-selected)]
     (hide $someSelectedDiv)
     (.change
       $searchModules
@@ -248,7 +248,7 @@
                 (.text $someSelectedDivText
                        (str "Selected " nrModulesSelected " Modules"))))))))
 
-    (.click ($ :#search-modules-clear-all-modules)
+    (.click ($ :.search-modules-clear-all-modules)
             (fn [evt]
               (prevent evt)
               (if (js/confirm
