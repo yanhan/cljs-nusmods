@@ -4,7 +4,8 @@
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
-            [cljs-nusmods.time                  :as time-helper]))
+            [cljs-nusmods.time                  :as time-helper]
+            [cljs-nusmods.timetable             :as timetable]))
 
 (defn ^{:doc "Wrapper for $.getScript"
         :private true}
@@ -414,6 +415,9 @@
     (aset js/window "Exhibit3_Loaded" false)
     (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
     (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
+
+    ; Initialize timetable
+    (timetable/init)
 
     ; Iniialize Select2
     (init-select2-element :#search-modules)
