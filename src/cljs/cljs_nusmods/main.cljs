@@ -1,6 +1,6 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
-  (:use [jayq.core :only [$ document-ready hide is one prevent show]])
+  (:use [jayq.core :only [$ attr document-ready hide is one prevent show]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
@@ -188,73 +188,100 @@
    This function should only be called after the JavaScript global variable
    `ModulesMap` is set"
   [element-id]
-  (let [$element-id ($ element-id)]
-    (.select2 $element-id
-              (js-obj "multiple"      true
-                      "width"         "100%"
-                      "placeholder"   "Type code/title to add mods"
-                      "initSelection" (fn [])
-                      "query"         select2-query-fn))))
+  (let [$element-id ($ element-id)
+        ModulesMap  (aget js/window "ModulesMap")]
+    (.select2
+      $element-id
+      (js-obj
+        "multiple"      true
+        "width"         "100%"
+        "placeholder"   "Type code/title to add mods"
+        "initSelection"
+        (fn [elem callback]
+          (callback
+            (clj->js
+              (map (fn [moduleCode]
+                     {"id" moduleCode
+                      "text" (str moduleCode " "
+                                  (get-in ModulesMap [moduleCode "name"]))})
+                   (.split (.val elem) ",")))))
+
+        "query"         select2-query-fn))))
 
 (defn- init-dom-clear-modules
   "Code for `(Clear Modules)` button on top of the `Select Modules for
    Timetable` input box"
-  []
-  (let [$searchModules       ($ :#search-modules)
+  [select2-box-ids]
+  (let [$select2-boxes       (map (fn [box-id] ($ box-id)) select2-box-ids)
         $noneSelectedDiv     ($ :.search-modules-none-selected-div)
         $someSelectedDiv     ($ :.search-modules-selected-div)
         $someSelectedDivText ($ :.search-modules-nr-selected)]
+
     (hide $someSelectedDiv)
-    (.change
-      $searchModules
-      (fn [evt]
-        (cond
-          ; some module has just been added
-          (aget evt "added")
-          (do
-            (if (is $noneSelectedDiv ":visible")
-                (hide $noneSelectedDiv))
-            ; Add the new module to the `MODULES_SELECTED` global
-            (aset (aget js/window "MODULES_SELECTED")
-                  (aget (aget evt "added") "id")
-                  true)
-            (if (is $someSelectedDiv ":visible")
-                (.text $someSelectedDivText
-                       (str "Selected "
-                            (.-length (goog.object.getKeys
-                                        (aget js/window "MODULES_SELECTED")))
-                            " Modules"))
-                ; 0 modules -> 1 module
-                (do (.text $someSelectedDivText "Selected 1 Module")
-                    (show $someSelectedDiv))))
 
-          ; some module was removed
-          (aget evt "removed")
-          (do
-            (js-delete (aget js/window "MODULES_SELECTED")
-                       (aget (aget evt "removed") "id"))
-            (let [nrModulesSelected
-                  (.-length (goog.object.getKeys
-                              (aget js/window "MODULES_SELECTED")))]
-              (cond
-                (<= nrModulesSelected 0)
-                (do (hide $someSelectedDiv)
-                    (show $noneSelectedDiv))
+    (doseq [$select2-box $select2-boxes]
+      (.change
+        $select2-box
+        (fn [evt]
+          (cond
+            ; some module has just been added
+            (aget evt "added")
+            (do
+              (if (is $noneSelectedDiv ":visible")
+                  (hide $noneSelectedDiv))
+              ; Add the new module to the `MODULES_SELECTED` global
+              (aset (aget js/window "MODULES_SELECTED")
+                    (aget (aget evt "added") "id")
+                    true)
+              ; Modify val of all other boxes
+              (doseq [$other-select2-box $select2-boxes]
+                (if (not= (attr $select2-box "id")
+                          (attr $other-select2-box "id"))
+                    (.select2 $other-select2-box "val"
+                      (goog.object.getKeys (aget js/window "MODULES_SELECTED")))))
+              (if (is $someSelectedDiv ":visible")
+                  (.text $someSelectedDivText
+                         (str "Selected "
+                              (.-length (goog.object.getKeys
+                                          (aget js/window "MODULES_SELECTED")))
+                              " Modules"))
+                  ; 0 modules -> 1 module
+                  (do (.text $someSelectedDivText "Selected 1 Module")
+                      (show $someSelectedDiv))))
 
-                (= nrModulesSelected 1)
-                (.text $someSelectedDivText "Selected 1 Module")
+            ; some module was removed
+            (aget evt "removed")
+            (do
+              (js-delete (aget js/window "MODULES_SELECTED")
+                         (aget (aget evt "removed") "id"))
+              ; Modify val of all other boxes
+              (doseq [$other-select2-box $select2-boxes]
+                (if (not= (attr $select2-box "id")
+                          (attr $other-select2-box "id"))
+                    (.select2 $other-select2-box "val"
+                      (goog.object.getKeys (aget js/window "MODULES_SELECTED")))))
+              (let [nrModulesSelected
+                    (.-length (goog.object.getKeys
+                                (aget js/window "MODULES_SELECTED")))]
+                (cond
+                  (<= nrModulesSelected 0)
+                  (do (hide $someSelectedDiv)
+                      (show $noneSelectedDiv))
 
-                :else
-                (.text $someSelectedDivText
-                       (str "Selected " nrModulesSelected " Modules"))))))))
+                  (= nrModulesSelected 1)
+                  (.text $someSelectedDivText "Selected 1 Module")
 
+                  :else
+                  (.text $someSelectedDivText
+                         (str "Selected " nrModulesSelected " Modules")))))))))
     (.click ($ :.search-modules-clear-all-modules)
             (fn [evt]
               (prevent evt)
               (if (js/confirm
                      "Are you sure you want to clear all selected modules?")
                   (do (aset js/window "MODULES_SELECTED" (js-obj))
-                      (.select2 $searchModules "val" "")
+                      (doseq [$select2-box $select2-boxes]
+                        (.select2 $select2-box "val" ""))
                       (hide $someSelectedDiv)
                       (show $noneSelectedDiv)))))))
 
@@ -390,7 +417,8 @@
 
     ; Iniialize Select2
     (init-select2-element :#search-modules)
-    (init-dom-clear-modules)
+    (init-select2-element :#tt-search-modules)
+    (init-dom-clear-modules [:#search-modules :#tt-search-modules])
 
     ; Code for tabs
     (hide ($ :#module-finder))
