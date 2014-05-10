@@ -3,10 +3,21 @@
   cljs-nusmods.lesson-array-repr
   (:require [cljs-nusmods.time :as time-helper]))
 
+(defn get-lesson-label
+  "Retrieves the label (class number) of a Lesson from its array representation"
+  [lessonArrayRepr]
+  (nth lessonArrayRepr 0))
+
 (defn get-lesson-type
-  "Retrieves the type of a Lesson from its array representation"
+  "Retrieves the (index to an Array of Lesson type Strings) of a Lesson from
+   its array representation"
   [lessonArrayRepr]
   (nth lessonArrayRepr 1))
+
+(defn get-lesson-type-string
+  "Retrieves the type string of a Lesson from its array representation"
+  [lessonArrayRepr lessonTypesStringsArray]
+  (nth lessonTypesStringsArray (get-lesson-type lessonArrayRepr)))
 
 (defn get-lesson-day
   "Retrieves the day of a Lesson from its array representation"
@@ -22,6 +33,17 @@
   "Retrieves the end time of a Lesson from its array representation"
   [lessonArrayRepr]
   (nth lessonArrayRepr 4))
+
+(defn get-lesson-venue
+  "Retrieves the (index to an Array of venue Strings) of a Lesson from its array
+   representation"
+  [lessonArrayRepr]
+  (nth lessonArrayRepr 5))
+
+(defn get-lesson-venue-string
+  "Retrieves the venue string of a Lesson from its array representation"
+  [lessonArrayRepr venuesStringsArray]
+  (nth venuesStringsArray (get-lesson-venue lessonArrayRepr)))
 
 (defn get-lesson-start-time-string-for-exhibit-filter
   "Given the array representation of a lesson, returns a string of its
@@ -41,7 +63,7 @@
            (>= startTime 1800) "Evening"
            :else "Afternoon"))))
 
-(defn get-lesson-type-string
+(defn get-lesson-overall-type-string
   "Returns either the String 'Lecture' or 'Tutorial' based on the lesson type
    of the array representation of the Lesson object"
   [lessonTypesHash lessonTypesStringsArray lessonArrayRepr]

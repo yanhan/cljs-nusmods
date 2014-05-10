@@ -52,7 +52,7 @@
              (filter
                (fn [lessonArrayRepr]
                  (= lessonType
-                    (lesson-array-repr/get-lesson-type-string
+                    (lesson-array-repr/get-lesson-overall-type-string
                       lessonTypesHash lessonTypesStringsArray lessonArrayRepr)))
                timetable))))))
 

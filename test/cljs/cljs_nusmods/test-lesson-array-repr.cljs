@@ -3,8 +3,16 @@
   (:require [cljs-nusmods.lesson-array-repr :as lesson-array-repr]
             [cemerick.cljs.test :as t]))
 
+(deftest test-get-lesson-label
+  (is (= "L1" (lesson-array-repr/get-lesson-label (array "L1")))))
+
 (deftest test-get-lesson-type
   (is (= 3 (lesson-array-repr/get-lesson-type (array 0 3)))))
+
+(deftest test-get-lesson-type-string
+  (is (= "Recitation" (lesson-array-repr/get-lesson-type-string
+                        (array 0 4) (array "Lecture" "Tutorial" "Lab"
+                                           "Seminar" "Recitation" "Unknown")))))
 
 (deftest test-get-lesson-day
   (is (= 4 (lesson-array-repr/get-lesson-day (array 0 0 4)))))
@@ -45,18 +53,26 @@
          (lesson-array-repr/get-lesson-start-time-string-for-exhibit-filter
            (array 0 0 2 22 26)))))
 
-(deftest test-get-lesson-type-string-lecture
+(deftest test-get-lesson-overall-type-string-lecture
   (is (= "Lecture"
-         (lesson-array-repr/get-lesson-type-string
+         (lesson-array-repr/get-lesson-overall-type-string
            (js-obj "Laboratory" "Tutorial" , "Recitation" "Tutorial",
                    "Lecture" "Lecture", "Sectional Teaching" "Lecture")
            (array "Laboratory" "Recitation" "Lecture" "Sectional Teaching")
            (array 0 3)))))
 
-(deftest test-get-lesson-type-string-tutorial
+(deftest test-get-lesson-overall-type-string-tutorial
   (is (= "Tutorial"
-         (lesson-array-repr/get-lesson-type-string
+         (lesson-array-repr/get-lesson-overall-type-string
            (js-obj "Laboratory" "Tutorial" , "Recitation" "Tutorial",
                    "Lecture" "Lecture", "Sectional Teaching" "Lecture")
            (array "Laboratory" "Recitation" "Lecture" "Sectional Teaching")
            (array 0 1)))))
+
+(deftest test-get-lesson-venue
+  (is (= 4 (lesson-array-repr/get-lesson-venue (array 0 0 0 0 0 4)))))
+
+(deftest test-get-lesson-venue-string
+  (is (= "LT81" (lesson-array-repr/get-lesson-venue-string
+                  (array 0 0 0 0 0 2)
+                  (array "LAB8" "CT101" "LT81" "M61" "AA527")))))

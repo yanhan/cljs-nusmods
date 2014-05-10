@@ -3,6 +3,7 @@
   (:use [jayq.core :only [$ document-ready hide is one prevent show]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
+            [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
             [cljs-nusmods.time                  :as time-helper]))
 
 (defn ^{:doc "Wrapper for $.getScript"
@@ -290,6 +291,88 @@
       (init-dom-clear-modules)
       (aset js/window "Exhibit3_Initialized" true))))
 
+(defn- build-lessons-map-from-module-timetable
+  "Builds a Clojure Map representation of a module's lessons used internally
+   by the Timetable Builder page.
+
+   An example:
+
+       Lecture -> Lecture Group 1 -> [vector of lessons in Lecture Group 1]
+                  Lecture Group 2 -> [vector of lessons in Lecture Group 2]
+                        .
+                        .
+                        .
+                  Lecture Group L -> [vector of lessons in Lecture Group N]
+
+       Tutorial -> Tut Group 1 -> [vector of lessons in Tut Group 1]
+                   Tut Group 2 -> [vector of lessons in Tut Group 2]
+                        .
+                        .
+                        .
+                   Tut Group T -> [vector of lessons in Tut Group T]
+
+   Lessons contain the following keys and values:
+
+       :venue        String of the lesson venue
+       :startTime    0-indexed Integer of the time, where 0 = 0800, 1 = 0830,
+                       and so on.
+       :endTime      0-indexed Integer, similar meaning as :startTime
+   "
+  [moduleTimetable lessonTypesStringsArray venuesStringsArray
+   weekTextStringsArray]
+  (reduce (fn [lessonsMap lessonArrayRepr]
+            (let [lessonLabel (lesson-array-repr/get-lesson-label
+                                lessonArrayRepr)
+                  lessonType  (lesson-array-repr/get-lesson-type-string
+                                lessonArrayRepr lessonTypesStringsArray)
+                  lessonVenue (lesson-array-repr/get-lesson-venue-string
+                                lessonArrayRepr venuesStringsArray)
+                  startTime   (lesson-array-repr/get-lesson-start-time
+                                lessonArrayRepr)
+                  endTime     (lesson-array-repr/get-lesson-end-time
+                                lessonArrayRepr)
+                  lessonRepr  {:venue lessonVenue, :startTime startTime,
+                               :endTime endTime}]
+              (update-in lessonsMap ["lessons" lessonType lessonLabel]
+                         (fn [lessonsVec]
+                           (if (empty? lessonsVec)
+                               [lessonRepr]
+                               (conj lessonsVec lessonRepr))))))
+          {}
+          moduleTimetable))
+
+(defn- build-timetable-module-map
+  "Builds a Clojure Map of modules to be used for the Timetable Builder page.
+
+   The map is of the following structure:
+
+       modCode -> 'name'    -> module name
+               -> 'lessons' -> lessons built by
+                               `build-lessons-map-from-module-timetable`
+                               function"
+  [MODULES]
+  (let [modulesArray            (aget MODULES "modules")
+        lessonTypesStringsArray (aget MODULES "lessonTypesStringsArray")
+        venuesStringsArray      (aget MODULES "venues")
+        weekTextStringsArray    (aget MODULES "weekText")]
+    (into
+      {}
+      (map
+        (fn [moduleArrayRepr]
+          (let [moduleCode       (module-array-repr/get-module-code
+                                   moduleArrayRepr)
+                moduleName       (module-array-repr/get-module-name
+                                   moduleArrayRepr)
+                moduleTimetable  (module-array-repr/get-module-timetable
+                                   moduleArrayRepr)
+                lessonsMap       (build-lessons-map-from-module-timetable
+                                   moduleTimetable
+                                   lessonTypesStringsArray
+                                   venuesStringsArray
+                                   weekTextStringsArray)]
+               [moduleCode {"name" moduleName, "lessons" lessonsMap}]))
+           modulesArray))))
+
 ; Main entry point of the program
 (defn ^:export init []
   ; Globals
@@ -303,6 +386,7 @@
     (aset js/window "Exhibit3_Initialized" false)
     (aset js/window "Exhibit3_Loaded" false)
     (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
+    (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
 
     ; Code for tabs
     (hide ($ :#module-finder))
