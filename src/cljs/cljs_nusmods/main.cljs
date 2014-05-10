@@ -147,7 +147,6 @@
   [options]
   (let [; Get global `ModulesMap` variable
         ModulesMap     (aget js/window "ModulesMap")
-        result         (js-obj "results" (array))
         resultsPerPage 20]
     (if (nil? (aget options "context"))
         (let [nrModules    (count ModulesMap)
@@ -172,18 +171,17 @@
           (aset options "context"
                 (js-obj "searchResults" sortedSearchResults))))
 
-    (let [ctx           (aget options "context")
-          searchResults (aget ctx "searchResults")]
-      (if (not (empty? searchResults))
-          (let [resultsForCurrentPage (take resultsPerPage searchResults)
-                remSearchResults      (drop resultsPerPage searchResults)]
-            (aset result "more" true)
-            (aset (aget options "context") "searchResults" remSearchResults)
-            (doseq [r resultsForCurrentPage]
-              (.push (aget result "results")
-                     (js-obj "id" (:id r), "text" (:text r)))))))
-    (aset result "context" (aget options "context"))
-    ((aget options "callback") result)))
+    ((aget options "callback")
+     (let [ctx           (aget options "context")
+           searchResults (aget ctx "searchResults")]
+       (if (not (empty? searchResults))
+           (let [resultsForCurrentPage (take resultsPerPage searchResults)
+                 remSearchResults      (drop resultsPerPage searchResults)]
+             (aset ctx "searchResults" remSearchResults)
+             (clj->js {"more" true, "context" ctx,
+                       "results" resultsForCurrentPage}))
+           ; no more results
+           (js-obj "more" false, "context" ctx, "results" (array)))))))
 
 (defn- init-select2-input-box
   "Initialize the Select2 `Select Modules for Timetable` input. This function
