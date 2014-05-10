@@ -267,8 +267,7 @@
   "Initialize Exhibit3 database and UI for Module Finder page"
   (if (and (not (aget js/window "Exhibit3_Initialized"))
            (aget js/window "Exhibit3_Loaded")
-           (= (aget js/window "ActiveTab") MODULEFINDER-TAB-INDEX)
-           )
+           (= (aget js/window "ActiveTab") MODULEFINDER-TAB-INDEX))
     (let [modulesArray (build-modules-array MODULES AUXMODULES)
           itemsArray   (add-aux-info-to-exhibit-items
                          AUXMODULES
