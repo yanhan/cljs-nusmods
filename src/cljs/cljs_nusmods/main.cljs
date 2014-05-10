@@ -183,13 +183,13 @@
            ; no more results
            (js-obj "more" false, "context" ctx, "results" (array)))))))
 
-(defn- init-select2-input-box
-  "Initialize the Select2 `Select Modules for Timetable` input. This function
-   should only be called after the JavaScript global variable `ModulesMap` is
-   set"
-  []
-  (let [$searchModules ($ :#search-modules)]
-    (.select2 $searchModules
+(defn- init-select2-element
+  "Initialize the Select2 elements.
+   This function should only be called after the JavaScript global variable
+   `ModulesMap` is set"
+  [element-id]
+  (let [$element-id ($ element-id)]
+    (.select2 $element-id
               (js-obj "multiple"      true
                       "width"         "100%"
                       "placeholder"   "Type code/title to add mods"
@@ -289,7 +289,7 @@
                                "moduleType" (js-obj "valueType" "item"))
                 "items"      itemsArray))
       (.configureFromDOM myExhibit)
-      (init-select2-input-box)
+      (init-select2-element :#search-modules)
       (init-dom-clear-modules)
       (aset js/window "Exhibit3_Initialized" true))))
 
