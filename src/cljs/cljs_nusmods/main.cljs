@@ -144,54 +144,62 @@
 
 (defn- select2-query-fn
   "query function for the Select2 `Select Modules for Timetable` input"
-  [modulesArray]
-  (fn [options]
-    (let [result         (js-obj "results" (array))
-          resultsPerPage 20]
-      (if (nil? (aget options "context"))
-          (let [nrModules    (.-length modulesArray)
-                searchTerm   (.toUpperCase (aget options "term"))
-                firstResults (array)
-                modsSatisfyingSearchTerm
-                  (filter
-                    (fn [modObj]
-                      (let [haystack (str (.toUpperCase (aget modObj "label"))
+  [options]
+  (let [; Get global `ModulesMap` variable
+        ModulesMap     (aget js/window "ModulesMap")
+        result         (js-obj "results" (array))
+        resultsPerPage 20]
+    (if (nil? (aget options "context"))
+        (let [nrModules    (count ModulesMap)
+              searchTerm   (.toUpperCase (aget options "term"))
+              firstResults
+                (reduce
+                  (fn [resultsArray [moduleCode module]]
+                    (let [moduleName (get module "name")
+                          haystack   (str (.toUpperCase moduleCode)
                                           " "
-                                          (.toUpperCase (aget modObj "name")))]
-                        (not= -1 (.indexOf haystack searchTerm))))
-                    modulesArray)]
-            (doseq [modObj modsSatisfyingSearchTerm]
-              (.push firstResults (js-obj "id"   (aget modObj "label"),
-                                          "text" (str (aget modObj "label")
-                                                      " "
-                                                      (aget modObj "name")))))
-            (aset options "context"
-                  (js-obj "searchResults" firstResults,
-                          "nrResults"     (.-length firstResults)))))
-      ; options.page starts counting from 1
-      (if (< (* resultsPerPage (- (aget options "page") 1))
-             (aget (aget options "context") "nrResults"))
-          (let [i     (* resultsPerPage (- (aget options "page") 1))
-                limit (min (+ i resultsPerPage)
-                           (aget (aget options "context") "nrResults"))]
-            (aset result "more" true)
-            (doseq [k (range i limit)]
-              (.push (aget result "results")
-                     (nth (aget (aget options "context") "searchResults") k))))
-          (aset result "more" false))
-      (aset result "context" (aget options "context"))
-      ((aget options "callback") result))))
+                                          (.toUpperCase moduleName))]
+                      (if (not= -1 (.indexOf haystack searchTerm))
+                          (.push resultsArray
+                                 (js-obj "id"   moduleCode
+                                         "text" (str moduleCode " "
+                                                     moduleName))))
+                      resultsArray))
+                  (array)
+                  ModulesMap)]
+          (aset options "context"
+                (js-obj "searchResults"
+                        (sort (fn [modA modB]
+                                (< (aget modA "id") (aget modB "id")))
+                              firstResults),
+                        "nrResults"
+                        (.-length firstResults)))))
+    ; options.page starts counting from 1
+    (if (< (* resultsPerPage (- (aget options "page") 1))
+           (aget (aget options "context") "nrResults"))
+        (let [i     (* resultsPerPage (- (aget options "page") 1))
+              limit (min (+ i resultsPerPage)
+                         (aget (aget options "context") "nrResults"))]
+          (aset result "more" true)
+          (doseq [k (range i limit)]
+            (.push (aget result "results")
+                   (nth (aget (aget options "context") "searchResults") k))))
+        (aset result "more" false))
+    (aset result "context" (aget options "context"))
+    ((aget options "callback") result)))
 
 (defn- init-select2-input-box
-  "Initialize the Select2 `Select Modules for Timetable` input"
-  [modulesArray]
+  "Initialize the Select2 `Select Modules for Timetable` input. This function
+   should only be called after the JavaScript global variable `ModulesMap` is
+   set"
+  []
   (let [$searchModules ($ :#search-modules)]
     (.select2 $searchModules
               (js-obj "multiple"      true
                       "width"         "100%"
                       "placeholder"   "Type code/title to add mods"
                       "initSelection" (fn [])
-                      "query"         (select2-query-fn modulesArray)))))
+                      "query"         select2-query-fn))))
 
 (defn- init-dom-clear-modules
   "Code for `(Clear Modules)` button on top of the `Select Modules for
@@ -286,7 +294,7 @@
                                "moduleType" (js-obj "valueType" "item"))
                 "items"      itemsArray))
       (.configureFromDOM myExhibit)
-      (init-select2-input-box modulesArray)
+      (init-select2-input-box)
       (init-dom-clear-modules)
       (aset js/window "Exhibit3_Initialized" true))))
 
