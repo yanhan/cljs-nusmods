@@ -230,21 +230,18 @@
             (do
               (if (is $noneSelectedDiv ":visible")
                   (hide $noneSelectedDiv))
-              ; Add the new module to the `MODULES_SELECTED` global
-              (aset (aget js/window "MODULES_SELECTED")
-                    (aget (aget evt "added") "id")
-                    true)
+              ; Add the new module
+              (timetable/add-module (aget (aget evt "added") "id"))
               ; Modify val of all other boxes
               (doseq [$other-select2-box $select2-boxes]
                 (if (not= (attr $select2-box "id")
                           (attr $other-select2-box "id"))
-                    (.select2 $other-select2-box "val"
-                      (goog.object.getKeys (aget js/window "MODULES_SELECTED")))))
+                    (.select2
+                      $other-select2-box "val"
+                      (timetable/get-selected-module-codes-as-js-array))))
               (if (is $someSelectedDiv ":visible")
                   (.text $someSelectedDivText
-                         (str "Selected "
-                              (.-length (goog.object.getKeys
-                                          (aget js/window "MODULES_SELECTED")))
+                         (str "Selected " (timetable/nr-modules-selected)
                               " Modules"))
                   ; 0 modules -> 1 module
                   (do (.text $someSelectedDivText "Selected 1 Module")
@@ -253,17 +250,15 @@
             ; some module was removed
             (aget evt "removed")
             (do
-              (js-delete (aget js/window "MODULES_SELECTED")
-                         (aget (aget evt "removed") "id"))
+              (timetable/remove-module (aget (aget evt "removed") "id"))
               ; Modify val of all other boxes
               (doseq [$other-select2-box $select2-boxes]
                 (if (not= (attr $select2-box "id")
                           (attr $other-select2-box "id"))
-                    (.select2 $other-select2-box "val"
-                      (goog.object.getKeys (aget js/window "MODULES_SELECTED")))))
-              (let [nrModulesSelected
-                    (.-length (goog.object.getKeys
-                                (aget js/window "MODULES_SELECTED")))]
+                    (.select2
+                      $other-select2-box "val"
+                      (timetable/get-selected-module-codes-as-js-array))))
+              (let [nrModulesSelected (timetable/nr-modules-selected)]
                 (cond
                   (<= nrModulesSelected 0)
                   (do (hide $someSelectedDiv)
@@ -280,7 +275,7 @@
               (prevent evt)
               (if (js/confirm
                      "Are you sure you want to clear all selected modules?")
-                  (do (aset js/window "MODULES_SELECTED" (js-obj))
+                  (do (timetable/remove-all-modules)
                       (doseq [$select2-box $select2-boxes]
                         (.select2 $select2-box "val" ""))
                       (hide $someSelectedDiv)
@@ -364,7 +359,7 @@
                                 lessonArrayRepr)
                   lessonRepr  {:venue lessonVenue, :day lessonDay,
                                :startTime startTime, :endTime endTime}]
-              (update-in lessonsMap ["lessons" lessonType lessonLabel]
+              (update-in lessonsMap [lessonType lessonLabel]
                          (fn [lessonsVec]
                            (if (empty? lessonsVec)
                                [lessonRepr]
@@ -410,9 +405,6 @@
   (let [$document     ($ js/document)
         AUXMODULES    (aget js/window "AUXMODULES")
         MODULES       (aget js/window "MODULES")]
-
-    ; Initialize window.MODULES_SELECTED
-    (aset js/window "MODULES_SELECTED" (js-obj))
 
     (aset js/window "Exhibit3_Initialized" false)
     (aset js/window "Exhibit3_Loaded" false)
