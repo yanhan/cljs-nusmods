@@ -4,6 +4,7 @@
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
+            [cljs-nusmods.select2               :as select2]
             [cljs-nusmods.time                  :as time-helper]
             [cljs-nusmods.timetable             :as timetable]))
 
@@ -143,84 +144,17 @@
   (add-lesson-time-to-exhibit-items itemsArray)
   itemsArray)
 
-(defn- select2-query-fn
-  "query function for the Select2 `Select Modules for Timetable` input"
-  [options]
-  (let [; Get global `ModulesMap` variable
-        ModulesMap     (aget js/window "ModulesMap")
-        resultsPerPage 20]
-    (if (nil? (aget options "context"))
-        (let [nrModules    (count ModulesMap)
-              searchTerm   (.toUpperCase (aget options "term"))
-              ; vector of initial search results
-              firstResults
-                (reduce
-                  (fn [resultsVec [moduleCode module]]
-                    (let [moduleName (get module "name")
-                          haystack   (str (.toUpperCase moduleCode)
-                                          " "
-                                          (.toUpperCase moduleName))]
-                      (if (not= -1 (.indexOf haystack searchTerm))
-                          (conj resultsVec
-                                {:id   moduleCode
-                                 :text (str moduleCode " " moduleName)})
-                          resultsVec)))
-                  []
-                  ModulesMap)
-              sortedSearchResults
-                (sort (fn [modA modB] (< (:id modA) (:id modB))) firstResults)]
-          (aset options "context"
-                (js-obj "searchResults" sortedSearchResults))))
-
-    ((aget options "callback")
-     (let [ctx           (aget options "context")
-           searchResults (aget ctx "searchResults")]
-       (if (not (empty? searchResults))
-           (let [resultsForCurrentPage (take resultsPerPage searchResults)
-                 remSearchResults      (drop resultsPerPage searchResults)]
-             (aset ctx "searchResults" remSearchResults)
-             (clj->js {"more" true, "context" ctx,
-                       "results" resultsForCurrentPage}))
-           ; no more results
-           (js-obj "more" false, "context" ctx, "results" (array)))))))
-
-(defn- init-select2-element
-  "Initialize the Select2 elements.
-   This function should only be called after the JavaScript global variable
-   `ModulesMap` is set"
-  [element-id]
-  (let [$element-id ($ element-id)
-        ModulesMap  (aget js/window "ModulesMap")]
-    (.select2
-      $element-id
-      (js-obj
-        "multiple"      true
-        "width"         "100%"
-        "placeholder"   "Type code/title to add mods"
-        "initSelection"
-        (fn [elem callback]
-          (callback
-            (clj->js
-              (map (fn [moduleCode]
-                     {"id" moduleCode
-                      "text" (str moduleCode " "
-                                  (get-in ModulesMap [moduleCode "name"]))})
-                   (.split (.val elem) ",")))))
-
-        "query"         select2-query-fn))))
-
 (defn- init-dom-clear-modules
   "Code for `(Clear Modules)` button on top of the `Select Modules for
    Timetable` input box"
-  [select2-box-ids]
-  (let [$select2-boxes       (map (fn [box-id] ($ box-id)) select2-box-ids)
-        $noneSelectedDiv     ($ :.search-modules-none-selected-div)
+  [select2-boxes-vec]
+  (let [$noneSelectedDiv     ($ :.search-modules-none-selected-div)
         $someSelectedDiv     ($ :.search-modules-selected-div)
         $someSelectedDivText ($ :.search-modules-nr-selected)]
 
     (hide $someSelectedDiv)
 
-    (doseq [$select2-box $select2-boxes]
+    (doseq [$select2-box select2-boxes-vec]
       (.change
         $select2-box
         (fn [evt]
@@ -233,7 +167,7 @@
               ; Add the new module
               (timetable/add-module (aget (aget evt "added") "id"))
               ; Modify val of all other boxes
-              (doseq [$other-select2-box $select2-boxes]
+              (doseq [$other-select2-box select2-boxes-vec]
                 (if (not= (attr $select2-box "id")
                           (attr $other-select2-box "id"))
                     (.select2
@@ -252,7 +186,7 @@
             (do
               (timetable/remove-module (aget (aget evt "removed") "id"))
               ; Modify val of all other boxes
-              (doseq [$other-select2-box $select2-boxes]
+              (doseq [$other-select2-box select2-boxes-vec]
                 (if (not= (attr $select2-box "id")
                           (attr $other-select2-box "id"))
                     (.select2
@@ -276,7 +210,7 @@
               (if (js/confirm
                      "Are you sure you want to clear all selected modules?")
                   (do (timetable/remove-all-modules)
-                      (doseq [$select2-box $select2-boxes]
+                      (doseq [$select2-box select2-boxes-vec]
                         (.select2 $select2-box "val" ""))
                       (hide $someSelectedDiv)
                       (show $noneSelectedDiv)))))))
@@ -415,9 +349,9 @@
     (timetable/init)
 
     ; Iniialize Select2
-    (init-select2-element :#search-modules)
-    (init-select2-element :#tt-search-modules)
-    (init-dom-clear-modules [:#search-modules :#tt-search-modules])
+    (doseq [$select2JqueryObject select2/Select2-Boxes]
+      (select2/init-select2-element $select2JqueryObject))
+    (init-dom-clear-modules select2/Select2-Boxes)
 
     ; Code for tabs
     (hide ($ :#module-finder))
