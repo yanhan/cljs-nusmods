@@ -366,4 +366,42 @@
            (initialize-exhibit3 MODULES AUXMODULES)))
 
     ; Retrieve Exhibit 3.0 Library
-    (getScript "js/vendor/exhibit3-all.min.js" (fn []))))
+    (getScript "js/vendor/exhibit3-all.min.js" (fn []))
+
+    ; Test code - remove when appropriate
+    (let [ModulesMap (aget js/window "ModulesMap")
+          c1 (timetable/get-next-lesson-bg-color-css-class)
+          c2 (timetable/get-next-lesson-bg-color-css-class)
+          c3 (timetable/get-next-lesson-bg-color-css-class)
+          c4 (timetable/get-next-lesson-bg-color-css-class)
+          c5 (timetable/get-next-lesson-bg-color-css-class)
+          c6 (timetable/get-next-lesson-bg-color-css-class)
+          c7 (timetable/get-next-lesson-bg-color-css-class)]
+      ; Wednesday 1000 - 1200; Row 0
+      (timetable/add-module-lesson-group "ACC1002" "LECTURE" "V1" c1 ModulesMap)
+      ; Tuesday 1000 - 1200; Row 0
+      (timetable/add-module-lesson-group "ACC1002" "TUTORIAL" "V01" c1 ModulesMap)
+      ; Tuesday 1000- 1300; Row 1
+      (timetable/add-module-lesson-group "CS1010" "SECTIONAL TEACHING" "1" c2 ModulesMap)
+      ; Friday 1000 - 1200; Row 0
+      (timetable/add-module-lesson-group "CS1010" "TUTORIAL" "1" c2 ModulesMap)
+      ; Thursday 1000 - 1200; Row 0
+      (timetable/add-module-lesson-group "CS1020" "LABORATORY" "1" c3 ModulesMap)
+      ; Tuesday 1000 - 1200; Row 2
+      (timetable/add-module-lesson-group "CS1020" "SECTIONAL TEACHING" "1" c3 ModulesMap)
+      ; Friday 1000 - 1100; Row 1
+      (timetable/add-module-lesson-group "CS1020" "TUTORIAL" "2" c3 ModulesMap)
+      ; Monday 1000 - 1200; Row 0
+      (timetable/add-module-lesson-group "CM1121" "LECTURE" "SL1" c4 ModulesMap)
+      ; Thursday 1000 - 1200; Row 1
+      (timetable/add-module-lesson-group "CM1121" "TUTORIAL" "TH1" c4 ModulesMap)
+      ; Monday 1900 - 2200; Row 0
+      (timetable/add-module-lesson-group "BPS5103" "LECTURE" "1" c5 ModulesMap)
+      ; Tuesday 0900 - 1530; Row 3
+      (timetable/add-module-lesson-group "BPS5103" "TUTORIAL" "1" c5 ModulesMap)
+      ; Monday 1400 - 1700; Row 0
+      (timetable/add-module-lesson-group "AR4223" "LECTURE" "1" c6 ModulesMap)
+      ; Monday 0900 - 1200; Row 1
+      (timetable/add-module-lesson-group "AR4223" "TUTORIAL" "1" c6 ModulesMap)
+      ; Monday 1100 - 1400; Row 2
+      (timetable/add-module-lesson-group "DSC3226" "SECTIONAL TEACHING" "Z1" c7 ModulesMap))))
