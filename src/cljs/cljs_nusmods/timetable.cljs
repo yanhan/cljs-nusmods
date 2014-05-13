@@ -9,6 +9,27 @@
        }
   half-hour-pixels 35)
 
+(def ^{:doc     "Number of available background colors for lesson divs"
+       :private true}
+  Nr-Available-Bg-Colors 24)
+
+(def ^{:doc     "Sequence of background color indices"
+       :private true}
+  Bg-Colors-Seq [])
+
+(defn get-next-lesson-bg-color-css-class
+  "Returns the next css background color class for a lesson div"
+  []
+  (if (empty? Bg-Colors-Seq)
+      (set! Bg-Colors-Seq (shuffle (range 0 Nr-Available-Bg-Colors))))
+  (let [currentIdx (first Bg-Colors-Seq)]
+    (set! Bg-Colors-Seq (rest Bg-Colors-Seq))
+    (str "lesson-bg-"
+         (if (< currentIdx 10)
+             "0"
+             "")
+         currentIdx)))
+
 (def ^{:doc     "In-memory representation of a Timetable"
        :private true}
   Timetable nil)
@@ -217,7 +238,7 @@
 (defn- add-module-lesson
   "Adds a single lesson of a module (obtained from the `ModulesMap` global) to
    the timetable, and returns its jQuery div element."
-  [moduleCode moduleName lessonType lessonLabel lesson]
+  [moduleCode moduleName lessonType lessonLabel lesson bgColorCssClass]
   (let [rowNum      (find-free-row-for-lesson lesson)
         day         (:day lesson)
         startTime   (:startTime lesson)
@@ -230,6 +251,9 @@
     (if (= rowNum (get-nr-rows-in-timetable-day day))
         (add-new-row-to-timetable-day day))
     (timetable-mark-lesson-slots-occupied rowNum lesson)
+
+    ; add background color css class
+    (.addClass divElem bgColorCssClass)
     (.append divElem (text ($ "<p />") (str moduleCode " " moduleName)))
     (.append divElem (text ($ "<p />") (str lessonType " [" lessonLabel "]")))
     (.append divElem (text ($ "<p />") (:venue lesson)))
@@ -250,7 +274,7 @@
 
 (defn add-module-lesson-group
   "Adds a lesson group of a module to the timetable."
-  [moduleCode lessonType lessonLabel
+  [moduleCode lessonType lessonLabel bgColorCssClass
    & {:keys [ModulesMap]
       :or   {ModulesMap (aget js/window "ModulesMap")}}]
   (let [moduleName (get-in ModulesMap [moduleCode "name"])
@@ -262,7 +286,8 @@
                                                    moduleName
                                                    lessonType
                                                    lessonLabel
-                                                   lesson))
+                                                   lesson
+                                                   bgColorCssClass))
                               lessons))]
           ; Update ModulesSelected with the lesson group
           (set! ModulesSelected
@@ -287,13 +312,15 @@
    be added."
   [moduleCode]
   (if (not (contains? ModulesSelected moduleCode))
-      (let [ModulesMap (aget js/window "ModulesMap")
-            module     (get ModulesMap moduleCode)
-            lessonsMap (get module "lessons")]
+      (let [ModulesMap      (aget js/window "ModulesMap")
+            module          (get ModulesMap moduleCode)
+            lessonsMap      (get module "lessons")
+            bgColorCssClass (get-next-lesson-bg-color-css-class)]
         (doseq [[lessonType lessonGroupsMap] lessonsMap]
           (add-module-lesson-group moduleCode
                                    lessonType
                                    (first (keys lessonGroupsMap))
+                                   bgColorCssClass
                                    ModulesMap)))))
 
 (defn remove-module
