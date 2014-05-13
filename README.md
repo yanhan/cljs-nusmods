@@ -140,11 +140,17 @@ his wonderful [NUSMods](https://github.com/ahbeng/NUSMods) library open source.
 This project would probably have taken a very different route without using it
 as a reference.
 
-### Libraries Used
+### Tools and Libraries Used
 
 This project will probably be impossible without the following awesome
-libraries (even though the documentation may not be so awesome for some of
-them):
+tools and libraries, used both directly and indirectly (even though the
+documentation may not be so awesome for some of them):
+
+#### Clojure / ClojureScript related
+- [Leiningen](https://github.com/technomancy/leiningen) (hey look, my hair's not
+on fire, but it's not long anyway)
+- [lein-cljsbuild](https://github.com/emezeske/lein-cljsbuild)
+- [jayq](https://github.com/ibdknox/jayq) (jQuery wrapper for ClojureScript)
 
 #### JavaScript libraries (front end):
 - [jQuery](http://jquery.com/)
