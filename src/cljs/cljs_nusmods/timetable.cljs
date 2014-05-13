@@ -223,7 +223,7 @@
         startTime   (:startTime lesson)
         endTime     (:endTime lesson)
         slotsOcc    (- endTime startTime)
-        divElem     ($ "<div />")
+        divElem     ($ "<div />" (js-obj "class" "lesson"))
         [hourClass minuteClass] (get-css-hour-minute-classes-for-time
                                   startTime)]
     ; Create new row if necessary
