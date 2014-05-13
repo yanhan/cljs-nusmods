@@ -3,7 +3,8 @@ var concat = require("gulp-concat");
 var uglify = require("gulp-uglify");
 var minifyCSS = require("gulp-minify-css");
 
-gulp.task("exhibit3", function() {
+// Concat + Minify Exhibit 3.0 JavaScript
+gulp.task("exhibit3-js-concat-minify", function() {
   return gulp.src([
       "src/js/vendor/exhibit3/exhibit-api.js",
       "src/js/vendor/exhibit3/lib/base64.js",
@@ -108,7 +109,8 @@ gulp.task("exhibit3", function() {
     .pipe(gulp.dest("resources/public/js/vendor/"));
 });
 
-gulp.task("exhibit3-css", function() {
+// Concat + Minify Exhibit 3.0 CSS
+gulp.task("exhibit3-css-concat-minify", function() {
   return gulp.src([
       "src/js/vendor/exhibit3/styles/graphics.css",
       "src/js/vendor/exhibit3/styles/exhibit.css",
@@ -134,16 +136,23 @@ gulp.task("exhibit3-css", function() {
     .pipe(gulp.dest("resources/public/css/"));
 });
 
+// Copy Exhibit 3.0 images
 gulp.task("exhibit3-images", function() {
   return gulp.src(["src/js/vendor/exhibit3/images/**/*"])
     .pipe(gulp.dest("resources/public/exhibit3/images/"));
 });
 
+// Copy Exhibit 3.0 english locale
 gulp.task("exhibit3-locale", function() {
   return gulp.src(["src/js/vendor/exhibit3/locales/en/locale.js"])
     .pipe(gulp.dest("resources/public/exhibit3/locales/en/"));
 });
 
-gulp.task("default", [
-  "exhibit3", "exhibit3-css", "exhibit3-images", "exhibit3-locale"
+// All Exhibit 3.0 related tasks
+gulp.task("exhibit3", [
+  "exhibit3-js-concat-minify", "exhibit3-css-concat-minify", "exhibit3-images",
+  "exhibit3-locale"
 ]);
+
+// Default task
+gulp.task("default", ["exhibit3"]);
