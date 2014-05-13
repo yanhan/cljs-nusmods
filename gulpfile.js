@@ -3,6 +3,7 @@ var concat = require("gulp-concat");
 var uglify = require("gulp-uglify");
 var minifyCSS = require("gulp-minify-css");
 var sass = require("gulp-sass");
+var shell = require("gulp-shell");
 
 // Concat + Minify Exhibit 3.0 JavaScript
 gulp.task("exhibit3-js-concat-minify", function() {
@@ -162,7 +163,14 @@ gulp.task("sass", function() {
     .pipe(gulp.dest("resources/public/css/"));
 });
 
+// Generate compacted representation of module data
+gulp.task("generate-module-data", shell.task([
+  "node helpers/normalize_modules_json.js",
+  "node helpers/convert_modules.js",
+  "cp build-temp/auxmodinfo.js build-temp/modinfo.js resources/public/js/"
+]));
+
 // Default task
 gulp.task("default", [
-  "exhibit3", "sass"
+  "exhibit3", "sass", "generate-module-data"
 ]);
