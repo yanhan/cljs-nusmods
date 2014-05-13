@@ -24,6 +24,13 @@ It is less buggy and contains a lot more features.
 Follow the installation instructions in the
 [Leiningen repository](https://github.com/technomancy/leiningen).
 
+### Node.js
+
+Choose one of the following ways to install Node.js:
+- install it using your favorite package manager
+- clone the [Node.js github repo](https://github.com/joyent/node), checkout a
+tag, build and install it
+
 ### Node.js libraries
 
 Install the necessary nodejs libraries:
