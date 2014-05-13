@@ -16,15 +16,8 @@ It is less buggy and contains a lot more features.
 
 - lein
 - node
-- rvm
 
 ## Setup
-
-### Ruby Gems
-
-Install the Ruby gems in the `Gemfile`:
-
-    bundle install
 
 ### Node.js libraries
 
@@ -151,9 +144,8 @@ find)
 (For the `Select Modules for Timetable` input box)
 
 #### CSS libraries / tools:
-- [Compass](http://compass-style.org/)
-(Enables us to write SCSS instead of CSS, huge boon)
 - [gulp-sass](https://github.com/dlmanning/gulp-sass)
+(Enables us to write SCSS instead of CSS, huge boon)
 
 #### JavaScript libraries (back end):
 - [gulp.js](http://gulpjs.com/) (Making Grunt obsolete, kind of)
