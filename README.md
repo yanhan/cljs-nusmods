@@ -48,49 +48,17 @@ http://api.nusmods.com/2013-2014/2/facultyDepartments.json
 - `lessonTypes.json`. A concrete example of such a file is
 http://api.nusmods.com/2013-2014/2/lessonTypes.json
 
-## Building
+## Building everything
 
-For generating CSS from SCSS:
-
-    sass --watch src/scss:resources/public/css
-
-### Generating module information
-
-    node helpers/normalize_modules_json.js
-
-Using the `processed_modules.json` file, we generate the `modinfo.js` and
-`auxmodinfo.js` files (which are used by the timetable builder code), and copy
-them to the `resources/public/js/` directory (these files hold compacted module
-information):
-
-    node helpers/convert_modules.js
-    cp build-temp/modinfo.js build-temp/auxmodinfo.js resources/public/js/
-
-### Building minified libraries
-
-Execute this command to build the minified libraries:
+Execute the following command:
 
     gulp
 
-The default gulp task does the following:
+This is a rather expensive operation due primarily to the minification step and
+ClojureScript compilation with advanced optimizations.
 
-- Concatenates all Exhibit 3.0 JavaScript files and minifies it, then copies it
-to `resources/public/js/vendor/exhibit3-all.min.js`
-- Concatenates all Exhibit 3.0 CSS files and minifies it, then copies it to
-`resources/public/css/exhibit3-styles.min.css`
-- Copies the `images` folder and the English locale file of the Exhibit 3.0
-library and places them under the same directory hierarchy at
-`resources/public/exhibit3/`
-
-### Compiling ClojureScript
-
-To clean any compiled files:
-
-    lein cljsbuild clean
-
-To compile the ClojureScript code into JavaScript:
-
-    lein cljsbuild once
+Check out the "**Some individual build tasks explained**" section below for
+finer grained builds.
 
 ## Running the web server
 
@@ -107,6 +75,49 @@ To build the test files:
 Running the tests:
 
     lein cljsbuild test
+
+## Some individual build tasks explained
+
+For more information on the `gulp` tasks, open `gulpfile.js` and read the
+`gulp.task` parts.
+
+### Compiling SCSS to CSS
+
+    gulp sass
+
+### Exhibit 3.0 task
+
+This task:
+
+    gulp exhibit3
+
+does the following:
+
+- concatenate and minify all Exhibit 3.0 JavaScript files
+- concatenate and minify all Exhibit 3.0 CSS files
+- copies all Exhibit 3.0 images to their destination
+- copies the English locale file to its destination
+
+Running it once should suffice, since the minification is a rather expensive
+step.
+
+### Compiling ClojureScript
+
+We make use of **Advanced Optimizations** for our ClojureScript code (where's
+the fun if you don't do that?). As such, this is the slowest step in the entire
+build process.
+
+[lein](https://github.com/technomancy/leiningen) (Leiningen) and the
+[lein-cljsbuild](https://github.com/emezeske/lein-cljsbuild) are used for
+helping us setup and compile the ClojureScript code in the project.
+
+To clean any compiled files:
+
+    lein cljsbuild clean
+
+To compile the ClojureScript code into JavaScript:
+
+    lein cljsbuild once
 
 ## Credits
 

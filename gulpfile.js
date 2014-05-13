@@ -170,7 +170,13 @@ gulp.task("generate-module-data", shell.task([
   "cp build-temp/auxmodinfo.js build-temp/modinfo.js resources/public/js/"
 ]));
 
+// Clean ClojureScript build products + Compile ClojureScript
+gulp.task("cljs-clean-compile", shell.task([
+  "lein cljsbuild clean",
+  "lein cljsbuild once"
+]));
+
 // Default task
 gulp.task("default", [
-  "exhibit3", "sass", "generate-module-data"
+  "exhibit3", "sass", "generate-module-data", "cljs-clean-compile"
 ]);
