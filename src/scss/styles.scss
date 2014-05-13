@@ -100,14 +100,23 @@ div.exhibit-flowingFacet {
 ////////////////////////////////////////////////////////////////////////////////
 
 $half-hour-width: 35px;
+$one-px-grey-border: 1px solid #ddd;
 
 #timetable {
   width: $half-hour-width * 32;
   font-size: 70%;
 }
 
+tbody.day-container {
+  border: $one-px-grey-border;
+}
+
 .m00 {
-  border-left: 1px solid #ddd;
+  border-left: $one-px-grey-border;
+}
+
+.h23.m30 {
+  border-right: $one-px-grey-border;
 }
 
 .day-row > td {
