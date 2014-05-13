@@ -152,6 +152,8 @@ find)
 - [gulp-concat](https://github.com/wearefractal/gulp-concat)
 - [gulp-uglify](https://www.npmjs.org/package/gulp-uglify)
 - [gulp-minify-css](https://github.com/jonathanepollack/gulp-minify-css)
+- [gulp-sass](https://github.com/dlmanning/gulp-sass)
+- [gulp-shell](https://github.com/sun-zheng-an/gulp-shell)
 - [lodash](http://lodash.com/)
 (more modern version of [Underscore.js](http://underscorejs.org/); use this and
 you may very well not see any `for` loops in your JavaScript for a start)
