@@ -4,7 +4,7 @@ var fs = require("fs");
 var _ = require("lodash");
 var SharedGlobals = require("./shared_globals.js");
 var NormalizeDepartment = require("./normalize_department.js");
-var MODULES_ARRAY = require(__dirname + "/../modules.json");
+var MODULES_ARRAY = require(__dirname + "/../api-nusmods-stuff/modules.json");
 
 var STRING_KEYS = [
   "ModuleCode", "ModuleTitle", "Department", "ModuleDescription",
@@ -88,7 +88,8 @@ var ARRAY_OF_STRINGS_KEYS = [
     }
     return mod;
   });
-  fs.writeFileSync("processed_modules.json",
+  // write to `build-temp` directory
+  fs.writeFileSync("build-temp/processed_modules.json",
     // 4 space indentation
     JSON.stringify(processedModulesArray, null, "    "),
     { flag: "w" }

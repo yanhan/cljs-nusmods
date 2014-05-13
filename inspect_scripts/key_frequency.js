@@ -1,7 +1,7 @@
 // figure out the number of module objects with the keys
 
 var _ = require("lodash");
-var MODULES_ARRAY = require(__dirname + "/../modules.json");
+var MODULES_ARRAY = require(__dirname + "/../api-nusmods-stuff/modules.json");
 
 var MODULE_KEYS = [
   "ModuleCode", "ModuleTitle", "Department", "ModuleDescription",

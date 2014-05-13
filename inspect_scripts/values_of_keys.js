@@ -2,7 +2,8 @@ var _ = require("lodash");
 var argv = require("minimist")(process.argv.slice(2));
 // Supply `-p` flag to inspect values of processed_modules.json
 var MODULES_ARRAY = require(
-  __dirname + "/../" + (argv["p"] ? "processed_modules.json" : "modules.json")
+  __dirname + "/../" + (argv["p"] ? "build-temp/processed_modules.json" :
+                                    "api-nusmods-stuff/modules.json")
 );
 
 var show_all_possible_values_for_key_with_string_value = function(

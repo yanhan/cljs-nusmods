@@ -16,7 +16,7 @@
 //
 //     node inspect_scripts/types.js
 
-var modulesJSON = require(__dirname + "/../modules.json");
+var modulesJSON = require(__dirname + "/../api-nusmods-stuff/modules.json");
 
 var get_type_string = function(o) {
   return (o instanceof Array ? "array" : typeof o);

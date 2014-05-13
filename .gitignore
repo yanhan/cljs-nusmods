@@ -13,6 +13,9 @@ pom.xml.asc
 *.swp
 /.lein-*
 /.nrepl-port
+/api-nusmods-stuff/*.json
+/build-temp/*.js
+/build-temp/*.json
 /resources/public/js/auxmodinfo.js
 /resources/public/js/modinfo.js
 /resources/public/js/main.js
