@@ -136,7 +136,7 @@ To compile the ClojureScript code into JavaScript:
 ## Credits
 
 First and foremost, to [Eu Beng Hee](https://github.com/ahbeng) for making
-his wonderful [NUSMods](https://github.com/ahbeng/NUSMods) library open source.
+his wonderful [NUSMods](https://github.com/ahbeng/NUSMods) project open source.
 This project would probably have taken a very different route without using it
 as a reference.
 
