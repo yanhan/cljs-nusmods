@@ -135,9 +135,6 @@ them):
 #### JavaScript libraries (front end):
 - [jQuery](http://jquery.com/)
 - [jQuery UI](https://jqueryui.com/)
-- [lodash](http://lodash.com/)
-(more modern version of [Underscore.js](http://underscorejs.org/); use this and
-you may very well not see any `for` loops in your JavaScript for a start)
 - [Exhibit 3.0](http://www.simile-widgets.org/exhibit3/)
 (**THE** main library in the Module Finder page; documentation can be hard to
 find)
@@ -154,5 +151,8 @@ find)
 - [gulp-concat](https://github.com/wearefractal/gulp-concat)
 - [gulp-uglify](https://www.npmjs.org/package/gulp-uglify)
 - [gulp-minify-css](https://github.com/jonathanepollack/gulp-minify-css)
+- [lodash](http://lodash.com/)
+(more modern version of [Underscore.js](http://underscorejs.org/); use this and
+you may very well not see any `for` loops in your JavaScript for a start)
 - [Moment.js](http://momentjs.com/)
 - [minimist](https://github.com/substack/minimist)
