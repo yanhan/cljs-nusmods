@@ -14,10 +14,15 @@ It is less buggy and contains a lot more features.
 
 ## System requirements
 
-- lein
+- Leiningen
 - node
 
 ## Setup
+
+### Leiningen
+
+Follow the installation instructions in the
+[Leiningen repository](https://github.com/technomancy/leiningen).
 
 ### Node.js libraries
 
@@ -109,7 +114,7 @@ We make use of **Advanced Optimizations** for our ClojureScript code (where's
 the fun if you don't do that?). As such, this is the slowest step in the entire
 build process.
 
-[lein](https://github.com/technomancy/leiningen) (Leiningen) and the
+[Leiningen](https://github.com/technomancy/leiningen) (Leiningen) and the
 [lein-cljsbuild](https://github.com/emezeske/lein-cljsbuild) are used for
 helping us setup and compile the ClojureScript code in the project.
 
