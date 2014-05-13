@@ -272,7 +272,7 @@
         (.remove siblingTdElem))
       divElem)))
 
-(defn add-module-lesson-group
+(defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable."
   [moduleCode lessonType lessonLabel bgColorCssClass
    & {:keys [ModulesMap]
@@ -322,6 +322,89 @@
                                    (first (keys lessonGroupsMap))
                                    bgColorCssClass
                                    ModulesMap)))))
+
+(defn- lesson-type-short-to-long-form
+  "Converts a short form lesson type string into its long form"
+  [lessonTypeShortForm]
+  (cond
+    (= lessonTypeShortForm "DL")  "DESIGN LECTURE"
+    (= lessonTypeShortForm "L")   "LECTURE"
+    (= lessonTypeShortForm "LAB") "LABORATORY"
+    (= lessonTypeShortForm "PL")  "PACKAGED LECTURE"
+    (= lessonTypeShortForm "PT")  "PACKAGED TUTORIAL"
+    (= lessonTypeShortForm "R")   "RECITATION"
+    (= lessonTypeShortForm "SEM") "SEMINAR-STYLE MODULE CLASS"
+    (= lessonTypeShortForm "ST")  "SECTIONAL TEACHING"
+    (= lessonTypeShortForm "T")   "TUTORIAL"
+    (= lessonTypeShortForm "T2")  "TUTORIAL TYPE 2"
+    (= lessonTypeShortForm "T3")  "TUTORIAL TYPE 3"))
+
+(defn add-module-lesson-groups-from-url-hash
+  "Adds the module lesson groups available in the url hash. Erroneous lesson
+   groups are ignored. If there are missing lesson groups for any module after
+   going through the url hash, a random lesson group is chosen.
+
+   NOTE: This function should only be called once."
+  [urlHash]
+  (let [ModulesMap      (aget js/window "ModulesMap")
+        moduleInfoArray (.split urlHash "&")
+
+        modInfoRegex
+        #"^([A-Z]+\d{4}[A-Z]*)_(DL|L|LAB|PL|PT|R|SEM|ST|T|T2|T3)=([A-Z0-9]+)$"
+
+        get-module-code-from-match-array
+        (fn [matchArray] (nth matchArray 1))
+
+        get-lesson-type-from-match-array
+        (fn [matchArray] (nth matchArray 2))
+
+        get-lesson-group-from-match-array
+        (fn [matchArray] (nth matchArray 3))
+
+        moduleInfoMaps
+        (map (fn [modInfo]
+               {:modInfo    modInfo
+                :matchArray (.exec modInfoRegex modInfo)})
+             moduleInfoArray)
+
+        moduleInfoMapsExistent
+        (filter
+          (fn [modInfoMap]
+            (let [matchArray (:matchArray modInfoMap)]
+              (and (not (nil? matchArray))
+                   (let [moduleCode       (get-module-code-from-match-array
+                                            matchArray)
+                         lessonTypeShort  (get-lesson-type-from-match-array
+                                            matchArray)
+                         lessonType       (lesson-type-short-to-long-form
+                                            lessonTypeShort)
+                         lessonGroup      (get-lesson-group-from-match-array
+                                            matchArray)]
+                     (not (nil? (get-in
+                                  ModulesMap
+                                  [moduleCode "lessons" lessonType
+                                   lessonGroup])))))))
+          moduleInfoMaps)
+
+        moduleToColorsMap
+        (reduce (fn [m2cMap moduleCode]
+                  (assoc m2cMap
+                         moduleCode
+                         (get-next-lesson-bg-color-css-class)))
+                {}
+                (distinct (map (fn [modInfoMap]
+                                 (get-module-code-from-match-array
+                                   (:matchArray modInfoMap)))
+                               moduleInfoMapsExistent)))]
+    (doseq [modInfo moduleInfoMapsExistent]
+      (let [matchArray (:matchArray modInfo)
+            moduleCode      (get-module-code-from-match-array matchArray)
+            lessonTypeShort (get-lesson-type-from-match-array matchArray)
+            lessonType      (lesson-type-short-to-long-form lessonTypeShort)
+            lessonGroup     (get-lesson-group-from-match-array matchArray)
+            bgColorCssClass (get moduleToColorsMap moduleCode)]
+        (add-module-lesson-group moduleCode lessonType lessonGroup
+                                 bgColorCssClass)))))
 
 (defn remove-module
   "Removes a module from the timetable.
