@@ -98,3 +98,11 @@ and print out the `ModuleCode`(s) which do not follow the format.
 To run it:
 
     node inspect_scripts/module_code_format.js
+
+### classno_format.js
+
+Checks if all the `.ClassNo` attribute of Lesson objects match a given regex.
+
+To run it:
+
+    node inspect_scripts/classno_format.js
