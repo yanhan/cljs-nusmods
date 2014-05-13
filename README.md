@@ -142,7 +142,6 @@ find)
 (For the `Select Modules for Timetable` input box)
 
 #### CSS libraries / tools:
-- [Zurb Foundation 5](http://foundation.zurb.com/)
 - [Compass](http://compass-style.org/)
 (Enables us to write SCSS instead of CSS, huge boon)
 
