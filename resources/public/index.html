@@ -21,19 +21,7 @@
     </div>
     <div>
       <div class="tab-content" id="module-finder">
-        <div class="medium-3 columns">
-          <div style="width: 100%;">
-            <div class="search-modules-none-selected-div">
-              <span class="exhibit-facet-header-title">Select Modules for Timetable</span>
-            </div>
-            <div class="search-modules-selected-div">
-              <span class="exhibit-facet-header-title search-modules-nr-selected"></span>
-              <span>
-                <a href="#" class="search-modules-clear-all-modules">(Clear All)</a>
-              </span>
-            </div>
-            <input type="hidden" id="search-modules" />
-          </div>
+        <div id="module-finder-sidebar" class="medium-3 columns">
           <div data-ex-role="exhibit-facet"
                data-ex-facet-class="Exhibit.TextSearchFacet"
                data-ex-expressions=".label, .name, .description, .lecturers"
@@ -533,17 +521,19 @@
             </tr>
           </tbody>
         </table>
-        <div style="width: 100%;">
-          <div class="search-modules-none-selected-div">
-            <span class="exhibit-facet-header-title">Select Modules for Timetable</span>
+        <div id="timetable-builder-controls">
+          <div id="search-modules-container" style="width: 100%;">
+            <div class="search-modules-none-selected-div">
+              <span class="exhibit-facet-header-title">Select Modules for Timetable</span>
+            </div>
+            <div class="search-modules-selected-div">
+              <span class="exhibit-facet-header-title search-modules-nr-selected"></span>
+              <span>
+                <a href="#" class="search-modules-clear-all-modules">(Clear All)</a>
+              </span>
+            </div>
+            <input type="hidden" id="search-modules" />
           </div>
-          <div class="search-modules-selected-div">
-            <span class="exhibit-facet-header-title search-modules-nr-selected"></span>
-            <span>
-              <a href="#" class="search-modules-clear-all-modules">(Clear All)</a>
-            </span>
-          </div>
-          <input type="hidden" id="tt-search-modules" />
         </div>
       </div>
     </div>

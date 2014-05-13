@@ -147,71 +147,59 @@
 (defn- init-dom-clear-modules
   "Code for `(Clear Modules)` button on top of the `Select Modules for
    Timetable` input box"
-  [select2-boxes-vec]
+  [$select2-box]
   (let [$noneSelectedDiv     ($ :.search-modules-none-selected-div)
         $someSelectedDiv     ($ :.search-modules-selected-div)
         $someSelectedDivText ($ :.search-modules-nr-selected)]
 
     (hide $someSelectedDiv)
 
-    (doseq [$select2-box select2-boxes-vec]
-      (.change
-        $select2-box
-        (fn [evt]
-          (cond
-            ; some module has just been added
-            (aget evt "added")
-            (do
-              (if (is $noneSelectedDiv ":visible")
-                  (hide $noneSelectedDiv))
-              ; Add the new module
-              (timetable/add-module (aget (aget evt "added") "id"))
-              ; Modify val of all other boxes
-              (doseq [$other-select2-box select2-boxes-vec]
-                (if (not= (attr $select2-box "id")
-                          (attr $other-select2-box "id"))
-                    (.select2
-                      $other-select2-box "val"
-                      (timetable/get-selected-module-codes-as-js-array))))
-              (if (is $someSelectedDiv ":visible")
-                  (.text $someSelectedDivText
-                         (str "Selected " (timetable/nr-modules-selected)
-                              " Modules"))
-                  ; 0 modules -> 1 module
-                  (do (.text $someSelectedDivText "Selected 1 Module")
-                      (show $someSelectedDiv))))
+    (.change
+      $select2-box
+      (fn [evt]
+        (cond
+          ; some module has just been added
+          (aget evt "added")
+          (do
+            (if (is $noneSelectedDiv ":visible")
+                (hide $noneSelectedDiv))
+            ; Add the new module if it has not been added.
+            ; We perform this check because the 'change' event could have
+            ; been triggered by the Timetable code instead of a UI action
+            (let [moduleCode (aget (nth (aget evt "added") 0) "id")]
+              (if (not (timetable/is-module-selected? moduleCode))
+                  (timetable/add-module moduleCode)))
+            (if (is $someSelectedDiv ":visible")
+                (.text $someSelectedDivText
+                       (str "Selected " (timetable/nr-modules-selected)
+                            " Modules"))
+                ; 0 modules -> 1 module
+                (do (.text $someSelectedDivText "Selected 1 Module")
+                    (show $someSelectedDiv))))
 
-            ; some module was removed
-            (aget evt "removed")
-            (do
-              (timetable/remove-module (aget (aget evt "removed") "id"))
-              ; Modify val of all other boxes
-              (doseq [$other-select2-box select2-boxes-vec]
-                (if (not= (attr $select2-box "id")
-                          (attr $other-select2-box "id"))
-                    (.select2
-                      $other-select2-box "val"
-                      (timetable/get-selected-module-codes-as-js-array))))
-              (let [nrModulesSelected (timetable/nr-modules-selected)]
-                (cond
-                  (<= nrModulesSelected 0)
-                  (do (hide $someSelectedDiv)
-                      (show $noneSelectedDiv))
+          ; some module was removed
+          (aget evt "removed")
+          (do
+            (timetable/remove-module (aget (aget evt "removed") "id"))
+            (let [nrModulesSelected (timetable/nr-modules-selected)]
+              (cond
+                (<= nrModulesSelected 0)
+                (do (hide $someSelectedDiv)
+                    (show $noneSelectedDiv))
 
-                  (= nrModulesSelected 1)
-                  (.text $someSelectedDivText "Selected 1 Module")
+                (= nrModulesSelected 1)
+                (.text $someSelectedDivText "Selected 1 Module")
 
-                  :else
-                  (.text $someSelectedDivText
-                         (str "Selected " nrModulesSelected " Modules")))))))))
+                :else
+                (.text $someSelectedDivText
+                       (str "Selected " nrModulesSelected " Modules"))))))))
     (.click ($ :.search-modules-clear-all-modules)
             (fn [evt]
               (prevent evt)
               (if (js/confirm
                      "Are you sure you want to clear all selected modules?")
                   (do (timetable/remove-all-modules)
-                      (doseq [$select2-box select2-boxes-vec]
-                        (.select2 $select2-box "val" ""))
+                      (select2/select2-box-reset-val $select2-box)
                       (hide $someSelectedDiv)
                       (show $noneSelectedDiv)))))))
 
@@ -349,9 +337,8 @@
     (timetable/init)
 
     ; Iniialize Select2
-    (doseq [$select2JqueryObject select2/Select2-Boxes]
-      (select2/init-select2-element $select2JqueryObject))
-    (init-dom-clear-modules select2/Select2-Boxes)
+    (select2/init-select2-element select2/$Select2-Box)
+    (init-dom-clear-modules select2/$Select2-Box)
 
     ; Code for tabs
     (hide ($ :#module-finder))
@@ -360,12 +347,16 @@
               (hide ($ :#timetable-builder))
               (show ($ :#module-finder))
               (aset js/window "ActiveTab" MODULEFINDER-TAB-INDEX)
+              (select2/shift-select2-container-to "timetable-builder-controls"
+                                                  "module-finder-sidebar")
               (initialize-exhibit3 MODULES AUXMODULES)))
 
     (.click ($ :#timetable-builder-tab-link)
             (fn []
               (hide ($ :#module-finder))
               (show ($ :#timetable-builder))
+              (select2/shift-select2-container-to "module-finder-sidebar"
+                                                  "timetable-builder-controls")
               (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)))
 
     ; Create modules

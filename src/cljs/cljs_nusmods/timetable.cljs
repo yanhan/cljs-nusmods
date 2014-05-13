@@ -1,7 +1,8 @@
 (ns ^{:doc "Code for Timetable Builder page"}
   cljs-nusmods.timetable
   (:use [jayq.core :only [$ attr children hide is prevent show text width]])
-  (:require [cljs-nusmods.time :as time-helper]))
+  (:require [cljs-nusmods.select2 :as select2]
+            [cljs-nusmods.time    :as time-helper]))
 
 (def ^{:doc     "Width in pixels of a half hour timeslot"
        :private true
@@ -28,6 +29,28 @@
   :private true
   }
   ModulesSelected {})
+
+(def ^{:doc     "Vector containing module code strings in the order the modules
+                 were added."
+       :private true}
+  ModulesSelectedOrder [])
+
+(defn nr-modules-selected
+  "Return the number of modules selected by the user"
+  []
+  (count ModulesSelected))
+
+(defn get-selected-module-codes-as-js-array
+  "Returns a JavaScript Array of Strings, where each String is the module code
+   of a selected module"
+  []
+  (clj->js ModulesSelectedOrder))
+
+(defn is-module-selected?
+  "Determines if a module has been selected"
+  [moduleCode]
+  (let [containsModule (contains? ModulesSelected moduleCode)]
+    containsModule))
 
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
@@ -243,7 +266,19 @@
                               lessons))]
           ; Update ModulesSelected with the lesson group
           (set! ModulesSelected
-                (assoc-in ModulesSelected [moduleCode lessonType] lessonLabel))))))
+                (assoc-in ModulesSelected [moduleCode lessonType] lessonLabel))
+
+          ; Add to ModulesSelectedOrder
+          (if (not-any? #{moduleCode} ModulesSelectedOrder)
+              (do
+                (set! ModulesSelectedOrder
+                      (conj ModulesSelectedOrder moduleCode))
+                ; Update select2 box.
+                ; NOTE: This does a quadratic amount of work but I do not have
+                ;       a workaround.
+                (select2/select2-box-set-val
+                  select2/$Select2-Box
+                  (get-selected-module-codes-as-js-array))))))))
 
 (defn add-module
   "Adds a module to the timetable.
@@ -277,14 +312,3 @@
   ; !!!
   nil
   )
-
-(defn nr-modules-selected
-  "Return the number of modules selected by the user"
-  []
-  (count ModulesSelected))
-
-(defn get-selected-module-codes-as-js-array
-  "Returns a JavaScript Array of Strings, where each String is the module code
-   of a selected module"
-  []
-  (clj->js (keys ModulesSelected)))

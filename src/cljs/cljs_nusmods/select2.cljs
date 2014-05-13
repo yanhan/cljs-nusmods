@@ -5,11 +5,14 @@
                   variable."
       }
   cljs-nusmods.select2
-  (:use [jayq.core :only [$]]))
+  (:use [jayq.core :only [$ attr parent]]))
 
-(def ^{:doc "jQuery objects for the Select2 input boxes"}
-  Select2-Boxes
-  [($ :#search-modules) ($ :#tt-search-modules)])
+(def ^{:doc "jQuery object for the Select2 input box"}
+  $Select2-Box ($ :#search-modules))
+
+(def ^{:doc     "jQuery object for the container of the Select2 input box"
+       :private true}
+  $Select2-Container ($ :#search-modules-container))
 
 (defn- select2-query-fn
   "query function for the Select2 `Select Modules for Timetable` input"
@@ -72,6 +75,24 @@
                      {"id" moduleCode
                       "text" (str moduleCode " "
                                   (get-in ModulesMap [moduleCode "name"]))})
-                   (.split (.val elem) ",")))))
+                   (filter (fn [s] (not= s "")) (.split (.val elem) ","))))))
 
         "query"         select2-query-fn))))
+
+(defn select2-box-set-val
+  "Sets the value for a Select2 jQuery object. The supplied value should be a
+   JavaScript Array of module code Strings."
+  [$select2-box moduleCodeStrings]
+  (.select2 $select2-box "val" moduleCodeStrings true))
+
+(defn select2-box-reset-val
+  "Resets the value for a Select2 jQuery object"
+  [$select2-box]
+  (.select2 $select2-box "val" "" true))
+
+(defn shift-select2-container-to
+  "Shifts the Select2 container jQuery object to another id."
+  [fromParentId toParentId]
+  (let [currentParentId (attr (parent $Select2-Container) "id")]
+    (if (= fromParentId currentParentId)
+        (.prepend ($ (str "#" toParentId)) $Select2-Container))))
