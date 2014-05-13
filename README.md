@@ -118,7 +118,7 @@ step.
 ### Compiling ClojureScript
 
 We make use of **Advanced Optimizations** for our ClojureScript code (where's
-the fun if you don't do that?). As such, this is the slowest step in the entire
+the fun if we don't do that?). As such, this is the slowest step in the entire
 build process.
 
 [Leiningen](https://github.com/technomancy/leiningen) (Leiningen) and the
