@@ -66,6 +66,15 @@ finer grained builds.
 
 And go to http://127.0.0.1:3000/index.html
 
+## Development
+
+Run the following:
+
+    gulp watch
+
+Any changes to the `src/scss/style.scss` will force a recompilation of SCSS to
+CSS.
+
 ## Running Tests
 
 To build the test files:
@@ -144,6 +153,7 @@ find)
 #### CSS libraries / tools:
 - [Compass](http://compass-style.org/)
 (Enables us to write SCSS instead of CSS, huge boon)
+- [gulp-sass](https://github.com/dlmanning/gulp-sass)
 
 #### JavaScript libraries (back end):
 - [gulp.js](http://gulpjs.com/) (Making Grunt obsolete, kind of)

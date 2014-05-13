@@ -180,3 +180,10 @@ gulp.task("cljs-clean-compile", shell.task([
 gulp.task("default", [
   "exhibit3", "sass", "generate-module-data", "cljs-clean-compile"
 ]);
+
+// Run `gulp watch` during development for gulp to perform the stuff inside
+// this task when your code changes.
+gulp.task("watch", function() {
+  // Compile SCSS to CSS on changes
+  gulp.watch("src/scss/styles.scss", ["sass"]);
+});
