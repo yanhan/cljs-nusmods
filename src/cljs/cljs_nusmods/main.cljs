@@ -166,7 +166,7 @@
             ; Add the new module if it has not been added.
             ; We perform this check because the 'change' event could have
             ; been triggered by the Timetable code instead of a UI action
-            (let [moduleCode (aget (nth (aget evt "added") 0) "id")]
+            (let [moduleCode (aget (aget evt "added") "id")]
               (if (not (timetable/is-module-selected? moduleCode))
                   (timetable/add-module moduleCode)))
             (if (is $someSelectedDiv ":visible")
