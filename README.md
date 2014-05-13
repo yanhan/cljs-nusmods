@@ -20,13 +20,33 @@ It is less buggy and contains a lot more features.
 
 ## Setup
 
+### Ruby Gems
+
 Install the Ruby gems in the `Gemfile`:
 
     bundle install
 
+### Node.js libraries
+
 Install the necessary nodejs libraries:
 
     npm install
+
+### Files from http://api.nusmods.com
+
+Execute the following commands to download some required files from
+http://api.nusmods.com to the `api-nusmods-stuff` folder:
+
+    helpers/dl-api-nusmods-stuff.sh
+
+The required files are the following:
+
+- `modules.json`. A concrete example of such a file is
+http://api.nusmods.com/2013-2014/2/modules.json
+- `facultyDepartments.json`. A concrete example of such a file is
+http://api.nusmods.com/2013-2014/2/facultyDepartments.json
+- `lessonTypes.json`. A concrete example of such a file is
+http://api.nusmods.com/2013-2014/2/lessonTypes.json
 
 ## Building
 
@@ -36,18 +56,6 @@ For generating CSS from SCSS:
 
 ### Generating module information
 
-We will need several files from http://api.nusmods.com/
-
-- `modules.json`. A concrete example of such a file is
-http://api.nusmods.com/2013-2014/2/modules.json
-- `facultyDepartments.json` A concrete example of such a file is
-http://api.nusmods.com/2013-2014/2/facultyDepartments.json
-- `lessonTypes.json`. A concrete example of such a file is
-http://api.nusmods.com/2013-2014/2/lessonTypes.json
-
-Place these JSON files at the root directory of this repository and
-generate a `processed_modules.json` file:
-
     node helpers/normalize_modules_json.js
 
 Using the `processed_modules.json` file, we generate the `modinfo.js` and
@@ -56,7 +64,7 @@ them to the `resources/public/js/` directory (these files hold compacted module
 information):
 
     node helpers/convert_modules.js
-    cp modinfo.js auxmodinfo.js resources/public/js/
+    cp build-temp/modinfo.js build-temp/auxmodinfo.js resources/public/js/
 
 ### Building minified libraries
 
