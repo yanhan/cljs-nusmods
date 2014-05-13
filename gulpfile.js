@@ -2,6 +2,7 @@ var gulp = require("gulp");
 var concat = require("gulp-concat");
 var uglify = require("gulp-uglify");
 var minifyCSS = require("gulp-minify-css");
+var sass = require("gulp-sass");
 
 // Concat + Minify Exhibit 3.0 JavaScript
 gulp.task("exhibit3-js-concat-minify", function() {
@@ -154,5 +155,14 @@ gulp.task("exhibit3", [
   "exhibit3-locale"
 ]);
 
+// Compile SCSS to CSS
+gulp.task("sass", function() {
+  return gulp.src("src/scss/styles.scss")
+    .pipe(sass())
+    .pipe(gulp.dest("resources/public/css/"));
+});
+
 // Default task
-gulp.task("default", ["exhibit3"]);
+gulp.task("default", [
+  "exhibit3", "sass"
+]);
