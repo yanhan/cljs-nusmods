@@ -1,6 +1,6 @@
 var _ = require("lodash");
 var MODULES_ARRAY = require(__dirname + "/../api-nusmods-stuff/modules.json");
-var moduleCodeRegex = /^\D+\d{4}\D*$/;
+var moduleCodeRegex = /^[A-Z]+\d{4}[A-Z]*$/;
 
 _.forEach(MODULES_ARRAY, function(mod) {
   var matchArray;
