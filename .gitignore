@@ -7,6 +7,7 @@ pom.xml
 pom.xml.asc
 *~
 *.jar
+*.bundle
 *.class
 *.swo
 *.swp
