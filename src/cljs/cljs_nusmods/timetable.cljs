@@ -339,6 +339,34 @@
     (= lessonTypeShortForm "T2")  "TUTORIAL TYPE 2"
     (= lessonTypeShortForm "T3")  "TUTORIAL TYPE 3"))
 
+(defn- get-module-info-from-url-hash-module-info
+  "Computes the final module info sequence for modules added via the url hash
+   on page initialization.
+
+   NOTE: This function should only be called by
+         `add-module-lesson-groups-from-url-hash`"
+  [moduleInfoSeq]
+  (let [moduleLessonGroupsMap
+        (reduce (fn [lgMap modInfo]
+                  ; Replaces earlier lesson groups with later ones if we
+                  ; encounter a duplicate lesson type
+                  (assoc-in lgMap [(:moduleCode modInfo) (:lessonType modInfo)]
+                            (:lessonGroup modInfo)))
+                {}
+                moduleInfoSeq)]
+
+    ; Produce the final module info sequence
+    (flatten
+      (map (fn [moduleCode]
+             (let [lessonTypesMap (get moduleLessonGroupsMap moduleCode)]
+               (map (fn [lessonType]
+                      (let [lessonGroup (get lessonTypesMap lessonType)]
+                        {:moduleCode  moduleCode
+                         :lessonType  lessonType
+                         :lessonGroup lessonGroup}))
+                    (keys lessonTypesMap))))
+           (keys moduleLessonGroupsMap)))))
+
 (defn add-module-lesson-groups-from-url-hash
   "Adds the module lesson groups available in the url hash. Erroneous lesson
    groups are ignored. If there are missing lesson groups for any module after
@@ -392,10 +420,13 @@
             (assoc m2cMap moduleCode (get-next-lesson-bg-color-css-class)))
           {}
           (distinct (map (fn [modInfo] (:moduleCode modInfo))
-                         moduleInfoExistent)))]
+                         moduleInfoExistent)))
+
+        moduleInfoFinal
+        (get-module-info-from-url-hash-module-info moduleInfoExistent)]
 
     ; Add the module lesson groups
-    (doseq [modInfo moduleInfoExistent]
+    (doseq [modInfo moduleInfoFinal]
       (let [moduleCode      (:moduleCode modInfo)
             bgColorCssClass (get moduleToColorsMap moduleCode)]
         (add-module-lesson-group moduleCode
