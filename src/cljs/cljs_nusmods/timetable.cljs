@@ -1,7 +1,8 @@
 (ns ^{:doc "Code for Timetable Builder page"}
   cljs-nusmods.timetable
   (:use [jayq.core :only [$ attr children hide is prevent show text width]])
-  (:require [cljs-nusmods.select2 :as select2]
+  (:require [clojure.set]
+            [cljs-nusmods.select2 :as select2]
             [cljs-nusmods.time    :as time-helper]))
 
 (def ^{:doc     "Width in pixels of a half hour timeslot"
@@ -346,26 +347,79 @@
    NOTE: This function should only be called by
          `add-module-lesson-groups-from-url-hash`"
   [moduleInfoSeq]
-  (let [moduleLessonGroupsMap
+  (let [ModulesMap         (aget js/window "ModulesMap")
+
+        moduleLessonGroupsMap
         (reduce (fn [lgMap modInfo]
                   ; Replaces earlier lesson groups with later ones if we
                   ; encounter a duplicate lesson type
                   (assoc-in lgMap [(:moduleCode modInfo) (:lessonType modInfo)]
                             (:lessonGroup modInfo)))
                 {}
-                moduleInfoSeq)]
+                moduleInfoSeq)
+
+        moduleCodesSeq (keys moduleLessonGroupsMap)
+
+        ; Map of Module Code -> Sequence of lesson type strings
+        moduleLessonTypes
+        (reduce (fn [lessonTypesMap moduleCode]
+                  (let [ltMap (get moduleLessonGroupsMap moduleCode)]
+                    (assoc lessonTypesMap moduleCode (keys ltMap))))
+                {}
+                moduleCodesSeq)
+
+        ; Similar to `moduleLessonTypes`, but obtained from ModulesMap
+        moduleLessonTypesFull
+        (reduce (fn [lessonTypesMap moduleCode]
+                  (assoc lessonTypesMap moduleCode
+                         (keys (get-in ModulesMap
+                                       [moduleCode "lessons"]))))
+                {}
+                moduleCodesSeq)
+
+        ; Obtained from the difference between `moduleLessonTypesFull` and
+        ; `moduleLessonTypes`
+        missingModuleLessonTypes
+        (reduce (fn [missingLessonTypesMap moduleCode]
+                  (let [missingLessonTypes
+                        (clojure.set/difference
+                          (set (get moduleLessonTypesFull moduleCode))
+                          (set (get moduleLessonTypes moduleCode)))]
+                    (if (empty? missingLessonTypes)
+                        missingLessonTypesMap
+                        (assoc missingLessonTypesMap moduleCode
+                               (seq missingLessonTypes)))))
+                {}
+                moduleCodesSeq)
+
+        ; similar to `moduleLessonGroupsMap`, but includes missing lesson types
+        moduleLessonGroupsMapFinal
+        (reduce (fn [lgMapFinal moduleCode]
+                  (let [missingLessonTypes
+                        (get missingModuleLessonTypes moduleCode)]
+                    (reduce
+                      (fn [lgMap lessonType]
+                        (let [lessonGroups
+                              (get-in ModulesMap
+                                      [moduleCode "lessons" lessonType])]
+                          (assoc-in lgMap [moduleCode lessonType]
+                                           (first (keys lessonGroups)))))
+                      lgMapFinal
+                      missingLessonTypes)))
+                moduleLessonGroupsMap
+                (keys missingModuleLessonTypes))]
 
     ; Produce the final module info sequence
     (flatten
       (map (fn [moduleCode]
-             (let [lessonTypesMap (get moduleLessonGroupsMap moduleCode)]
+             (let [lessonTypesMap (get moduleLessonGroupsMapFinal moduleCode)]
                (map (fn [lessonType]
                       (let [lessonGroup (get lessonTypesMap lessonType)]
                         {:moduleCode  moduleCode
                          :lessonType  lessonType
                          :lessonGroup lessonGroup}))
                     (keys lessonTypesMap))))
-           (keys moduleLessonGroupsMap)))))
+           moduleCodesSeq))))
 
 (defn add-module-lesson-groups-from-url-hash
   "Adds the module lesson groups available in the url hash. Erroneous lesson
