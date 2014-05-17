@@ -346,10 +346,10 @@
 
    NOTE: This function should only be called once."
   [urlHash]
-  (let [ModulesMap      (aget js/window "ModulesMap")
-        moduleInfoArray (.split urlHash "&")
+  (let [ModulesMap         (aget js/window "ModulesMap")
+        moduleUrlHashArray (.split urlHash "&")
 
-        modInfoRegex
+        modUrlHashRegex
         #"^([A-Z]+\d{4}[A-Z]*)_(DL|L|LAB|PL|PT|R|SEM|ST|T|T2|T3)=([A-Z0-9]+)$"
 
         get-module-code-from-match-array
@@ -361,49 +361,46 @@
         get-lesson-group-from-match-array
         (fn [matchArray] (nth matchArray 3))
 
-        moduleInfoMaps
-        (map (fn [modInfo]
-               {:modInfo    modInfo
-                :matchArray (.exec modInfoRegex modInfo)})
-             moduleInfoArray)
+        ; Sequence of non-nil match arrays
+        matchArraySeq
+        (filter (fn [matchArray] (not (nil? matchArray)))
+          (map (fn [modUrlHash] (.exec modUrlHashRegex modUrlHash))
+               moduleUrlHashArray))
 
-        moduleInfoMapsExistent
+        ; Sequence of existing lesson groups
+        moduleInfoExistent
         (filter
-          (fn [modInfoMap]
-            (let [matchArray (:matchArray modInfoMap)]
-              (and (not (nil? matchArray))
-                   (let [moduleCode       (get-module-code-from-match-array
-                                            matchArray)
-                         lessonTypeShort  (get-lesson-type-from-match-array
-                                            matchArray)
-                         lessonType       (lesson-type-short-to-long-form
-                                            lessonTypeShort)
-                         lessonGroup      (get-lesson-group-from-match-array
-                                            matchArray)]
-                     (not (nil? (get-in
-                                  ModulesMap
-                                  [moduleCode "lessons" lessonType
-                                   lessonGroup])))))))
-          moduleInfoMaps)
+          (fn [modInfo]
+            (not (nil? (get-in ModulesMap
+                               [(:moduleCode modInfo) "lessons"
+                                (:lessonType modInfo)
+                                (:lessonGroup modInfo)]))))
+          ; convert matchArrays to maps
+          (map (fn [matchArray]
+                 {:moduleCode  (get-module-code-from-match-array
+                                 matchArray)
+                  :lessonType  (lesson-type-short-to-long-form
+                                 (get-lesson-type-from-match-array matchArray))
+                  :lessonGroup (get-lesson-group-from-match-array
+                                 matchArray)})
+               matchArraySeq))
 
+        ; Module code to CSS class for lesson div background color
         moduleToColorsMap
-        (reduce (fn [m2cMap moduleCode]
-                  (assoc m2cMap
-                         moduleCode
-                         (get-next-lesson-bg-color-css-class)))
-                {}
-                (distinct (map (fn [modInfoMap]
-                                 (get-module-code-from-match-array
-                                   (:matchArray modInfoMap)))
-                               moduleInfoMapsExistent)))]
-    (doseq [modInfo moduleInfoMapsExistent]
-      (let [matchArray (:matchArray modInfo)
-            moduleCode      (get-module-code-from-match-array matchArray)
-            lessonTypeShort (get-lesson-type-from-match-array matchArray)
-            lessonType      (lesson-type-short-to-long-form lessonTypeShort)
-            lessonGroup     (get-lesson-group-from-match-array matchArray)
+        (reduce
+          (fn [m2cMap moduleCode]
+            (assoc m2cMap moduleCode (get-next-lesson-bg-color-css-class)))
+          {}
+          (distinct (map (fn [modInfo] (:moduleCode modInfo))
+                         moduleInfoExistent)))]
+
+    ; Add the module lesson groups
+    (doseq [modInfo moduleInfoExistent]
+      (let [moduleCode      (:moduleCode modInfo)
             bgColorCssClass (get moduleToColorsMap moduleCode)]
-        (add-module-lesson-group moduleCode lessonType lessonGroup
+        (add-module-lesson-group moduleCode
+                                 (:lessonType modInfo)
+                                 (:lessonGroup modInfo)
                                  bgColorCssClass)))))
 
 (defn remove-module
