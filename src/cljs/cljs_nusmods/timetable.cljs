@@ -325,21 +325,20 @@
                                    bgColorCssClass
                                    ModulesMap)))))
 
-(defn- lesson-type-short-to-long-form
-  "Converts a short form lesson type string into its long form"
-  [lessonTypeShortForm]
-  (cond
-    (= lessonTypeShortForm "DL")  "DESIGN LECTURE"
-    (= lessonTypeShortForm "L")   "LECTURE"
-    (= lessonTypeShortForm "LAB") "LABORATORY"
-    (= lessonTypeShortForm "PL")  "PACKAGED LECTURE"
-    (= lessonTypeShortForm "PT")  "PACKAGED TUTORIAL"
-    (= lessonTypeShortForm "R")   "RECITATION"
-    (= lessonTypeShortForm "SEM") "SEMINAR-STYLE MODULE CLASS"
-    (= lessonTypeShortForm "ST")  "SECTIONAL TEACHING"
-    (= lessonTypeShortForm "T")   "TUTORIAL"
-    (= lessonTypeShortForm "T2")  "TUTORIAL TYPE 2"
-    (= lessonTypeShortForm "T3")  "TUTORIAL TYPE 3"))
+(def ^{:doc     "Converts a short form lesson type string to its long form"
+       :private true}
+  Lesson-Type-Short-To-Long-Form
+  {"DL"  "DESIGN LECTURE",
+   "L"   "LECTURE",
+   "LAB" "LABORATORY",
+   "PL"  "PACKAGED LECTURE",
+   "PT"  "PACKAGED TUTORIAL",
+   "R"   "RECITATION",
+   "SEM" "SEMINAR-STYLE MODULE CLASS",
+   "ST"  "SECTIONAL TEACHING",
+   "T"   "TUTORIAL",
+   "T2"  "TUTORIAL TYPE 2",
+   "T3"  "TUTORIAL TYPE 3"})
 
 (def ^{:doc     "Converts a long form lesson type string to its short form"
        :private true}
@@ -502,7 +501,7 @@
           (map (fn [matchArray]
                  {:moduleCode  (get-module-code-from-match-array
                                  matchArray)
-                  :lessonType  (lesson-type-short-to-long-form
+                  :lessonType  (Lesson-Type-Short-To-Long-Form
                                  (get-lesson-type-from-match-array matchArray))
                   :lessonGroup (get-lesson-group-from-match-array
                                  matchArray)})
