@@ -160,10 +160,20 @@
        {
          :nrLessonGroups (integer representing the number of lesson groups
                           occupying the current row)
-         :occupied       (a vector of timeslots from 0800 to 2330 (inclusive)
-                          in 30 min intervals. Each slot is a boolean value.
-                          A value of `True` indicates that the slot is occupied.
-                          A value of `False` indicates that the slot is free.)
+         :occupied        a vector of timeslots from 0800 to 2330 (inclusive)
+                          in 30 min intervals. Each slot is one of:
+                          - nil. The means that the slot is free
+                          - a map of module information:
+                            {
+                              :moduleCode -> module code string
+                              :lessonType -> lesson type string (long form),
+                              :lessonGroup -> Lesson group string (lesson label)
+                              :index       -> index to the list of lessons for
+                                              that lesson group.
+                            }
+                            This information can be used to access the <div> in
+                            the `ModulesSelected` global during module removal
+                            or lesson shifting.
        }"
   []
   {
@@ -251,20 +261,18 @@
 (defn- timetable-mark-lesson-slots-occupied
   "Given a 0-indexed row number obtained by `find-free-row-for-lesson`, marks
    the timeslots for the lesson in that row as occupied."
-  [rowNum lesson]
-  (let [day       (:day lesson)
-        startTime (:startTime lesson)
-        endTime   (:endTime lesson)]
-    (set! Timetable
-          (update-in Timetable [day rowNum]
-                     (fn [ttRow]
-                       {
-                         :nrLessonGroups (inc (:nrLessonGroups ttRow))
-                         :occupied       (reduce (fn [occupiedVec idx]
-                                                   (assoc occupiedVec idx true))
-                                                 (:occupied ttRow)
-                                                 (range startTime endTime))
-                       })))))
+  [day rowNum startTime endTime modInfo]
+  (set! Timetable
+        (update-in
+          Timetable [day rowNum]
+          (fn [ttRow]
+            {
+              :nrLessonGroups (inc (:nrLessonGroups ttRow))
+              :occupied       (reduce (fn [occupiedVec idx]
+                                        (assoc occupiedVec idx modInfo))
+                                      (:occupied ttRow)
+                                      (range startTime endTime))
+            }))))
 
 (defn- find-free-row-for-lesson
   "Returns the 0-indexed row which can accomodate the given lesson (timeslots
@@ -285,7 +293,7 @@
             (zero? (:nrLessonGroups row))
             (assoc result :foundFreeRow true)
 
-            (not (some true?
+            (not (some (fn [x] (not (nil? x)))
                        (map (fn [timeIdx] (nth (:occupied row) timeIdx))
                             (range startTime endTime))))
             (assoc result :foundFreeRow true)
@@ -310,7 +318,8 @@
 (defn- add-module-lesson
   "Adds a single lesson of a module (obtained from the `ModulesMap` global) to
    the timetable, and returns its jQuery div element."
-  [moduleCode moduleName lessonType lessonLabel lesson bgColorCssClass]
+  [moduleCode moduleName lessonType lessonLabel lesson lessonIdx
+   bgColorCssClass]
   (let [rowNum      (find-free-row-for-lesson lesson)
         day         (:day lesson)
         startTime   (:startTime lesson)
@@ -322,7 +331,12 @@
     ; Create new row if necessary
     (if (= rowNum (get-nr-rows-in-timetable-day day))
         (add-new-row-to-timetable-day day))
-    (timetable-mark-lesson-slots-occupied rowNum lesson)
+
+    ; Update in-memory representation of timetable
+    (timetable-mark-lesson-slots-occupied
+      day rowNum startTime endTime
+      {:moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonLabel,
+       :index lessonIdx})
 
     ; add background color css class
     (.addClass divElem bgColorCssClass)
@@ -358,14 +372,16 @@
                                        lessonLabel])]
     (if (and moduleName lessons)
         (let [lessonInfoSeq (doall
-                              (map (fn [lesson]
+                              (map (fn [[lessonIdx lesson]]
                                      (add-module-lesson moduleCode
                                                         moduleName
                                                         lessonType
                                                         lessonLabel
                                                         lesson
+                                                        lessonIdx
                                                         bgColorCssClass))
-                                   lessons))]
+                                   (map vector
+                                        (range 0 (count lessons)) lessons)))]
           ; Update ModulesSelected with the lesson group
           (set! ModulesSelected
                 (assoc-in ModulesSelected [moduleCode lessonType]
