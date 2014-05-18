@@ -1,0 +1,53 @@
+Ensure that:
+1. Incorrectly formatted stuff is ignored
+2. If a piece of supplied module information results in a missing modules,
+   lesson type or lesson group, it is ignored
+3. Any missing lesson type for a module is handled by adding a randomly
+   selected lesson group for that lesson type
+
+http://127.0.0.1:3000/index.html#ACC1002_L=V1&ACC1002_T=V01&CS1010_ST=1&CS1010_T=1&CS1010_L=1&CS1020_LAB=1&CS1020_ST=1&CS1234_L=1&CS3241_LAB=2&CM1121_L=SL1&BPS5103_L=1&BPS5103_T=1&AR4223_L=1&AR4223_T=1&DSC3226_ST=Z1&ACC1002_T=V02&CS1010_T=2&LAJ3202_L=2&LAJ3202_T=A3
+
+
+; WED 1000 - 1200
+ACC1002 Lecture V1
+; TUE 1300 - 1500
+ACC1002 Tutorial V02
+; TUE 1000 - 1300
+CS1010 Sectional Teaching 1
+; FRI 1200 - 1400
+CS1010 Tutorial 2
+; THU 1000 - 1200
+CS1020 Lab 1
+; TUE 1000 - 1200
+CS1020 Sectional Teaching 1
+; TUE 1300 - 1400
+CS3241 Lab 2
+; MON 1000 - 1200
+CM1121 Lecture SL1
+; MON 1900 - 2200
+BPS5103 Lecture 1
+; TUE 900 - 1530
+BPS5103 Tutorial 1
+; MON 1400 - 1700
+AR4223 Lecture 1
+; MON 900 - 1200
+AR4223 Tutorial 1
+; MON 1100 - 1400
+DSC3226 Sectional Teaching Z1
+; TUE 1800 - 2000
+LAJ3202 Tutorial A3
+
+
+CS1020 Tutorial missing
+CM1121 Tutorial missing
+CS3241 Lecuture missing
+CS3241 Tutorial missing
+LAJ3202 Lecture missing
+LAJ3202 Tutorial Type 2 missing
+LAJ3202 Tutorial Type 3 missing
+
+
+Non-existent
+- CS1010_L=1 (CS1010 has no lecture)
+- CS1234_L= 1 (no such module)
+- LAJ3202_L=2 (LAJ3202 has no lecture label = 2)

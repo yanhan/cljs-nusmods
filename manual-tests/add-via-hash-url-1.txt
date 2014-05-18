@@ -1,0 +1,66 @@
+Ensure that:
+1. All the short forms for lesson types ('L' for Lecture, 'T' for Tutorial,
+   etc) are handled correctly.
+2. New rows are created for a lesson when existing rows cannot accomodate
+   the lesson due to time slot clashes
+
+http://127.0.0.1:3000/index.html#ACC1002_L=V1&ACC1002_T=V01&CS1010_ST=1&CS1010_T=1&CS1020_LAB=1&CS1020_ST=1&CS1020_T=2&CM1121_L=SL1&CM1121_T=TH1&BPS5103_L=1&BPS5103_T=1&AR4223_L=1&AR4223_T=1&DSC3226_ST=Z1&AR1102_DL=1&EE2021_PL=3&EE2021_PT=5&CS1010S_L=1&CS1010S_R=4&CS1010S_T=13&YSS1202_SEM=1&LAT2201_L=2&LAT2201_T=A2&LAT2201_T2=B2&LAJ3202_L=1&LAJ3202_T=A3&LAJ3202_T2=B1&LAJ3202_T3=C2
+
+; WED 1000 - 1200
+ACC1002 Lecture V1
+; TUE 1000 - 1200
+ACC1002 Tutorial V01
+; TUE 1000 - 1300
+CS1010 Sectional Teaching 1
+; FRI 1000 - 1200
+CS1010 Tutorial 1
+; THU 1000 - 1200
+CS1020 Lab 1
+; TUE 1000 - 1200
+CS1020 Sectional Teaching 1
+; FRI 1000 - 12000
+CS1020 Tutorial 2
+; MON 1000 - 1200
+CM1121 Lecture SL1
+; THU 1000 - 1200
+CM1121 Tutorial TH1
+; MON 1900 - 2200
+BPS5103 Lecture 1
+; TUE 900 - 1530
+BPS5103 Tutorial 1
+; MON 1400 - 1700
+AR4223 Lecture 1
+; MON 900 - 1200
+AR4223 Tutorial 1
+; MON 1100 - 1400
+DSC3226 Sectional Teaching Z1
+; MON 1400 - 1800
+; THU 1400 - 1800
+AR1102 Design Lecture 1
+; MON 1200 - 1400
+EE2021 Packaged Lecture 3
+; WED 1000 - 1200
+EE2021 Packaged Tutorial 5
+; WED 1200 - 1400
+CS1010S Lecture 1
+; FRI 1500 - 1600
+CS1010S Recitation 4
+; TUE 1200 - 1300
+CS1010S Tutorial 13
+; TUE 1430 - 1600
+; FRI 1430 - 1600
+YSS1202 Seminar-Style Module Class 1
+; FRI 1600 - 1800
+LAT2201 Lecture 2
+; MON 1200 - 1400
+LAT2201 Tutorial A2
+; WED 1200 - 1400
+LAT2201 Tutorial Type 2 B2
+; THU 1800 - 2000
+LAJ3202 Lecture 1
+; TUE 1800 - 2000
+LAJ3202 Tutorial A3
+; WED 1200 - 1400
+LAJ3202 Tutorial Type 2 B1
+; FRI 1300 - 1400
+LAJ3202 Tutorial Type 3 C2
