@@ -18,7 +18,7 @@ CS1010 Tutorial 1
 CS1020 Lab 1
 ; TUE 1000 - 1200
 CS1020 Sectional Teaching 1
-; FRI 1000 - 12000
+; FRI 1000 - 1100
 CS1020 Tutorial 2
 ; MON 1000 - 1200
 CM1121 Lecture SL1
