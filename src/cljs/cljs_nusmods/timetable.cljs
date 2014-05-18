@@ -2,6 +2,7 @@
   cljs-nusmods.timetable
   (:use [jayq.core :only [$ attr children hide is prevent show text width]])
   (:require [clojure.set]
+            [clojure.string]
             [cljs-nusmods.select2 :as select2]
             [cljs-nusmods.time    :as time-helper]))
 
@@ -340,6 +341,22 @@
     (= lessonTypeShortForm "T2")  "TUTORIAL TYPE 2"
     (= lessonTypeShortForm "T3")  "TUTORIAL TYPE 3"))
 
+(def ^{:doc     "Converts a long form lesson type string to its short form"
+       :private true}
+  Lesson-Type-Long-To-Short-Form
+  {"DESIGN LECTURE"             "DL",
+   "LECTURE"                    "L",
+   "LABORATORY"                 "LAB",
+   "PACKAGED LECTURE"           "PL",
+   "PACKAGED TUTORIAL"          "PT",
+   "RECITATION"                 "R",
+   "SEMINAR-STYLE MODULE CLASS" "SEM",
+   "SECTIONAL TEACHING"         "ST",
+   "TUTORIAL"                   "T",
+   "TUTORIAL TYPE 2"            "T2",
+   "TUTORIAL TYPE 3"            "T3"
+   })
+
 (defn- get-module-info-from-url-hash-module-info
   "Computes the final module info sequence for modules added via the url hash
    on page initialization.
@@ -421,6 +438,30 @@
                     (keys lessonTypesMap))))
            moduleCodesSeq))))
 
+(defn- set-document-location-hash
+  "Sets document.location.hash to a canonical representation.
+
+   NOTE: This function should only be called by the
+         `add-module-lesson-groups-from-url-hash` function"
+  [moduleInfoSeq]
+  (let [sortedModInfo (sort (fn [modInfoA modInfoB]
+                              (let [moduleCodeA (:moduleCode modInfoA)
+                                    moduleCodeB (:moduleCode modInfoB)]
+                                (if (not= moduleCodeA moduleCodeB)
+                                    (< moduleCodeA moduleCodeB)
+                                    (< (:lessonType modInfoA)
+                                       (:lessonType modInfoB)))))
+                            moduleInfoSeq)]
+    (aset (aget js/document "location") "hash"
+          (clojure.string/join "&"
+            (map (fn [modInfo]
+                   (str (:moduleCode modInfo)
+                        "_"
+                        (Lesson-Type-Long-To-Short-Form (:lessonType modInfo))
+                        "="
+                        (:lessonGroup modInfo)))
+                 sortedModInfo)))))
+
 (defn add-module-lesson-groups-from-url-hash
   "Adds the module lesson groups available in the url hash. Erroneous lesson
    groups are ignored. If there are missing lesson groups for any module after
@@ -486,7 +527,10 @@
         (add-module-lesson-group moduleCode
                                  (:lessonType modInfo)
                                  (:lessonGroup modInfo)
-                                 bgColorCssClass)))))
+                                 bgColorCssClass)))
+
+    ; Update url hash
+    (set-document-location-hash moduleInfoFinal)))
 
 (defn remove-module
   "Removes a module from the timetable.
