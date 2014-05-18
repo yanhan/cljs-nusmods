@@ -342,7 +342,11 @@
       (attr tdHTMLElem "colspan" slotsOcc)
       (doseq [siblingTdElem (take (- slotsOcc 1) (.nextAll tdHTMLElem))]
         (.remove siblingTdElem))
-      divElem)))
+
+      ; Returns a map containing information to make it easier to remove the
+      ; lesson
+      {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
+       :divElem divElem})))
 
 (defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable."
@@ -353,17 +357,19 @@
         lessons    (get-in ModulesMap [moduleCode "lessons" lessonType
                                        lessonLabel])]
     (if (and moduleName lessons)
-        (let [lessonDivs (vec (map (fn [lesson]
-                                (add-module-lesson moduleCode
-                                                   moduleName
-                                                   lessonType
-                                                   lessonLabel
-                                                   lesson
-                                                   bgColorCssClass))
-                              lessons))]
+        (let [lessonInfoSeq (doall
+                              (map (fn [lesson]
+                                     (add-module-lesson moduleCode
+                                                        moduleName
+                                                        lessonType
+                                                        lessonLabel
+                                                        lesson
+                                                        bgColorCssClass))
+                                   lessons))]
           ; Update ModulesSelected with the lesson group
           (set! ModulesSelected
-                (assoc-in ModulesSelected [moduleCode lessonType] lessonLabel))
+                (assoc-in ModulesSelected [moduleCode lessonType]
+                          {:label lessonLabel, :info lessonInfoSeq}))
 
           ; Add to ModulesSelectedOrder
           (if (not-any? #{moduleCode} ModulesSelectedOrder)
