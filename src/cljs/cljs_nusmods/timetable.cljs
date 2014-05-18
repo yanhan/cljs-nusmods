@@ -135,6 +135,16 @@
     (aset (aget js/document "location") "hash"
           (mod-info-url-seq-to-url-hash moduleInfoUrlSeq))))
 
+(defn- update-document-location-hash
+  "Updates document.location.hash with lesson grousp from a newly added module"
+  [newModInfoSeq]
+  (let [orgUrlHash       (aget (aget js/document "location") "hash")
+        newModInfoElems  (map mod-info-to-url-repr newModInfoSeq)
+        newModInfoUrlSeq (concat (clojure.string/split orgUrlHash #"&")
+                                 newModInfoElems)]
+    (aset (aget js/document "location") "hash"
+          (mod-info-url-seq-to-url-hash newModInfoUrlSeq))))
+
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
        :private true
@@ -377,13 +387,26 @@
       (let [ModulesMap      (aget js/window "ModulesMap")
             module          (get ModulesMap moduleCode)
             lessonsMap      (get module "lessons")
-            bgColorCssClass (get-next-lesson-bg-color-css-class)]
-        (doseq [[lessonType lessonGroupsMap] lessonsMap]
-          (add-module-lesson-group moduleCode
-                                   lessonType
-                                   (first (keys lessonGroupsMap))
+            bgColorCssClass (get-next-lesson-bg-color-css-class)
+
+            newModInfoSeq
+            (reduce (fn [moduleInfoSeq [lessonType lessonGroupsMap]]
+                      (conj moduleInfoSeq
+                            {:moduleCode  moduleCode
+                             :lessonType  lessonType
+                             :lessonGroup (first (keys lessonGroupsMap))}))
+                    []
+                    lessonsMap)]
+
+        (doseq [moduleInfo newModInfoSeq]
+          (add-module-lesson-group (:moduleCode moduleInfo)
+                                   (:lessonType moduleInfo)
+                                   (:lessonGroup moduleInfo)
                                    bgColorCssClass
-                                   ModulesMap)))))
+                                   ModulesMap))
+
+        ; Update URL hash with newly added module
+        (update-document-location-hash newModInfoSeq))))
 
 (defn- get-module-info-from-url-hash-module-info
   "Computes the final module info sequence for modules added via the url hash
