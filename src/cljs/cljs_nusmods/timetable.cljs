@@ -75,6 +75,66 @@
   (let [containsModule (contains? ModulesSelected moduleCode)]
     containsModule))
 
+(def ^{:doc     "Converts a short form lesson type string to its long form"
+       :private true}
+  Lesson-Type-Short-To-Long-Form
+  {"DL"  "DESIGN LECTURE",
+   "L"   "LECTURE",
+   "LAB" "LABORATORY",
+   "PL"  "PACKAGED LECTURE",
+   "PT"  "PACKAGED TUTORIAL",
+   "R"   "RECITATION",
+   "SEM" "SEMINAR-STYLE MODULE CLASS",
+   "ST"  "SECTIONAL TEACHING",
+   "T"   "TUTORIAL",
+   "T2"  "TUTORIAL TYPE 2",
+   "T3"  "TUTORIAL TYPE 3"})
+
+(def ^{:doc     "Converts a long form lesson type string to its short form"
+       :private true}
+  Lesson-Type-Long-To-Short-Form
+  {"DESIGN LECTURE"             "DL",
+   "LECTURE"                    "L",
+   "LABORATORY"                 "LAB",
+   "PACKAGED LECTURE"           "PL",
+   "PACKAGED TUTORIAL"          "PT",
+   "RECITATION"                 "R",
+   "SEMINAR-STYLE MODULE CLASS" "SEM",
+   "SECTIONAL TEACHING"         "ST",
+   "TUTORIAL"                   "T",
+   "TUTORIAL TYPE 2"            "T2",
+   "TUTORIAL TYPE 3"            "T3"
+   })
+
+(defn- sort-mod-info-url-seq
+  "Sorts a sequence of mod info url strings, eg. CS1234_L=1"
+  [modInfoUrlSeq]
+  (sort (fn [modInfoUrlA modInfoUrlB]
+          (< modInfoUrlA modInfoUrlB))
+        modInfoUrlSeq))
+
+(defn- mod-info-url-seq-to-url-hash
+  "Converts a sequence of mod info url strings (eg. CS1234_L=1) to a url hash"
+  [modInfoUrlSeq]
+  (clojure.string/join "&" (sort-mod-info-url-seq modInfoUrlSeq)))
+
+(defn- mod-info-to-url-repr
+  "Converts a module info map to a url representation"
+  [modInfo]
+  (str (:moduleCode modInfo) "_"
+       (Lesson-Type-Long-To-Short-Form (:lessonType modInfo))
+       "=" (:lessonGroup modInfo)))
+
+(defn- set-document-location-hash-from-module-info-seq
+  "Sets document.location.hash to a canonical representation.
+
+   NOTE: This function should only be called by the
+         `add-module-lesson-groups-from-url-hash` function"
+  [moduleInfoSeq]
+  (let [moduleInfoUrlSeq (map mod-info-to-url-repr moduleInfoSeq)]
+    (aset (aget js/document "location") "hash"
+          (mod-info-url-seq-to-url-hash moduleInfoUrlSeq))))
+
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
        :private true
@@ -325,37 +385,6 @@
                                    bgColorCssClass
                                    ModulesMap)))))
 
-(def ^{:doc     "Converts a short form lesson type string to its long form"
-       :private true}
-  Lesson-Type-Short-To-Long-Form
-  {"DL"  "DESIGN LECTURE",
-   "L"   "LECTURE",
-   "LAB" "LABORATORY",
-   "PL"  "PACKAGED LECTURE",
-   "PT"  "PACKAGED TUTORIAL",
-   "R"   "RECITATION",
-   "SEM" "SEMINAR-STYLE MODULE CLASS",
-   "ST"  "SECTIONAL TEACHING",
-   "T"   "TUTORIAL",
-   "T2"  "TUTORIAL TYPE 2",
-   "T3"  "TUTORIAL TYPE 3"})
-
-(def ^{:doc     "Converts a long form lesson type string to its short form"
-       :private true}
-  Lesson-Type-Long-To-Short-Form
-  {"DESIGN LECTURE"             "DL",
-   "LECTURE"                    "L",
-   "LABORATORY"                 "LAB",
-   "PACKAGED LECTURE"           "PL",
-   "PACKAGED TUTORIAL"          "PT",
-   "RECITATION"                 "R",
-   "SEMINAR-STYLE MODULE CLASS" "SEM",
-   "SECTIONAL TEACHING"         "ST",
-   "TUTORIAL"                   "T",
-   "TUTORIAL TYPE 2"            "T2",
-   "TUTORIAL TYPE 3"            "T3"
-   })
-
 (defn- get-module-info-from-url-hash-module-info
   "Computes the final module info sequence for modules added via the url hash
    on page initialization.
@@ -437,30 +466,6 @@
                     (keys lessonTypesMap))))
            moduleCodesSeq))))
 
-(defn- set-document-location-hash
-  "Sets document.location.hash to a canonical representation.
-
-   NOTE: This function should only be called by the
-         `add-module-lesson-groups-from-url-hash` function"
-  [moduleInfoSeq]
-  (let [sortedModInfo (sort (fn [modInfoA modInfoB]
-                              (let [moduleCodeA (:moduleCode modInfoA)
-                                    moduleCodeB (:moduleCode modInfoB)]
-                                (if (not= moduleCodeA moduleCodeB)
-                                    (< moduleCodeA moduleCodeB)
-                                    (< (:lessonType modInfoA)
-                                       (:lessonType modInfoB)))))
-                            moduleInfoSeq)]
-    (aset (aget js/document "location") "hash"
-          (clojure.string/join "&"
-            (map (fn [modInfo]
-                   (str (:moduleCode modInfo)
-                        "_"
-                        (Lesson-Type-Long-To-Short-Form (:lessonType modInfo))
-                        "="
-                        (:lessonGroup modInfo)))
-                 sortedModInfo)))))
-
 (defn add-module-lesson-groups-from-url-hash
   "Adds the module lesson groups available in the url hash. Erroneous lesson
    groups are ignored. If there are missing lesson groups for any module after
@@ -529,7 +534,7 @@
                                  bgColorCssClass)))
 
     ; Update url hash
-    (set-document-location-hash moduleInfoFinal)))
+    (set-document-location-hash-from-module-info-seq moduleInfoFinal)))
 
 (defn remove-module
   "Removes a module from the timetable.
