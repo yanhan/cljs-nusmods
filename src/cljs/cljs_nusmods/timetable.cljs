@@ -1,6 +1,7 @@
 (ns ^{:doc "Code for Timetable Builder page"}
   cljs-nusmods.timetable
-  (:use [jayq.core :only [$ attr children hide is prevent show text width]])
+  (:use [jayq.core :only [$ attr children hide insert-after is parent prevent
+                          remove-attr show text width]])
   (:require [clojure.set]
             [clojure.string]
             [cljs-nusmods.select2 :as select2]
@@ -273,6 +274,31 @@
                                       (:occupied ttRow)
                                       (range startTime endTime))
             }))))
+
+(defn- timetable-mark-lesson-slots-free
+  "Marks the timeslots for a lesson as free. The `lessonInfo` parameter must be
+   a map with the following keys:
+
+     :day       -> 0-indexed day
+     :row       -> 0-indexed row in the day
+     :startTime -> 0-indexed start time of the lesson
+     :endTime   -> 0-indexed end time of the lesson"
+  [lessonInfo]
+  (let [day         (:day lessonInfo)
+        row         (:rowNum lessonInfo)
+        startTime   (:startTime lessonInfo)
+        endTime     (:endTime lessonInfo)
+        ttRow       (get-in Timetable [day row])
+        occupiedVec (reduce (fn [occupiedVec timeIdx]
+                              (assoc occupiedVec timeIdx nil))
+                            (:occupied ttRow)
+                            (range startTime endTime))]
+    (set! Timetable
+          (update-in
+            Timetable [day row]
+            (fn [ttRow]
+              {:nrLessonGroups (dec (:nrLessonGroups ttRow))
+               :occupied       occupiedVec})))))
 
 (defn- find-free-row-for-lesson
   "Returns the 0-indexed row which can accomodate the given lesson (timeslots
@@ -581,15 +607,84 @@
     ; Update url hash
     (set-document-location-hash-from-module-info-seq moduleInfoFinal)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Functions for Removing Modules
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- add-missing-td-elements-replacing-lesson
+  "Adds <td> elements that were removed by the `add-module-lesson` function
+   to make way for the lesson."
+  [$parentTd lessonInfo]
+  (let [startTime (:startTime lessonInfo)
+        endTime   (:endTime lessonInfo)]
+    (loop [$currentTd $parentTd
+           timeIdx    (inc startTime)]
+      (if (>= timeIdx endTime)
+          nil
+          (let [[hourClass minuteClass]
+                (get-css-hour-minute-classes-for-time timeIdx)
+
+                $newTdElem
+                ($ "<td />" (js-obj "class" (str hourClass " " minuteClass)))]
+            ; Insert after new <td> after the current <td>
+            (insert-after $newTdElem $currentTd)
+            ; Then use the new <td> as the current <td> in the next iteration
+            (recur $newTdElem (inc timeIdx)))))))
+
+(defn- remove-lesson-group-html
+  "Removes a lesson group for a module from the HTML timetable.
+   This does NOT remove any empty rows / perform module shifting.
+
+   Returns an array of the map with the following keys:
+
+     :day       -> 0-indexed day where the lesson was stored
+     :rowNum    -> 0-indexed row to the day in `Timetable` where the lesson
+                   was stored
+     :startTime -> 0-indexed start time of the lesson
+     :endTime   -> 0-indexed end time of the lesson"
+  [moduleCode lessonType]
+  (let [lessonGroupDetails (get-in ModulesSelected [moduleCode lessonType])
+        lessonLabel        (:label lessonGroupDetails)
+        lessonInfoSeq      (:info lessonGroupDetails)]
+    (map (fn [lessonInfo]
+           (let [$lessonDiv (:divElem lessonInfo)
+                 $parentTd  (parent $lessonDiv)]
+             ; Remove the `colspan` attribute of the parent <td> so it has
+             ; colspan=1
+             (remove-attr $parentTd "colspan")
+             ; Remove the HTML div elem
+             (.remove $lessonDiv)
+             ; Add the missing <td> elements
+             (add-missing-td-elements-replacing-lesson $parentTd lessonInfo)
+             ; Remove the same lessonInfo without :divElem key
+             (dissoc lessonInfo :divElem)))
+         lessonInfoSeq)))
+
 (defn remove-module
   "Removes a module from the timetable.
 
    This deletes every lesson of the module from the timetable."
   [moduleCode]
   (if (contains? ModulesSelected moduleCode)
-    ;!!!
-    nil
-  ))
+      (let [lessonTypes
+            (keys (get ModulesSelected moduleCode))
+
+            seqOfRemovedLessons
+            (flatten (map (fn [lessonType]
+                            (remove-lesson-group-html moduleCode lessonType))
+                          lessonTypes))]
+        (doseq [lessonInfo seqOfRemovedLessons]
+          (timetable-mark-lesson-slots-free lessonInfo))
+        ; Remove from `ModulesSelected`
+        (set! ModulesSelected (dissoc ModulesSelected moduleCode))
+        ; Remove from `ModulesSelectedOrder`
+        (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))
+        ; Update Exhibit3 box
+        (select2/select2-box-set-val select2/$Select2-Box
+                                     (get-selected-module-codes-as-js-array)))))
 
 (defn remove-all-modules
   "Removes all modules from the timetable"
