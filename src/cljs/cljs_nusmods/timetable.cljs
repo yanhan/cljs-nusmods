@@ -40,14 +40,20 @@
 (def ^{
   :doc
   "Modules selected by the user. This map has the following
-   format (Text to the right of arrows `->` represent values):
+   format:
 
+     Module Code (String) ->
        {
          Lesson Type String eg. 'Lecture', 'Tutorial', etc
            -> {
                 :label -> Lesson label String
-                :divs  -> Vector of HTML elements of the lessons
-                          under this label
+                :info  -> Vector of maps in the following format:
+                            {:day       -> 0-indexed day of the lesson
+                             :rowNum    -> 0-indexed <tr> where the lesson is
+                                           stored
+                             :startTime -> 0-indexed start time of lesson
+                             :endTime   -> 0-indexed end time of lesson
+                             :divElem   -> jQuery <div> of the lesson}
               }
        }"
   :private true
