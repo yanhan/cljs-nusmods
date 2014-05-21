@@ -159,27 +159,27 @@
    following format:
 
        {
-         :nrLessonGroups (integer representing the number of lesson groups
-                          occupying the current row)
-         :occupied        a vector of timeslots from 0800 to 2330 (inclusive)
-                          in 30 min intervals. Each slot is one of:
-                          - nil. The means that the slot is free
-                          - a map of module information:
-                            {
-                              :moduleCode -> module code string
-                              :lessonType -> lesson type string (long form),
-                              :lessonGroup -> Lesson group string (lesson label)
-                              :index       -> index to the list of lessons for
-                                              that lesson group.
-                            }
-                            This information can be used to access the <div> in
-                            the `ModulesSelected` global during module removal
-                            or lesson shifting.
+         :nrLessons (integer representing the number of lesson groups
+                     occupying the current row)
+         :occupied  a vector of timeslots from 0800 to 2330 (inclusive)
+                    in 30 min intervals. Each slot is one of:
+                    - nil. The means that the slot is free
+                    - a map of module information:
+                      {
+                        :moduleCode -> module code string
+                        :lessonType -> lesson type string (long form),
+                        :lessonGroup -> Lesson group string (lesson label)
+                        :index       -> index to the list of lessons for
+                                        that lesson group.
+                      }
+                      This information can be used to access the <div> in
+                      the `ModulesSelected` global during module removal
+                      or lesson shifting.
        }"
   []
   {
-    :nrLessonGroups 0,
-    :occupied       (vec (map (fn [t] nil) (range 800 2400 50)))
+    :nrLessons 0,
+    :occupied  (vec (map (fn [t] nil) (range 800 2400 50)))
   })
 
 (defn- create-day-repr
@@ -268,7 +268,7 @@
           Timetable [day rowNum]
           (fn [ttRow]
             {
-              :nrLessonGroups (inc (:nrLessonGroups ttRow))
+              :nrLessons (inc (:nrLessons ttRow))
               :occupied       (reduce (fn [occupiedVec idx]
                                         (assoc occupiedVec idx modInfo))
                                       (:occupied ttRow)
@@ -297,8 +297,8 @@
           (update-in
             Timetable [day row]
             (fn [ttRow]
-              {:nrLessonGroups (dec (:nrLessonGroups ttRow))
-               :occupied       occupiedVec})))))
+              {:nrLessons (dec (:nrLessons ttRow))
+               :occupied  occupiedVec})))))
 
 (defn- find-free-row-for-lesson
   "Returns the 0-indexed row which can accomodate the given lesson (timeslots
@@ -316,7 +316,7 @@
             (:foundFreeRow result)
             result
 
-            (zero? (:nrLessonGroups row))
+            (zero? (:nrLessons row))
             (assoc result :foundFreeRow true)
 
             (not (some (fn [x] (not (nil? x)))
