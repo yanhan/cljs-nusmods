@@ -674,6 +674,54 @@
              (assoc ttLessonInfo :day day, :rowNum rowNum)))
          lessonInfoSeq)))
 
+(defn- find-replacement-lessons-within-time
+  "Given a lessonInfo map of a lesson which has been removed, find other lessons
+   on the same day but in a row below the removed lesson, which could be shifted
+   upwards and take the timeslots freed up by the removed lesson."
+  [removedLessonInfo]
+  (let [day       (:day removedLessonInfo)
+        row       (:rowNum removedLessonInfo)
+        startTime (:startTime lesson)
+        endTime   (:endTime lesson)]
+    ; TODO: Find the longest consecutive free time range
+    ))
+
+(defn- shift-lessons-upwards-to-replace-empty-slots
+  "For each removed lesson, see if there are any lessons in rows below it that
+   can be shifted upwards to occupy the empty slots resulting from its removal."
+  [removedLessonInfoSeq]
+  (let [sort-lesson-info-seq (fn [lessonInfoSeq]
+                               (sort #(let [dayA (:day %1)
+                                            dayB (:day %2)]
+                                        (if (= dayA dayB)
+                                          (< (:rowNum %1) (:rowNum %2))
+                                          (< dayA dayB)))
+                                     lessonInfoSeq))]
+
+    (loop [currentLessonInfoSeq (sort-lesson-info-seq removedLessonInfoSeq)
+           nextLessonInfoVec    []]
+      (cond (and (empty? currentLessonInfoSeq) (empty? nextLessonInfoVec))
+            nil
+
+            (empty? currentLessonInfoSeq)
+            (recur (sort-lesson-info-seq nextLessonInfoVec) [])
+
+            ; find timeslot to shift up to replace gap
+            :else
+            (let [replacementLessons (find-replacement-lessons-within-time
+                                       (first currentLessonInfoSeq))]
+              ; TODO: Shift the lessons...
+              ;
+              (recur (rest currentLessonInfoSeq)
+                     ; append newly shifted lessons to nextLessonInfoVec
+                     (loop [newlyShiftedLessons    replacementLessons
+                            nextLessonInfoVecPrime nextLessonInfoVec]
+                       (if (empty? newlyShiftedLessons)
+                           nextLessonInfoVecPrime
+                           (recur (rest newlyShiftedLessons)
+                                  (conj nextLessonInfoVecPrime
+                                        (first newlyShiftedLessons)))))))))))
+
 (defn remove-module
   "Removes a module from the timetable.
 
@@ -692,6 +740,7 @@
                 rowNum       (:rowNum ttLessonInfoAug)
                 ttLessonInfo (dissoc ttLessonInfoAug :day :rowNum)]
           (timetable-remove-lesson day rowNum ttLessonInfo)))
+        (shift-lessons-upwards-to-replace-empty-slots seqOfRemovedLessons)
         ; Remove from `ModulesSelected`
         (set! ModulesSelected (dissoc ModulesSelected moduleCode))
         ; Remove from `ModulesSelectedOrder`
