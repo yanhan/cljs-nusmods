@@ -674,15 +674,56 @@
              (assoc ttLessonInfo :day day, :rowNum rowNum)))
          lessonInfoSeq)))
 
+(defn- get-largest-consecutive-time-slot-freed-up-by-lesson
+  "Given a removed lessonInfo, find the largest interval which is freed up due
+   to the its removal.
+
+   For instance, given this timetable row:
+
+   x | x | x |  |  |  | y | y | y | y |  |  | z | z
+
+   And we remove the lesson occupying the slots labelled 'y'. The 4 slots
+   currently occupied by 'y', along with the 3 empty slots to its left and the
+   2 empty slots to its right will be freed up.
+
+   Given that the first slot occupied by the label 'x' is the index 0, this
+   function will return the vector [3 11]."
+  [removedLessonInfo]
+  (let [day        (:day removedLessonInfo)
+        row        (:rowNum removedLessonInfo)
+        startTime  (:startTime removedLessonInfo)
+        endTime    (:endTime removedLessonInfo)
+        ttRow      (get-in Timetable [day row])
+        minTimeIdx (time-helper/TIME-INDEX-MIN)
+        maxTimeIdx (time-helper/TIME-INDEX-MAX)]
+
+    [
+      ; Find the minimum timeslot that's free
+      (loop [timeIdx     (dec startTime)
+             occupiedVec (:occupied ttRow)]
+        (cond (< timeIdx minTimeIdx)           minTimeIdx
+              (nil? (nth occupiedVec timeIdx)) (recur (dec timeIdx) occupiedVec)
+              :else                            (inc timeIdx)))
+
+      ; Find the maximum timeslot that's free
+      (loop [timeIdx     (inc endTime)
+             occupiedVec (:occupied ttRow)]
+        (cond (> timeIdx maxTimeIdx)          maxTimeIdx
+              (nil? (nth occupiedVec timeIdx) (recur (inc timeIdx) occupiedVec))
+              :else                           (dec timeIdx)))
+    ]))
+
 (defn- find-replacement-lessons-within-time
-  "Given a lessonInfo map of a lesson which has been removed, find other lessons
+  "Given a lessonInfo which has been removed, find other lessons
    on the same day but in a row below the removed lesson, which could be shifted
    upwards and take the timeslots freed up by the removed lesson."
   [removedLessonInfo]
   (let [day       (:day removedLessonInfo)
         row       (:rowNum removedLessonInfo)
-        startTime (:startTime lesson)
-        endTime   (:endTime lesson)]
+        startTime (:startTime removedLessonInfo)
+        endTime   (:endTime removedLessonInfo)
+        [s]
+        ]
     ; TODO: Find the longest consecutive free time range
     ))
 
@@ -690,7 +731,17 @@
   "For each removed lesson, see if there are any lessons in rows below it that
    can be shifted upwards to occupy the empty slots resulting from its removal."
   [removedLessonInfoSeq]
-  (let [sort-lesson-info-seq (fn [lessonInfoSeq]
+  (let [; we do not consider any lessons on empty rows for ease of
+        ; implementation
+        exclude-lessons-on-empty-rows
+        (fn [lessonInfoSeq]
+          (filter #(let [day   (:day %1)
+                         row   (:row %1)
+                         ttRow (get-in Timetable [day row])]
+                     (not= (:nrLessons ttRow) 0))
+                  lessonInfoSeq))
+
+        sort-lesson-info-seq (fn [lessonInfoSeq]
                                (sort #(let [dayA (:day %1)
                                             dayB (:day %2)]
                                         (if (= dayA dayB)
@@ -698,13 +749,21 @@
                                           (< dayA dayB)))
                                      lessonInfoSeq))]
 
-    (loop [currentLessonInfoSeq (sort-lesson-info-seq removedLessonInfoSeq)
+    (loop [currentLessonInfoSeq
+           (sort-lesson-info-seq (exclude-lessons-on-empty-rows
+                                   removedLessonInfoSeq))
+
            nextLessonInfoVec    []]
       (cond (and (empty? currentLessonInfoSeq) (empty? nextLessonInfoVec))
             nil
 
+            ; we're done for the current set of lessons. Move on to the
+            ; set of lessons that were shifted upwards.
             (empty? currentLessonInfoSeq)
-            (recur (sort-lesson-info-seq nextLessonInfoVec) [])
+            (recur
+              (sort-lesson-info-seq (exclude-lessons-on-empty-rows
+                                      nextLessonInfoVec))
+              [])
 
             ; find timeslot to shift up to replace gap
             :else

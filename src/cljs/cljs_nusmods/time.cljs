@@ -7,6 +7,16 @@
   DAY_INTEGER_TO_STRING
   ["Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"])
 
+(def
+  ^{:doc "Time index for the earliest lesson starting time in the Timetable.
+          This represents the time 0800."}
+  TIME-INDEX-MIN 0)
+
+(def
+  ^{:doc "Time index for the latest lesson starting time in the Timetable.
+          This represents the time 2330."}
+  TIME-INDEX-MAX 31)
+
 (defn convert-time-index-to-mult-of-50-int
   "Converts the index representation of a time in the day
    (index 0 represents 0800) to an integer which looks like 24H time, but in
