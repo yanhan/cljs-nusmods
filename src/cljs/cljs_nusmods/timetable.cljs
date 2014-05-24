@@ -722,10 +722,60 @@
         row       (:rowNum removedLessonInfo)
         startTime (:startTime removedLessonInfo)
         endTime   (:endTime removedLessonInfo)
-        [s]
+
+        ; This is the time range freed up by removal of the lesson
+        [lowTimeIdx highTimeIdx]
+        (get-largest-consecutive-time-slot-freed-up-by-lesson
+          removedLessonInfo)
+
+        ModulesMap
+        (aget js/window "ModulesMap")
         ]
-    ; TODO: Find the longest consecutive free time range
-    ))
+    (reduce
+      (fn [reduceResult ttRow]
+        (if (<= (:nrLessons ttRow) 0)
+            ; Skip empty row
+            reduceResult
+            ; Non-empty row
+            (let [ttRowOccupied (:occupied ttRow)
+
+                  ; get any lessons overlapping with [lowTimeIdx, highTimeIdx]
+                  lessonsPartiallyInTimeRange
+                  (reduce (fn [lessonsSet lesson] (conj lessonsSet lesson))
+                          #{}
+                          ; get everything in [lowTimeIdx, highTimeIdx] and
+                          ; remove all `nil`
+                          (filter #(not (nil? %1))
+                                  (map #(nth ttRowOccupied %1)
+                                       (range lowTimeIdx (inc highTimeIdx)))))
+
+                  ; Filter those that are within the time range and can fit in
+                  ; the unoccupied intervals
+                  lessonsWithinTimeRange
+                  (filter #(let [lesson
+                                 (get-in ModulesMap
+                                         [(:moduleCode %1) "lessons"
+                                          (:lessonType %1) (:lessonGroup %1)
+                                          (:index %1)])
+
+                                 lessonStart        (:startTime lesson)
+                                 lessonEnd          (:endTime lesson)
+                                 currentOccupiedVec (:occupiedVec reduceResult)]
+                             (and
+                               (>= lessonStart lowTimeIdx)
+                               (<= (dec lessonEnd) highTimeIdx)
+                               (every? #(nil? %1)
+                                       (map #(nth currentOccupiedVec %1)
+                                            (range lessonStart lessonEnd)))))
+                          lessonsPartiallyInTimeRange)
+                  ]
+              ; TODO: Need to decorate the lessons with day, row, startTime, endTime
+              ()
+              ))
+        )
+      {:lessonsToShiftUp #{}
+       :occupiedVec      [vec (map (fn [t] nil) (range 800 2400 50))]}
+      (get-timetable-day day))))
 
 (defn- shift-lessons-upwards-to-replace-empty-slots
   "For each removed lesson, see if there are any lessons in rows below it that

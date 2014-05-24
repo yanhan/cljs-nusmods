@@ -4,3 +4,6 @@ Module addition via URL hash on initialization
   module? I'd say yes
 - Mutate `document.location.hash` to a canonical representation after
   initialization
+- timetable.cljs - functions `create-empty-timetable-row` and
+  `find-replacement-lesson-within-time` - abstract `:occupied` vector creation
+  into a function
