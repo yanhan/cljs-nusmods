@@ -7,3 +7,5 @@ Module addition via URL hash on initialization
 - timetable.cljs - functions `create-empty-timetable-row` and
   `find-replacement-lesson-within-time` - abstract `:occupied` vector creation
   into a function
+- timetable.cljs - Change the data representation of `Timetable` and
+  `ModulesSelected` globals
