@@ -675,8 +675,8 @@
          lessonInfoSeq)))
 
 (defn- get-largest-consecutive-time-slot-freed-up-by-lesson
-  "Given a removed lessonInfo, find the largest interval which is freed up due
-   to the its removal.
+  "Given a removed lesson, find the largest interval on the same row which is
+   freed up due to the its removal.
 
    For instance, given this timetable row:
 
@@ -687,129 +687,145 @@
    2 empty slots to its right will be freed up.
 
    Given that the first slot occupied by the label 'x' is the index 0, this
-   function will return the vector [3 11]."
-  [removedLessonInfo]
-  (let [day        (:day removedLessonInfo)
-        row        (:rowNum removedLessonInfo)
-        startTime  (:startTime removedLessonInfo)
-        endTime    (:endTime removedLessonInfo)
+   function will return the vector [3 11].
+
+   The parameter `removedAugTTLessonInfo` is a `TimetableLessonInfo` object
+   augmented with the `:day` and `:rowNum` keys."
+  [removedAugTTLessonInfo]
+  (let [day        (:day removedAugTTLessonInfo)
+        row        (:rowNum removedAugTTLessonInfo)
+        startTime  (:startTime removedAugTTLessonInfo)
+        endTime    (:endTime removedAugTTLessonInfo)
         ttRow      (get-in Timetable [day row])
         minTimeIdx (time-helper/TIME-INDEX-MIN)
         maxTimeIdx (time-helper/TIME-INDEX-MAX)]
 
     [
-      ; Find the minimum timeslot that's free
-      (loop [timeIdx     (dec startTime)
-             occupiedVec (:occupied ttRow)]
-        (cond (< timeIdx minTimeIdx)           minTimeIdx
-              (nil? (nth occupiedVec timeIdx)) (recur (dec timeIdx) occupiedVec)
-              :else                            (inc timeIdx)))
+      ; Find the lesson right before the removed lesson
+      (let [immediateTTLessonInfoBefore
+            (reduce (fn [ttLessonInfoBefore [ttLessonInfo _]]
+                      (let [stime (:startTime ttLessonInfo)
+                            etime (:endTime ttLessonInfo)]
+                        (cond (and (nil? ttLessonInfoBefore)
+                                   (<= etime startTime))
+                              ttLessonInfo
 
-      ; Find the maximum timeslot that's free
-      (loop [timeIdx     (inc endTime)
-             occupiedVec (:occupied ttRow)]
-        (cond (> timeIdx maxTimeIdx)          maxTimeIdx
-              (nil? (nth occupiedVec timeIdx) (recur (inc timeIdx) occupiedVec))
-              :else                           (dec timeIdx)))
+                              (and (not (nil? ttLessonInfoBefore))
+                                   (<= etime startTime)
+                                   (> etime (:endTime ttLessonInfoBefore)))
+                              ttLessonInfo
+
+                              :else ttLessonInfoBefore)))
+                    nil
+                    ttRow)]
+        (if (nil? immediateTTLessonInfoBefore)
+            minTimeIdx
+            (:endTime immediateTTLessonInfoBefore)))
+
+      ; Find the lesson right after the removed lesson
+      (let [immediateTTLessonInfoAfter
+            (reduce (fn [ttLessonInfoAfter [ttLessonInfo _]]
+                      (let [stime (:startTime ttLessonInfo)
+                            etime (:endTime ttLessonInfo)]
+                        (cond (and (nil? ttLessonInfoAfter)
+                                   (>= stime endTime))
+                              ttLessonInfo
+
+                              (and (not (nil? ttLessonInfoAfter))
+                                   (>= stime endTime)
+                                   (< stime (:endTime ttLessonInfoAfter)))
+
+                              :else ttLessonInfoAfter)))
+                    nil
+                    ttRow)]
+        (if (nil? immediateTTLessonInfoAfter)
+            maxTimeIdx
+            (dec (:startTime immediateTTLessonInfoAfter))))
     ]))
 
 (defn- find-replacement-lessons-within-time
-  "Given a lessonInfo which has been removed, find other lessons
-   on the same day but in a row below the removed lesson, which could be shifted
-   upwards and take the timeslots freed up by the removed lesson."
-  [removedLessonInfo]
-  (let [day       (:day removedLessonInfo)
-        row       (:rowNum removedLessonInfo)
-        startTime (:startTime removedLessonInfo)
-        endTime   (:endTime removedLessonInfo)
+  "For a removed lesson, find other lessons on the same day but in a row below
+   the removed lesson which could be shifted upwards and take the timeslots
+   freed up by the removed lesson.
+
+   The `removedAugTTLessonInfo` parameter is an `TimetableLessonInfo` object
+   augmented with the `:day` and `:rowNum` keys.
+
+   Returns a map, where keys are `TimetableLessonInfo` objects augmented with
+   `:day` and `:rowNum` keys, and values are jQuery <div> objects for the
+   shifted lesson."
+  [removedAugTTLessonInfo]
+  (let [day        (:day removedAugTTLessonInfo)
+        rowNum     (:rowNum removedAugTTLessonInfo)
+        startTime  (:startTime removedAugTTLessonInfo)
+        endTime    (:endTime removedAugTTLessonInfo)
+        ModulesMap (aget js/window "ModulesMap")
+        dayRows    (get-in Timetable [day rowNum])
 
         ; This is the time range freed up by removal of the lesson
         [lowTimeIdx highTimeIdx]
         (get-largest-consecutive-time-slot-freed-up-by-lesson
-          removedLessonInfo)
+          removedAugTTLessonInfo)
 
-        ModulesMap (aget js/window "ModulesMap")]
+        not-occupied?
+        (fn [occupiedVec startTime endTime]
+          (every? #(nil? %1)
+                  (map #(nth occupiedVec %1)
+                       (range startTime endTime))))]
 
-    (:lessonsToShiftUp
+    (:augTTLessonInfoMapToShift
       (reduce
-        (fn [reduceResult ttRow]
-          (if (<= (:nrLessons ttRow) 0)
+        (fn [reduceResult [rowIdx ttRow]]
+          (if (empty? ttRow)
               ; Skip empty row
               reduceResult
+
               ; Non-empty row
-              (let [ttRowOccupied      (:occupied ttRow)
-                    currentOccupiedVec (:occupiedVec reduceResult)
-  
-                    ; get any lessons overlapping with [lowTimeIdx, highTimeIdx]
-                    ttRowLessonsPartiallyInTimeRange
-                    (reduce (fn [lessonsSet lesson] (conj lessonsSet lesson))
-                            #{}
-                            ; get everything in [lowTimeIdx, highTimeIdx] and
-                            ; remove all `nil`
-                            (filter #(not (nil? %1))
-                                    (map #(nth ttRowOccupied %1)
-                                         (range lowTimeIdx (inc highTimeIdx)))))
-  
-                    ; Filter those that are within the time range and can fit in
-                    ; and unoccupied time interval
-                    ttRowLessonsToShift
-                    (filter #(let [lesson
-                                   (get-in ModulesMap
-                                           [(:moduleCode %1) "lessons"
-                                            (:lessonType %1) (:lessonGroup %1)
-                                            (:index %1)])
+              (let [occupiedVec (:occupiedVec reduceResult)
 
-                                   lessonStart (:startTime lesson)
-                                   lessonEnd   (:endTime lesson)]
-                               (and
-                                 ; check that lesson is in time range
-                                 (>= lessonStart lowTimeIdx)
-                                 (<= (dec lessonEnd) highTimeIdx)
-                                 ; and is within an unoccupied interval
-                                 (every? #(nil? %1)
-                                         (map #(nth currentOccupiedVec %1)
-                                              (range lessonStart lessonEnd)))))
-                            ttRowLessonsPartiallyInTimeRange)]
-
-                {:lessonToShiftUp
-                 (reduce (fn [ttRowLessonsSet ttRowLesson]
-                           (conj ttRowLessonsSet ttRowLesson))
-                         (:lessonsToShiftUp reduceResult)
-                         ttRowLessonsToShift)
+                    ttLessonInfoToShift
+                    (filter (fn [[ttLessonInfo _]]
+                              (let [stime (:startTime ttLessonInfo)
+                                    etime (:endTime ttLessonInfo)]
+                                (and (>= stime lowTimeIdx)
+                                     (<= (dec etime) highTimeIdx)
+                                     (not-occupied? occupiedVec stime etime))))
+                            ttRow)]
+                {:augTTLessonInfoMapToShift
+                 (reduce (fn [augTTLessonInfoMap [ttLessonInfo $divElem]]
+                           (assoc augTTLessonInfoMap
+                                  (assoc ttLessonInfo :day day :rowNum :rowIdx)
+                                  $divElem))
+                         (:augTTLessonInfoMapToShift reduceResult)
+                         ttLessonInfoToShift)
 
                  :occupiedVec
-                 (reduce (fn [occupiedVec ttRowLesson]
-                           (reduce (fn [occVec timeIdx]
-                                     (assoc occVec timeIdx true))
-                                   occupiedVec
-                                   ; get time range of the lesson
-                                   (let [lesson
-                                         (get-in ModulesMap
-                                                 [(:moduleCode ttRowLesson)
-                                                  "lessons"
-                                                  (:lessonType ttRowLesson)
-                                                  (:lessonGroup ttRowLesson)
-                                                  (:index ttRowLesson)])]
-                                     (range (:startTime lesson)
-                                            (:endTime lesson)))))
-                         currentOccupiedVec
-                         ttRowLessonsToShift)})))
-        {:lessonsToShiftUp #{},
+                 (reduce (fn [occVec [ttLessonInfo _]]
+                           (reduce (fn [ov timeIdx] (assoc ov timeIdx true))
+                                   occVec
+                                   (range (:startTime ttLessonInfo)
+                                          (:endTime ttLessonInfo))))
+                         occupiedVec
+                         ttLessonInfoToShift)})))
+        {:augTTLessonInfoMapToShift {},
          ; nil = free slot, true = occupied slot
          :occupiedVec      [vec (map (fn [t] nil) (range 800 2400 50))]}
         ; go through each row in the day, below the current row
-        (drop (inc row) (get-timetable-day day))))))
+        (drop (inc rowNum) (map vector (range (count dayRows)) dayRows))))))
 
+; TODO: Implement this function
 (defn- shift-lesson-to-row
   "Shifts a lesson from its original row up to the given row."
   [ttRowLesson rowNum]
-  j
   )
 
 (defn- shift-lessons-upwards-to-replace-empty-slots
   "For each removed lesson, see if there are any lessons in rows below it that
-   can be shifted upwards to occupy the empty slots resulting from its removal."
-  [removedLessonInfoSeq]
+   can be shifted upwards to occupy the empty slots resulting from its removal.
+
+   The paramter `removedAugmentedTTLessonInfoSeq` is a sequence of
+   `TimetableLessonInfo` objects augmented with the `:day` and `:rowNum` keys."
+  [removedAugmentedTTLessonInfoSeq]
   (let [; we do not consider any lessons on empty rows for ease of
         ; implementation
         exclude-lessons-on-empty-rows
@@ -817,43 +833,45 @@
           (filter #(let [day   (:day %1)
                          row   (:rowNum %1)
                          ttRow (get-in Timetable [day row])]
-                     (not= (:nrLessons ttRow) 0))
+                     (not (empty? ttRow)))
                   lessonInfoSeq))
 
-        sort-lesson-info-seq (fn [lessonInfoSeq]
-                               (sort #(let [dayA (:day %1)
-                                            dayB (:day %2)]
-                                        (if (= dayA dayB)
-                                          (< (:rowNum %1) (:rowNum %2))
-                                          (< dayA dayB)))
-                                     lessonInfoSeq))]
+        sort-lesson-info-seq
+        (fn [lessonInfoSeq]
+          (sort #(let [dayA (:day %1)
+                       dayB (:day %2)]
+                   (if (= dayA dayB)
+                       (< (:rowNum %1) (:rowNum %2))
+                       (< dayA dayB)))
+                lessonInfoSeq))]
 
-    (loop [currentLessonInfoSeq
+    (loop [sortedAugTTLessonInfoSeq
            (sort-lesson-info-seq (exclude-lessons-on-empty-rows
-                                   removedLessonInfoSeq))
+                                   removedAugmentedTTLessonInfoSeq))
 
            nextLessonInfoVec    []]
-      (cond (and (empty? currentLessonInfoSeq) (empty? nextLessonInfoVec))
+      (cond (and (empty? sortedAugTTLessonInfoSeq) (empty? nextLessonInfoVec))
             nil
 
             ; we're done for the current set of lessons. Move on to the
             ; set of lessons that were shifted upwards.
-            (empty? currentLessonInfoSeq)
-            (recur
-              (sort-lesson-info-seq (exclude-lessons-on-empty-rows
-                                      nextLessonInfoVec))
-              [])
+            (empty? sortedAugTTLessonInfoSeq)
+            (recur (sort-lesson-info-seq (exclude-lessons-on-empty-rows
+                                           nextLessonInfoVec))
+                   [])
 
             ; find timeslot to shift up to replace gap
             :else
-            (let [currentLessonInfo       (first currentLessonInfoSeq)
-                  rowNum                  (:rowNum currentLessonInfo)
+            (let [augTTLessonInfo         (first sortedAugTTLessonInfoSeq)
+                  rowNum                  (:rowNum augTTLessonInfo)
+                  ; TODO: Rename this
                   replacementTTRowLessons (find-replacement-lessons-within-time
-                                            currentLessonInfo)]
+                                            augTTLessonInfo)]
+              ; TODO: Continue editing here
               (doseq [ttRowLesson replacementTTRowLessons]
                 (shift-lesson-to-row ttRowLesson rowNum))
               ; TODO: `replacementLessons` is not in the format we want. Make it so.
-              (recur (rest currentLessonInfoSeq)
+              (recur (rest sortedAugTTLessonInfoSeq)
                      ; append newly shifted lessons to nextLessonInfoVec
                      (loop [newlyShiftedLessons    replacementLessons
                             nextLessonInfoVecPrime nextLessonInfoVec]
@@ -881,7 +899,7 @@
                 rowNum       (:rowNum ttLessonInfoAug)
                 ttLessonInfo (dissoc ttLessonInfoAug :day :rowNum)]
           (timetable-remove-lesson day rowNum ttLessonInfo)))
-        (shift-lessons-upwards-to-replace-empty-slots seqOfRemovedLessons)
+        (shift-lessons-upwards-to-replace-empty-slots ttLessonInfoAugmentedSeq)
         ; TODO: Modify `ModulesSelected` to update :rowNum
 
         ; Remove from `ModulesSelected`
