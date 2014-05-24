@@ -10,10 +10,12 @@
 ; Data type Definitions
 ; =====================
 ;
-; TimetableLessonInfo (short form: ttLessonInfo)
-; ----------------------------------------------
-; Describes a lesson in the `Timetable` global.
-; Each instance is a map in the following format:
+; TimetableLessonInfo (abbrev: ttLessonInfo)
+; ------------------------------------------
+; Describes a lesson in the `Timetable` global; this is the key used for each
+; row in a day of the `Timetable`.
+;
+; Each instance of `TimetableLessonInfo` is a map in the following format:
 ;
 ;   {
 ;     :moduleCode  -> module code string of this lesson
@@ -21,6 +23,19 @@
 ;     :lessonGroup -> lesson group string of this lesson
 ;     :startTime   -> 0-indexed start time of the lesson
 ;     :endTime     -> 0-indexed end time of the lesson
+;   }
+;
+;
+; ModulesSelectedLessonInfo (abbrev: modSelLessonInfo)
+; ----------------------------------------------------
+; Describes a lesson in the `ModulesSelected` global.
+; Each instance is a map in the following format:
+;
+;   {
+;     :day       -> 0-indexed integer of the day of the lesson
+;     :rowNum    -> 0-indexed integer of the row
+;     :startTime -> 0-indexed start time of the lesson
+;     :endTime   -> 0-indexed end time of the lesson
 ;   }
 
 (def ^{:doc     "Width in pixels of a half hour timeslot"
@@ -269,27 +284,13 @@
                    (fn [ttRow]
                      (assoc ttRow ttLessonInfo $lessonDiv)))))
 
-; TODO - update this function
-; It was formerly called timetable-mark-lesson-slots-free
 (defn- timetable-remove-lesson
   "Removes a lesson from the `Timetable` global, effectively 'marking' the
    time interval occupied by that lesson as free."
-  [day row ttLessonInfo]
-  (let [day         (:day lessonInfo)
-        row         (:rowNum lessonInfo)
-        startTime   (:startTime lessonInfo)
-        endTime     (:endTime lessonInfo)
-        ttRow       (get-in Timetable [day row])
-        occupiedVec (reduce (fn [occupiedVec timeIdx]
-                              (assoc occupiedVec timeIdx nil))
-                            (:occupied ttRow)
-                            (range startTime endTime))]
-    (set! Timetable
-          (update-in
-            Timetable [day row]
-            (fn [ttRow]
-              {:nrLessons (dec (:nrLessons ttRow))
-               :occupied  occupiedVec})))))
+  [day rowNum ttLessonInfo]
+  (set! Timetable
+        (update-in Timetable [day rowNum]
+                   (fn [ttRow] (dissoc ttRow ttLessonInfo)))))
 
 (defn- find-free-row-for-lesson
   "Returns the 0-indexed row which can accomodate the given lesson (timeslots
@@ -352,11 +353,11 @@
 (defn- add-module-lesson
   "Adds a single lesson of a module (obtained from the `ModulesMap` global) to
    the timetable, and returns its jQuery div element."
-  [moduleCode moduleName lessonType lessonLabel lesson bgColorCssClass]
-  (let [rowNum    (find-free-row-for-lesson lesson)
-        day       (:day lesson)
-        startTime (:startTime lesson)
-        endTime   (:endTime lesson)
+  [moduleCode moduleName lessonType lessonLabel modulesMapLesson bgColorCssClass]
+  (let [rowNum    (find-free-row-for-lesson modulesMapLesson)
+        day       (:day modulesMapLesson)
+        startTime (:startTime modulesMapLesson)
+        endTime   (:endTime modulesMapLesson)
         slotsOcc  (- endTime startTime)
         $divElem  ($ "<div />" (js-obj "class" "lesson"))
 
@@ -367,7 +368,8 @@
         (add-new-row-to-timetable-day day))
 
     ; Update in-memory representation of timetable
-    (timetable-add-lesson day rowNum
+    (timetable-add-lesson day
+                          rowNum
                           {:moduleCode moduleCode,
                            :lessonType lessonType,
                            :lessonGroup lessonLabel,
@@ -379,7 +381,7 @@
     (.addClass $divElem bgColorCssClass)
     (.append $divElem (text ($ "<p />") (str moduleCode " " moduleName)))
     (.append $divElem (text ($ "<p />") (str lessonType " [" lessonLabel "]")))
-    (.append $divElem (text ($ "<p />") (:venue lesson)))
+    (.append $divElem (text ($ "<p />") (:venue modulesMapLesson)))
     (width $divElem (str (* half-hour-pixels slotsOcc) "px"))
     (let [dayHTMLElem (nth HTML-Timetable day)
           rowHTMLElem (nth (children dayHTMLElem "tr") rowNum)
@@ -394,32 +396,27 @@
       (doseq [siblingTdElem (take (- slotsOcc 1) (.nextAll tdHTMLElem))]
         (.remove siblingTdElem))
 
-      ; Returns a map containing information to make it easier to remove the
-      ; lesson
-      {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
-       :divElem $divElem})))
+      ; Returns a ModulesSelectedLessonInfo object
+      {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime})))
 
 (defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable."
   [moduleCode lessonType lessonLabel bgColorCssClass
    & {:keys [ModulesMap]
       :or   {ModulesMap (aget js/window "ModulesMap")}}]
-  (let [moduleName (get-in ModulesMap [moduleCode "name"])
-        lessons    (get-in ModulesMap [moduleCode "lessons" lessonType
-                                       lessonLabel])]
-    (if (and moduleName lessons)
+  (let [moduleName          (get-in ModulesMap [moduleCode "name"])
+        modulesMapLessonSeq (get-in ModulesMap [moduleCode "lessons" lessonType
+                                                lessonLabel])]
+    (if (and moduleName modulesMapLessonSeq)
         (let [lessonInfoSeq (doall
-                              ; remove lessonIdx
-                              (map (fn [[lessonIdx lesson]]
+                              (map (fn [modulesMapLesson]
                                      (add-module-lesson moduleCode
                                                         moduleName
                                                         lessonType
                                                         lessonLabel
-                                                        lesson
-                                                        lessonIdx
+                                                        modulesMapLesson
                                                         bgColorCssClass))
-                                   (map vector
-                                        (range 0 (count lessons)) lessons)))]
+                                   modulesMapLessonSeq))]
           ; Update ModulesSelected with the lesson group
           (set! ModulesSelected
                 (assoc-in ModulesSelected [moduleCode lessonType]
@@ -629,9 +626,9 @@
 (defn- add-missing-td-elements-replacing-lesson
   "Adds <td> elements that were removed by the `add-module-lesson` function
    to make way for the lesson."
-  [$parentTd lessonInfo]
-  (let [startTime (:startTime lessonInfo)
-        endTime   (:endTime lessonInfo)]
+  [$parentTd ttLessonInfo]
+  (let [startTime (:startTime ttLessonInfo)
+        endTime   (:endTime ttLessonInfo)]
     (loop [$currentTd $parentTd
            timeIdx    (inc startTime)]
       (if (>= timeIdx endTime)
@@ -650,29 +647,31 @@
   "Removes a lesson group for a module from the HTML timetable.
    This does NOT remove any empty rows / perform module shifting.
 
-   Returns an array of the map with the following keys:
-
-     :day       -> 0-indexed day where the lesson was stored
-     :rowNum    -> 0-indexed row to the day in `Timetable` where the lesson
-                   was stored
-     :startTime -> 0-indexed start time of the lesson
-     :endTime   -> 0-indexed end time of the lesson"
+   Returns a sequence of `ttLessonInfo` objects which contain
+   additional `:day` and `:rowNum` keys."
   [moduleCode lessonType]
   (let [lessonGroupDetails (get-in ModulesSelected [moduleCode lessonType])
-        lessonLabel        (:label lessonGroupDetails)
+        lessonGroup        (:label lessonGroupDetails)
         lessonInfoSeq      (:info lessonGroupDetails)]
-    (map (fn [lessonInfo]
-           (let [$lessonDiv (:divElem lessonInfo)
-                 $parentTd  (parent $lessonDiv)]
+    (map (fn [modSelLessonInfo]
+           (let [day          (:day modSelLessonInfo)
+                 rowNum       (:rowNum modSelLessonInfo)
+                 startTime    (:startTime modSelLessonInfo)
+                 endTime      (:endTime modSelLessonInfo)
+                 ttRow        (get-in Timetable [day rowNum])
+                 ttLessonInfo {:moduleCode moduleCode, :lessonType lessonType,
+                               :lessonGroup lessonGroup, :startTime startTime,
+                               :endTime endTime}
+                 $lessonDiv   (get ttRow ttLessonInfo)
+                 $parentTd    (parent $lessonDiv)]
              ; Remove the `colspan` attribute of the parent <td> so it has
              ; colspan=1
              (remove-attr $parentTd "colspan")
              ; Remove the HTML div elem
              (.remove $lessonDiv)
              ; Add the missing <td> elements
-             (add-missing-td-elements-replacing-lesson $parentTd lessonInfo)
-             ; Remove the same lessonInfo without :divElem key
-             (dissoc lessonInfo :divElem)))
+             (add-missing-td-elements-replacing-lesson $parentTd ttLessonInfo)
+             (assoc ttLessonInfo :day day, :rowNum rowNum)))
          lessonInfoSeq)))
 
 (defn remove-module
@@ -684,12 +683,15 @@
       (let [lessonTypes
             (keys (get ModulesSelected moduleCode))
 
-            seqOfRemovedLessons
+            ttLessonInfoAugmentedSeq
             (flatten (map (fn [lessonType]
                             (remove-lesson-group-html moduleCode lessonType))
                           lessonTypes))]
-        (doseq [lessonInfo seqOfRemovedLessons]
-          (timetable-mark-lesson-slots-free lessonInfo))
+        (doseq [ttLessonInfoAug ttLessonInfoAugmentedSeq]
+          (let [day          (:day ttLessonInfoAug)
+                rowNum       (:rowNum ttLessonInfoAug)
+                ttLessonInfo (dissoc ttLessonInfoAug :day :rowNum)]
+          (timetable-remove-lesson day rowNum ttLessonInfo)))
         ; Remove from `ModulesSelected`
         (set! ModulesSelected (dissoc ModulesSelected moduleCode))
         ; Remove from `ModulesSelectedOrder`
