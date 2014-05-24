@@ -7,6 +7,22 @@
             [cljs-nusmods.select2 :as select2]
             [cljs-nusmods.time    :as time-helper]))
 
+; Data type Definitions
+; =====================
+;
+; TimetableLessonInfo (short form: ttLessonInfo)
+; ----------------------------------------------
+; Describes a lesson in the `Timetable` global.
+; Each instance is a map in the following format:
+;
+;   {
+;     :moduleCode  -> module code string of this lesson
+;     :lessonType  -> lesson type string of this lesson
+;     :lessonGroup -> lesson group string of this lesson
+;     :startTime   -> 0-indexed start time of the lesson
+;     :endTime     -> 0-indexed end time of the lesson
+;   }
+
 (def ^{:doc     "Width in pixels of a half hour timeslot"
        :private true
        }
@@ -52,8 +68,7 @@
                              :rowNum    -> 0-indexed <tr> where the lesson is
                                            stored
                              :startTime -> 0-indexed start time of lesson
-                             :endTime   -> 0-indexed end time of lesson
-                             :divElem   -> jQuery <div> of the lesson}
+                             :endTime   -> 0-indexed end time of lesson}
               }
        }"
   :private true
@@ -161,32 +176,11 @@
 (defn- create-empty-timetable-row
   "Creates an in-memory representation of an empty timetable row.
 
-   Each row corresponds to a <tr> in the timetable. Each row is a map of the
-   following format:
-
-       {
-         :nrLessons (integer representing the number of lesson groups
-                     occupying the current row)
-         :occupied  a vector of timeslots from 0800 to 2330 (inclusive)
-                    in 30 min intervals. Each slot is one of:
-                    - nil. The means that the slot is free
-                    - a map of module information:
-                      {
-                        :moduleCode -> module code string
-                        :lessonType -> lesson type string (long form),
-                        :lessonGroup -> Lesson group string (lesson label)
-                        :index       -> index to the list of lessons for
-                                        that lesson group.
-                      }
-                      This information can be used to access the <div> in
-                      the `ModulesSelected` global during module removal
-                      or lesson shifting.
-       }"
+   Each row corresponds to a <tr> in the timetable. Each row is a map
+   with each key is a `TimetableLessonInfo` object (see the top of this file for
+   the definition) and each value is the jQuery object of the lesson <div>."
   []
-  {
-    :nrLessons 0,
-    :occupied  (vec (map (fn [t] nil) (range 800 2400 50)))
-  })
+  {})
 
 (defn- create-day-repr
   "Creates in-memory representation of a single day in the timetable.
@@ -265,31 +259,22 @@
         thElem (.find (nth HTML-Timetable day) "tr > th")]
     (attr thElem "rowspan" nrRows)))
 
-(defn- timetable-mark-lesson-slots-occupied
-  "Given a 0-indexed row number obtained by `find-free-row-for-lesson`, marks
-   the timeslots for the lesson in that row as occupied."
-  [day rowNum startTime endTime modInfo]
+(defn- timetable-add-lesson
+  "Adds a lesson to the `Timetable` global, effectively 'marking' the
+   time interval for that lesson as being occupied."
+  [day rowNum ttLessonInfo $lessonDiv]
   (set! Timetable
-        (update-in
-          Timetable [day rowNum]
-          (fn [ttRow]
-            {
-              :nrLessons (inc (:nrLessons ttRow))
-              :occupied       (reduce (fn [occupiedVec idx]
-                                        (assoc occupiedVec idx modInfo))
-                                      (:occupied ttRow)
-                                      (range startTime endTime))
-            }))))
+        (update-in Timetable
+                   [day rowNum]
+                   (fn [ttRow]
+                     (assoc ttRow ttLessonInfo $lessonDiv)))))
 
-(defn- timetable-mark-lesson-slots-free
-  "Marks the timeslots for a lesson as free. The `lessonInfo` parameter must be
-   a map with the following keys:
-
-     :day       -> 0-indexed day
-     :row       -> 0-indexed row in the day
-     :startTime -> 0-indexed start time of the lesson
-     :endTime   -> 0-indexed end time of the lesson"
-  [lessonInfo]
+; TODO - update this function
+; It was formerly called timetable-mark-lesson-slots-free
+(defn- timetable-remove-lesson
+  "Removes a lesson from the `Timetable` global, effectively 'marking' the
+   time interval occupied by that lesson as free."
+  [day row ttLessonInfo]
   (let [day         (:day lessonInfo)
         row         (:rowNum lessonInfo)
         startTime   (:startTime lessonInfo)
@@ -310,32 +295,49 @@
   "Returns the 0-indexed row which can accomodate the given lesson (timeslots
    for the lesson are not occupied). If no existing row can accomodate the
    lesson, then the total number of existing rows is returned to indicate that
-   a new row must be created."
-  [lesson]
-  (let [ttDay     (get-timetable-day (:day lesson))
-        startTime (:startTime lesson)
-        endTime   (:endTime lesson)]
+   a new row must be created.
+
+   The `moduleMapLesson` parameter should be a lesson from the `ModulesMap`
+   global"
+  [moduleMapLesson]
+  (let [ttDay     (get-timetable-day (:day moduleMapLesson))
+        startTime (:startTime moduleMapLesson)
+        endTime   (:endTime moduleMapLesson)]
     (:rowIndex
       (reduce
-        (fn [result row]
+        (fn [result ttRow]
           (cond
-            (:foundFreeRow result)
-            result
+            (:foundFreeRow result) result
+            (zero? (count ttRow))  (assoc result :foundFreeRow true)
 
-            (zero? (:nrLessons row))
+            (empty?
+              ; Find any existing lessons which overlap with our new lesson.
+              ; The row is free if there are no existing overlapping lessons.
+              ; 4 types of overlap:
+              ;
+              ; ONE:
+              ;        |-- exist --|
+              ; |-- new --|
+              ;
+              ; TWO:
+              ; |-- exist --|
+              ;       |-- new --|
+              ;
+              ; THREE:
+              ;     |-- exist --|
+              ; |------- new -------|
+              ;
+              ; FOUR:
+              ; |------- exist -------|
+              ;      |-- new --|
+              (filter (fn [[ttLessonInfo _]]
+                        (and (>= (dec endTime) (:startTime ttLessonInfo))
+                             (< startTime (:endTime ttLessonInfo))))
+                      ttRow))
             (assoc result :foundFreeRow true)
 
-            (not (some (fn [x] (not (nil? x)))
-                       (map (fn [timeIdx] (nth (:occupied row) timeIdx))
-                            (range startTime endTime))))
-            (assoc result :foundFreeRow true)
-
-            :else
-            (update-in result [:rowIndex] inc)))
-        {
-          :foundFreeRow false
-          :rowIndex     0
-        }
+            :else (update-in result [:rowIndex] inc)))
+        {:foundFreeRow false, :rowIndex 0}
         ttDay))))
 
 (defn- get-css-hour-minute-classes-for-time
@@ -350,39 +352,42 @@
 (defn- add-module-lesson
   "Adds a single lesson of a module (obtained from the `ModulesMap` global) to
    the timetable, and returns its jQuery div element."
-  [moduleCode moduleName lessonType lessonLabel lesson lessonIdx
-   bgColorCssClass]
-  (let [rowNum      (find-free-row-for-lesson lesson)
-        day         (:day lesson)
-        startTime   (:startTime lesson)
-        endTime     (:endTime lesson)
-        slotsOcc    (- endTime startTime)
-        divElem     ($ "<div />" (js-obj "class" "lesson"))
-        [hourClass minuteClass] (get-css-hour-minute-classes-for-time
-                                  startTime)]
+  [moduleCode moduleName lessonType lessonLabel lesson bgColorCssClass]
+  (let [rowNum    (find-free-row-for-lesson lesson)
+        day       (:day lesson)
+        startTime (:startTime lesson)
+        endTime   (:endTime lesson)
+        slotsOcc  (- endTime startTime)
+        $divElem  ($ "<div />" (js-obj "class" "lesson"))
+
+        [hourClass minuteClass]
+        (get-css-hour-minute-classes-for-time startTime)]
     ; Create new row if necessary
     (if (= rowNum (get-nr-rows-in-timetable-day day))
         (add-new-row-to-timetable-day day))
 
     ; Update in-memory representation of timetable
-    (timetable-mark-lesson-slots-occupied
-      day rowNum startTime endTime
-      {:moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonLabel,
-       :index lessonIdx})
+    (timetable-add-lesson day rowNum
+                          {:moduleCode moduleCode,
+                           :lessonType lessonType,
+                           :lessonGroup lessonLabel,
+                           :startTime startTime,
+                           :endTime endTime}
+                          $divElem)
 
     ; add background color css class
-    (.addClass divElem bgColorCssClass)
-    (.append divElem (text ($ "<p />") (str moduleCode " " moduleName)))
-    (.append divElem (text ($ "<p />") (str lessonType " [" lessonLabel "]")))
-    (.append divElem (text ($ "<p />") (:venue lesson)))
-    (width divElem (str (* half-hour-pixels slotsOcc) "px"))
+    (.addClass $divElem bgColorCssClass)
+    (.append $divElem (text ($ "<p />") (str moduleCode " " moduleName)))
+    (.append $divElem (text ($ "<p />") (str lessonType " [" lessonLabel "]")))
+    (.append $divElem (text ($ "<p />") (:venue lesson)))
+    (width $divElem (str (* half-hour-pixels slotsOcc) "px"))
     (let [dayHTMLElem (nth HTML-Timetable day)
           rowHTMLElem (nth (children dayHTMLElem "tr") rowNum)
           tdHTMLElem  (nth (children
                              rowHTMLElem
                              (str "td" "." hourClass "." minuteClass))
                            0)]
-      (.append tdHTMLElem divElem)
+      (.append tdHTMLElem $divElem)
       ; Increase colspan and delete the <td> after it that occupy the timeslot
       ; of the lesson
       (attr tdHTMLElem "colspan" slotsOcc)
@@ -392,7 +397,7 @@
       ; Returns a map containing information to make it easier to remove the
       ; lesson
       {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
-       :divElem divElem})))
+       :divElem $divElem})))
 
 (defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable."
@@ -404,6 +409,7 @@
                                        lessonLabel])]
     (if (and moduleName lessons)
         (let [lessonInfoSeq (doall
+                              ; remove lessonIdx
                               (map (fn [[lessonIdx lesson]]
                                      (add-module-lesson moduleCode
                                                         moduleName
