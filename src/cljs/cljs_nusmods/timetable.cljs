@@ -804,7 +804,7 @@
                  (reduce (fn [augTTLessonInfoMap [ttLessonInfo $divElem]]
                            (.log js/console ":augTTLessonInfoMapToShift")
                            (assoc augTTLessonInfoMap
-                                  (assoc ttLessonInfo :day day :rowNum :rowIdx)
+                                  (assoc ttLessonInfo :day day :rowNum rowIdx)
                                   $divElem))
                          (:augTTLessonInfoMapToShift reduceResult)
                          ttLessonInfoToShift)
@@ -837,8 +837,9 @@
         slotsOccupied           (- endTime startTime)
         [hourClass minuteClass] (get-css-hour-minute-classes-for-time startTime)
         tdSelectorString        (str "td" "." hourClass "." minuteClass)
-        $sourceTableRow         (nth (children (nth HTML-Timetable day) "tr")
-                                     sourceRowNum)
+        $sourceTableRow         (do (.log js/console (str "sourceRowNum = " sourceRowNum))
+                                    (nth (children (nth HTML-Timetable day) "tr")
+                                     sourceRowNum))
         $sourceTd               (nth
                                   (children $sourceTableRow tdSelectorString)
                                   0)
