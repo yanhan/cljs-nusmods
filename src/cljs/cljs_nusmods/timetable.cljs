@@ -37,6 +37,30 @@
 ;     :startTime -> 0-indexed start time of the lesson
 ;     :endTime   -> 0-indexed end time of the lesson
 ;   }
+;
+;
+; PreToUrlHashLessonGroup
+; -----------------------
+; Data representation of a lesson group amenable for conversion to a url hash.
+; Each instance is a map in the following format:
+;
+;   {
+;     :lessonType  -> short form of lesson type
+;     :lessonGroup -> lesson group selected for the lesson type
+;   }
+;
+;
+; PreToUrlHashModule
+; ------------------
+; Data representation of a module amenable for conversion to a url hash.
+; Each instance is a map in the following format:
+;
+;   {
+;     :moduleCode                       -> module code string
+;     :preToUrlHashLessonGroupSeqSorted -> sequence of `PreToUrlHashLessonGroup`
+;                                          sorted lexicographically by
+;                                          `:lessonType`
+;   }
 
 (def ^{:doc     "Width in pixels of a half hour timeslot"
        :private true
@@ -143,44 +167,63 @@
    "TUTORIAL TYPE 3"            "T3"
    })
 
-(defn- sort-mod-info-url-seq
-  "Sorts a sequence of mod info url strings, eg. CS1234_L=1"
-  [modInfoUrlSeq]
-  (sort (fn [modInfoUrlA modInfoUrlB]
-          (< modInfoUrlA modInfoUrlB))
-        modInfoUrlSeq))
+(defn- preToUrlHashModule-to-url-hash-string
+  "Converts a `PreToUrlHashModule` object to a url hash string."
+  [preToUrlHashModule]
+  (let [moduleCode (:moduleCode preToUrlHashModule)]
+    (clojure.string/join
+      "&"
+      (map #(str moduleCode "_" (:lessonType %1) "=" (:lessonGroup %1))
+           (:preToUrlHashLessonGroupSeqSorted preToUrlHashModule)))))
 
-(defn- mod-info-url-seq-to-url-hash
-  "Converts a sequence of mod info url strings (eg. CS1234_L=1) to a url hash"
-  [modInfoUrlSeq]
-  (clojure.string/join "&" (sort-mod-info-url-seq modInfoUrlSeq)))
+(defn- sort-PreToUrlHashLessonGroup-seq
+  "Sorts a sequence of `PreToUrlHashLessonGroup` objects lexicographically by
+   `:lessonType`."
+  [preToUrlHashLessonGroupSeq]
+  (sort (fn [a b] (< (:lessonType a) (:lessonType b)))
+        preToUrlHashLessonGroupSeq))
 
-(defn- mod-info-to-url-repr
-  "Converts a module info map to a url representation"
-  [modInfo]
-  (str (:moduleCode modInfo) "_"
-       (Lesson-Type-Long-To-Short-Form (:lessonType modInfo))
-       "=" (:lessonGroup modInfo)))
+(defn- get-PreToUrlHashLessonGroup-seq-for-module
+  "Given the module code of a module that has been selected, returns a sequence
+   of `PreToUrlHashLessonGroup` objects for that module."
+  [moduleCode]
+  (map (fn [[lessonType lessonTypeVal]]
+         {:lessonType  (Lesson-Type-Long-To-Short-Form lessonType),
+          :lessonGroup (:label lessonTypeVal)})
+       (get ModulesSelected moduleCode)))
 
-(defn- set-document-location-hash-from-module-info-seq
-  "Sets document.location.hash to a canonical representation.
+(defn- get-PreToUrlHashModule-for-module
+  "Retrieves a `PreToUrlHashModule` for a selected module."
+  [moduleCode]
+  {:moduleCode moduleCode,
 
-   NOTE: This function should only be called by the
-         `add-module-lesson-groups-from-url-hash` function"
-  [moduleInfoSeq]
-  (let [moduleInfoUrlSeq (map mod-info-to-url-repr moduleInfoSeq)]
+   :preToUrlHashLessonGroupSeqSorted
+   (sort-PreToUrlHashLessonGroup-seq
+     (get-PreToUrlHashLessonGroup-seq-for-module moduleCode))})
+
+(defn- set-document-location-hash-based-on-modules-order
+  "Sets document.location.hash based on the `ModulesSelectedOrder` global."
+  []
+  (let [preToUrlHashModuleSeq
+        (map #(get-PreToUrlHashModule-for-module %1) ModulesSelectedOrder)]
     (aset (aget js/document "location") "hash"
-          (mod-info-url-seq-to-url-hash moduleInfoUrlSeq))))
+          (clojure.string/join
+            "&"
+            (map #(preToUrlHashModule-to-url-hash-string %1)
+                 preToUrlHashModuleSeq)))))
 
-(defn- update-document-location-hash
-  "Updates document.location.hash with lesson grousp from a newly added module"
-  [newModInfoSeq]
-  (let [orgUrlHash       (aget (aget js/document "location") "hash")
-        newModInfoElems  (map mod-info-to-url-repr newModInfoSeq)
-        newModInfoUrlSeq (concat (clojure.string/split orgUrlHash #"&")
-                                 newModInfoElems)]
+(defn- update-document-location-hash-with-new-module
+  "Updates document.location.hash with the `PreToUrlHashModule` of a
+   newly added module."
+  [preToUrlHashModule]
+  (let [orgUrlHash    (aget (aget js/document "location") "hash")
+
+        moduleUrlHash
+        (preToUrlHashModule-to-url-hash-string preToUrlHashModule)]
+    (.log js/console (str "orgUrlHash = \"" orgUrlHash "\""))
+    (.log js/console (str "preToUrlHashModule = " (.stringify js/JSON (clj->js preToUrlHashModule))))
     (aset (aget js/document "location") "hash"
-          (mod-info-url-seq-to-url-hash newModInfoUrlSeq))))
+          (str orgUrlHash (if (empty? orgUrlHash) "" "&") moduleUrlHash))))
 
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
@@ -463,7 +506,16 @@
                                    ModulesMap))
 
         ; Update URL hash with newly added module
-        (update-document-location-hash newModInfoSeq))))
+        (update-document-location-hash-with-new-module
+          {:moduleCode moduleCode,
+
+           :preToUrlHashLessonGroupSeqSorted
+           (sort-PreToUrlHashLessonGroup-seq
+             (map #(dissoc
+                     (assoc %1 :lessonType
+                            (Lesson-Type-Long-To-Short-Form (:lessonType %1)))
+                     :moduleCode)
+                  newModInfoSeq))}))))
 
 (defn- get-module-info-from-url-hash-module-info
   "Computes the final module info sequence for modules added via the url hash
@@ -614,7 +666,7 @@
                                  bgColorCssClass)))
 
     ; Update url hash
-    (set-document-location-hash-from-module-info-seq moduleInfoFinal)))
+    (set-document-location-hash-based-on-modules-order)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

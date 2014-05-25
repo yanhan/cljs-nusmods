@@ -167,7 +167,8 @@
             ; We perform this check because the 'change' event could have
             ; been triggered by the Timetable code instead of a UI action
             (let [moduleCode (aget (aget evt "added") "id")]
-              (if (not (timetable/is-module-selected? moduleCode))
+              (if (and moduleCode
+                       (not (timetable/is-module-selected? moduleCode)))
                   (timetable/add-module moduleCode)))
             (if (is $someSelectedDiv ":visible")
                 (.text $someSelectedDivText
