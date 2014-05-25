@@ -734,6 +734,7 @@
                               (and (not (nil? ttLessonInfoAfter))
                                    (>= stime endTime)
                                    (< stime (:endTime ttLessonInfoAfter)))
+                              ttLessonInfo
 
                               :else ttLessonInfoAfter)))
                     nil
@@ -969,6 +970,37 @@
                              emptyRowsToRemoveVec)]
                   (.remove (nth (children $day "tr") (- rowIdx idx))))))))))
 
+(defn- update-ModulesSelected-for-affected-days
+  "Given a set of days that may possibly be affected by removal and shifting of
+   lessons, update the individual entries in the `ModulesSelected` global."
+  [affectedDaysSet]
+  (doseq [day affectedDaysSet]
+    (let [ttDay (get-timetable-day day)]
+      (doseq [[rowIdx ttRow] (map vector (range (count ttDay)) ttDay)]
+        (doseq [[ttLessonInfo _] ttRow]
+          (let [moduleCode  (:moduleCode ttLessonInfo)
+                lessonType  (:lessonType ttLessonInfo)
+                lessonGroup (:lessonGroup ttLessonInfo)
+                startTime   (:startTime ttLessonInfo)
+                endTime     (:endTime ttLessonInfo)]
+            (set! ModulesSelected
+                  (update-in
+                    ModulesSelected
+                    [moduleCode lessonType lessonGroup :info]
+                    (fn [modSelLessonInfoSeq]
+                      (conj
+                        (filter (fn [modSelLessonInfo]
+                                  (or (not= (:day modSelLessonInfo) day)
+                                      (not= (:startTime modSelLessonInfo)
+                                            startTime)
+                                      (not= (:endTime modSelLessonInfo)
+                                            endTime)))
+                                modSelLessonInfoSeq)
+                        {:day day,
+                         :rowNum rowIdx,
+                         :startTime startTime,
+                         :endTime endTime}))))))))))
+
 (defn remove-module
   "Removes a module from the timetable.
 
@@ -1004,7 +1036,7 @@
         (timetable-prune-empty-rows affectedDaysSet)
 
         ; Update `ModulesSelected`
-        (s)
+        (update-ModulesSelected-for-affected-days affectedDaysSet)
 
         ; Remove from `ModulesSelectedOrder`
         (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))
