@@ -1,0 +1,22 @@
+http://127.0.0.1:3000/index.html#ACC1002_L=V1&ACC1002_T=V10&ACC3601_ST=A3&CS1010E_LAB=1&CS1010E_ST=1&CS1010E_T=C20
+
+What I see for Wednesday:
+row 0 - ACC1002 Lecture V1
+row 1 - ACC3601 Sectional Teaching A3
+row 2 - CS1010E Lab 1
+
+What I see for Friday:
+row 0 - ACC1002 Tutorial V10
+row 1 - CS1010E Tutorial C20
+
+Step: Remove the ACC1002 module.
+Observations:
+-> <th> containing "WED" should be present and have a rowspan of 2
+-> For Wednesday, ACC3601 and CS1010E should be shifted upwards, to rows 0 and 1
+   respectively
+-> For Friday, CS1010E should be shifted up to row 0
+
+Step: Remove the CS3601 module.
+Observations:
+-> <th> containing "WED" should be present and have a rowspan of 2
+-> For Wednesday, CS1010E should be shifted to row 0

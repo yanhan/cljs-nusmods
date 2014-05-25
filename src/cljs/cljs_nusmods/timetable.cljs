@@ -1,7 +1,7 @@
 (ns ^{:doc "Code for Timetable Builder page"}
   cljs-nusmods.timetable
-  (:use [jayq.core :only [$ attr children hide insert-after is parent prepend
-                          prevent remove-attr show text width]])
+  (:use [jayq.core :only [$ attr before children hide insert-after is parent
+                          prepend prevent remove-attr show text width]])
   (:require [clojure.set]
             [clojure.string]
             [cljs-nusmods.select2 :as select2]
@@ -953,47 +953,47 @@
           nonEmptyRowsVec (:nonEmptyRows rowsPartition)
           nrEmptyRows     (count emptyRowsVec)
           nrNonEmptyRows  (- nrRows nrEmptyRows)
-          $day            (nth HTML-Timetable day)]
-      (if (>= nrNonEmptyRows 2)
-          ; we have at least 2 non empty rows, so remove all empty rows
-          (do (set! Timetable
-                    (update-in Timetable [day]
-                               (fn [ttDay]
-                                 (vec (map (fn [rowIdx] (nth ttDay rowIdx))
-                                           nonEmptyRowsVec)))))
-              ; remove empty <tr> elements
-              (doseq [[idx rowIdx] (map vector (range nrEmptyRows)
-                                        emptyRowsVec)]
-                (.remove (nth (children $day "tr") (- rowIdx idx)))))
+          $day            (nth HTML-Timetable day)
+          $thElem         (.find $day "tr > th")]
+      (.log js/console (str "day = " day ", emptyRowsVec = "
+                            (.stringify js/JSON (clj->js emptyRowsVec))
+                            ", nonEmptyRowsVec = "
+                            (.stringify js/JSON (clj->js nonEmptyRowsVec))))
+      (set! Timetable
+            (update-in Timetable [day]
+                       (fn [ttDay]
+                         (vec (map (fn [rowIdx] (nth ttDay rowIdx))
+                                   (cond (>= nrNonEmptyRows 2)
+                                         nonEmptyRowsVec
 
-          ; We have less than 2 non empty rows. We remove as many empty rows
-          ; as we can, while ensuring that there are 2 rows for that day.
-          (let [nrEmptyRowsToKeep    (- 2 nrNonEmptyRows)
-                emptyRowsToKeepVec   (take nrEmptyRowsToKeep emptyRowsVec)
-                rowsToKeepSeq        (sort (fn [a b] (< a b))
-                                          (concat nonEmptyRowsVec
-                                                  emptyRowsToKeepVec))
-                emptyRowsToRemoveVec (drop nrEmptyRowsToKeep emptyRowsVec)]
-            (do (set! Timetable
-                      (update-in Timetable [day]
-                                 (fn [ttDay]
-                                   (vec (map (fn [rowIdx] (nth ttDay rowIdx))
-                                             rowsToKeepSeq)))))
-                ; remove empty <tr> elements
-                (doseq [[idx rowIdx]
-                        (map vector
-                             (range (count emptyRowsToRemoveVec))
-                             emptyRowsToRemoveVec)]
-                  (.remove (nth (children $day "tr") (- rowIdx idx)))))))
+                                         (= nrNonEmptyRows 1)
+                                         [(first nonEmptyRowsVec)
+                                          (first emptyRowsVec)]
 
-      ; Ensure that the <th> for 'MON', 'TUE', 'WED', 'THU', 'FRI' exists
-      (if (empty? (.find $day "tr > th"))
-          (let [$trArray (children $day "tr")
-                $tr0     (nth $trArray 0)]
-            (prepend $tr0
-                     ($ (time-helper/DAY-INDEX-TO-TH-HTML-STRING day)))))
+                                         :else
+                                         (take 2 emptyRowsVec)))))))
+      ; shift <th> element to the new 0th row
+      (if (and (zero? (first emptyRowsVec)) (> nrNonEmptyRows 0))
+          (prepend (nth (children $day "tr") (first nonEmptyRowsVec)) $thElem))
+
+      ; remove empty <tr> elements
+      (let [rowsToRemove
+            (cond (>= nrNonEmptyRows 2) emptyRowsVec
+                  (=  nrNonEmptyRows 1) (rest emptyRowsVec)
+                  :else                 (drop 2 emptyRowsVec))]
+        (doseq [[idx rowIdx] (map vector (range (count rowsToRemove))
+                                  rowsToRemove)]
+          (.remove (nth (children $day "tr") (- rowIdx idx)))))
+
+      (if (and (= nrNonEmptyRows 1)
+               (zero? (first emptyRowsVec)))
+          (let [$trArray (children $day "tr")]
+            (.log js/console "Am gonna swap this shit man")
+            (.log js/console (str "$trArray = " $trArray ", 0th = " (nth $trArray 0) ", 1st = " (nth $trArray 1)))
+            (before (nth $trArray 0) (nth $trArray 1))))
+
       ; adjust rowspan of <th>
-      (attr (.find $day "tr > th") "rowspan" (max nrNonEmptyRows 2)))))
+      (attr $thElem "rowspan" (max nrNonEmptyRows 2)))))
 
 (defn- update-ModulesSelected-for-affected-days
   "Given a set of days that may possibly be affected by removal and shifting of
