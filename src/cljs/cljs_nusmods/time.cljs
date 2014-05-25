@@ -23,3 +23,12 @@
    multiples of 50, eg. 1130 -> 1150, 1200 -> 1200"
   [timeIdx]
   (+ 800 (* 50 timeIdx)))
+
+(def
+  ^{:doc "Day index to 3 character day string mapping"}
+  DAY-INDEX-TO-TH-HTML-STRING
+  {0 "<th><div>M<br />O<br />N<br /></div></th>",
+   1 "<th><div>T<br />U<br />E<br /></div></th>",
+   2 "<th><div>W<br />E<br />D<br /></div></th>",
+   3 "<th><div>T<br />H<br />U<br /></div></th>",
+   4 "<th><div>F<br />R<br />I<br /></div></th>"})

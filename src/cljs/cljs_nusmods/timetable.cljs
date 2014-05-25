@@ -1,7 +1,7 @@
 (ns ^{:doc "Code for Timetable Builder page"}
   cljs-nusmods.timetable
-  (:use [jayq.core :only [$ attr children hide insert-after is parent prevent
-                          remove-attr show text width]])
+  (:use [jayq.core :only [$ attr children hide insert-after is parent prepend
+                          prevent remove-attr show text width]])
   (:require [clojure.set]
             [clojure.string]
             [cljs-nusmods.select2 :as select2]
@@ -984,7 +984,16 @@
                         (map vector
                              (range (count emptyRowsToRemoveVec))
                              emptyRowsToRemoveVec)]
-                  (.remove (nth (children $day "tr") (- rowIdx idx))))))))))
+                  (.remove (nth (children $day "tr") (- rowIdx idx)))))))
+
+      ; Ensure that the <th> for 'MON', 'TUE', 'WED', 'THU', 'FRI' exists
+      (if (empty? (.find $day "tr > th"))
+          (let [$trArray (children $day "tr")
+                $tr0     (nth $trArray 0)]
+            (prepend $tr0
+                     ($ (time-helper/DAY-INDEX-TO-TH-HTML-STRING day)))))
+      ; adjust rowspan of <th>
+      (attr (.find $day "tr > th") "rowspan" (max nrNonEmptyRows 2)))))
 
 (defn- update-ModulesSelected-for-affected-days
   "Given a set of days that may possibly be affected by removal and shifting of
