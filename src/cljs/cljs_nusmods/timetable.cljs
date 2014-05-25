@@ -206,6 +206,7 @@
   []
   (let [preToUrlHashModuleSeq
         (map #(get-PreToUrlHashModule-for-module %1) ModulesSelectedOrder)]
+    (.log js/console (str "ModulesSelectedOrder = " (.stringify js/JSON (clj->js ModulesSelectedOrder))))
     (aset (aget js/document "location") "hash"
           (clojure.string/join
             "&"
@@ -535,7 +536,7 @@
                 {}
                 moduleInfoSeq)
 
-        moduleCodesSeq (keys moduleLessonGroupsMap)
+        moduleCodesSeq (distinct (map #(:moduleCode %1) moduleInfoSeq))
 
         ; Map of Module Code -> Sequence of lesson type strings
         moduleLessonTypes
@@ -589,7 +590,8 @@
     ; Produce the final module info sequence
     (flatten
       (map (fn [moduleCode]
-             (let [lessonTypesMap (get moduleLessonGroupsMapFinal moduleCode)]
+             (let [lessonTypesMap
+                   (get moduleLessonGroupsMapFinal moduleCode)]
                (map (fn [lessonType]
                       (let [lessonGroup (get lessonTypesMap lessonType)]
                         {:moduleCode  moduleCode
@@ -656,6 +658,8 @@
         moduleInfoFinal
         (get-module-info-from-url-hash-module-info moduleInfoExistent)]
 
+    (.log js/console (str "moduleInfoExistent = " (.stringify js/JSON (clj->js moduleInfoExistent))))
+    (.log js/console (str "moduleInfoFinal = " (.stringify js/JSON (clj->js moduleInfoFinal))))
     ; Add the module lesson groups
     (doseq [modInfo moduleInfoFinal]
       (let [moduleCode      (:moduleCode modInfo)
