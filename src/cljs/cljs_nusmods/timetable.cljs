@@ -697,9 +697,10 @@
         startTime  (:startTime removedAugTTLessonInfo)
         endTime    (:endTime removedAugTTLessonInfo)
         ttRow      (get-in Timetable [day row])
-        minTimeIdx (time-helper/TIME-INDEX-MIN)
-        maxTimeIdx (time-helper/TIME-INDEX-MAX)]
+        minTimeIdx time-helper/TIME-INDEX-MIN
+        maxTimeIdx time-helper/TIME-INDEX-MAX]
 
+    (.log js/console "get-largest-consecutive-time-slot-freed-up-by-lesson")
     [
       ; Find the lesson right before the removed lesson
       (let [immediateTTLessonInfoBefore
@@ -761,7 +762,7 @@
         startTime  (:startTime removedAugTTLessonInfo)
         endTime    (:endTime removedAugTTLessonInfo)
         ModulesMap (aget js/window "ModulesMap")
-        dayRows    (get-in Timetable [day rowNum])
+        ttDay      (get-timetable-day day)
 
         ; This is the time range freed up by removal of the lesson
         [lowTimeIdx highTimeIdx]
@@ -770,10 +771,13 @@
 
         not-occupied?
         (fn [occupiedVec startTime endTime]
+          (.log js/console (str "inside not-occupied?, occupiedVec = " (.stringify js/JSON (clj->js occupiedVec))))
           (every? #(nil? %1)
                   (map #(nth occupiedVec %1)
                        (range startTime endTime))))]
 
+    (.log js/console "find-replacement-lessons-within-time")
+    (.log js/console (str "lowTimeIdx = " lowTimeIdx ", highTimeIdx = " highTimeIdx))
     (:augTTLessonInfoMapToShift
       (reduce
         (fn [reduceResult [rowIdx ttRow]]
@@ -788,12 +792,17 @@
                     (filter (fn [[ttLessonInfo _]]
                               (let [stime (:startTime ttLessonInfo)
                                     etime (:endTime ttLessonInfo)]
+                                (.log js/console (str "Executing, startTime = " stime ", endTime = " etime))
                                 (and (>= stime lowTimeIdx)
                                      (<= (dec etime) highTimeIdx)
                                      (not-occupied? occupiedVec stime etime))))
                             ttRow)]
+                (.log js/console "suspect above")
+                (.log js/console (str "rowIdx = " rowIdx))
+                (.log js/console (str "occupiedVec = " (.stringify js/JSON (clj->js occupiedVec))))
                 {:augTTLessonInfoMapToShift
                  (reduce (fn [augTTLessonInfoMap [ttLessonInfo $divElem]]
+                           (.log js/console ":augTTLessonInfoMapToShift")
                            (assoc augTTLessonInfoMap
                                   (assoc ttLessonInfo :day day :rowNum :rowIdx)
                                   $divElem))
@@ -802,6 +811,7 @@
 
                  :occupiedVec
                  (reduce (fn [occVec [ttLessonInfo _]]
+                           (.log js/console ":occupiedVec")
                            (reduce (fn [ov timeIdx] (assoc ov timeIdx true))
                                    occVec
                                    (range (:startTime ttLessonInfo)
@@ -810,9 +820,9 @@
                          ttLessonInfoToShift)})))
         {:augTTLessonInfoMapToShift {},
          ; nil = free slot, true = occupied slot
-         :occupiedVec      [vec (map (fn [t] nil) (range 800 2400 50))]}
+         :occupiedVec      (vec (map (fn [t] nil) (range 800 2400 50)))}
         ; go through each row in the day, below the current row
-        (drop (inc rowNum) (map vector (range (count dayRows)) dayRows))))))
+        (drop (inc rowNum) (map vector (range (count ttDay)) ttDay))))))
 
 (defn- shift-lesson-to-row
   "Shifts a lesson from its original row up to the given row.
@@ -838,6 +848,7 @@
                                   (children $destTableRow tdSelectorString)
                                   0)
         ttLessonInfo            (dissoc augTTLessonInfo :day :rowNum)]
+    (.log js/console (str "day = " day ", sourceRowNum = " sourceRowNum ", destinationRowNum = " destinationRowNum))
     ; Transfer lesson <div> to the destination <td>
     (.append $destTd $divElem)
     ; restore the colspan of the source <td>
@@ -880,11 +891,13 @@
                        (< dayA dayB)))
                 lessonInfoSeq))]
 
+    (.log js/console "Hoo hoo")
     (loop [sortedAugTTLessonInfoSeq
            (sort-lesson-info-seq (exclude-lessons-on-empty-rows
                                    removedAugmentedTTLessonInfoSeq))
 
            nextLessonInfoVec    []]
+      (.log js/console "Inside the loop, the loop")
       (cond (and (empty? sortedAugTTLessonInfoSeq) (empty? nextLessonInfoVec))
             nil
 
@@ -906,7 +919,9 @@
                   (find-replacement-lessons-within-time currentAugTTLessonInfo)]
 
               (doseq [[augTTLessonInfo $divElem] augTTLessonInfoTo$DivElem]
+                (.log js/console "shift-lesson-to-row")
                 (shift-lesson-to-row rowNum augTTLessonInfo $divElem))
+              (.log js/console "gonna recur...")
               (recur (rest sortedAugTTLessonInfoSeq)
                      ; append newly shifted lessons to nextLessonInfoVec
                      (reduce (fn [augTTLessonInfoVec [augTTLessonInfo _]]
@@ -1031,15 +1046,21 @@
                 ttLessonInfo (dissoc augTTLessonInfo :day :rowNum)]
           (timetable-remove-lesson day rowNum ttLessonInfo)))
 
+        (.log js/console "Reached here man")
+
         ; Perform shifting due to removal of lesson <div>s
         (shift-lessons-upwards-to-replace-empty-slots augTTLessonInfoSeq)
+        (.log js/console "Here too bro")
         (timetable-prune-empty-rows affectedDaysSet)
+        (.log js/console "Whats up")
 
         ; Update `ModulesSelected`
         (update-ModulesSelected-for-affected-days affectedDaysSet)
+        (.log js/console "Boo ya!")
 
         ; Remove from `ModulesSelectedOrder`
         (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))
+        (.log js/console "I hear and obey!")
         ; Update Exhibit3 box
         (select2/select2-box-set-val select2/$Select2-Box
                                      (get-selected-module-codes-as-js-array)))))
