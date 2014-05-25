@@ -1002,7 +1002,7 @@
             (set! ModulesSelected
                   (update-in
                     ModulesSelected
-                    [moduleCode lessonType lessonGroup :info]
+                    [moduleCode lessonType :info]
                     (fn [modSelLessonInfoSeq]
                       (conj
                         (filter (fn [modSelLessonInfo]
@@ -1058,6 +1058,7 @@
         ; Update `ModulesSelected`
         (update-ModulesSelected-for-affected-days affectedDaysSet)
         (.log js/console "Boo ya!")
+        (.log js/console (str "ModulesSelected:" (.stringify js/JSON (clj->js ModulesSelected))))
 
         ; Remove from `ModulesSelectedOrder`
         (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))
