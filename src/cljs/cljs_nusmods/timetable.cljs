@@ -915,7 +915,59 @@
 
 (defn- timetable-prune-empty-rows
   "Removes empty rows resulting from the removal of lessons on given days."
-  [affectedDaysSet])
+  [affectedDaysSet]
+  (doseq [day affectedDaysSet]
+    (let [nrRows          (get-nr-rows-in-timetable-day day)
+          ttDay           (get-timetable-day day)
+
+          rowsPartition
+          (reduce (fn [rPart [rowIdx ttRow]]
+                    (if (empty? ttRow)
+                      (update-in rPart [:emptyRows]
+                                 (fn [emptyRowsVec]
+                                   (conj emptyRowsVec rowIdx)))
+                      (update-in rPart [:nonEmptyRows]
+                                 (fn [nonEmptyRowsVec]
+                                   (conj nonEmptyRowsVec rowIdx)))))
+                  {:emptyRows [], :nonEmptyRows []}
+                  (map vector (range (count ttDay)) ttDay))
+
+          emptyRowsVec    (:emptyRows rowsPartition)
+          nonEmptyRowsVec (:nonEmptyRows rowsPartition)
+          nrEmptyRows     (count emptyRowsVec)
+          nrNonEmptyRows  (- nrRows nrEmptyRows)
+          $day            (nth HTML-Timetable day)]
+      (if (>= nrNonEmptyRows 2)
+          ; we have at least 2 non empty rows, so remove all empty rows
+          (do (set! Timetable
+                    (update-in Timetable [day]
+                               (fn [ttDay]
+                                 (vec (map (fn [rowIdx] (nth ttDay rowIdx))
+                                           nonEmptyRowsVec)))))
+              ; remove empty <tr> elements
+              (doseq [[idx rowIdx] (map vector (range nrEmptyRows)
+                                        emptyRowsVec)]
+                (.remove (nth (children $day "tr") (- rowIdx idx)))))
+
+          ; We have less than 2 non empty rows. We remove as many empty rows
+          ; as we can, while ensuring that there are 2 rows for that day.
+          (let [nrEmptyRowsToKeep    (- 2 nrNonEmptyRows)
+                emptyRowsToKeepVec   (take nrEmptyRowsToKeep emptyRowsVec)
+                rowsToKeepSeq        (sort (fn [a b] (< a b))
+                                          (concat nonEmptyRowsVec
+                                                  emptyRowsToKeepVec))
+                emptyRowsToRemoveVec (drop nrEmptyRowsToKeep emptyRowsVec)]
+            (do (set! Timetable
+                      (update-in Timetable [day]
+                                 (fn [ttDay]
+                                   (vec (map (fn [rowIdx] (nth ttDay rowIdx))
+                                             rowsToKeepSeq)))))
+                ; remove empty <tr> elements
+                (doseq [[idx rowIdx]
+                        (map vector
+                             (range (count emptyRowsToRemoveVec))
+                             emptyRowsToRemoveVec)]
+                  (.remove (nth (children $day "tr") (- rowIdx idx))))))))))
 
 (defn remove-module
   "Removes a module from the timetable.
