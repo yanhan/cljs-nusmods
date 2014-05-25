@@ -813,17 +813,51 @@
         ; go through each row in the day, below the current row
         (drop (inc rowNum) (map vector (range (count dayRows)) dayRows))))))
 
-; TODO: Implement this function
 (defn- shift-lesson-to-row
-  "Shifts a lesson from its original row up to the given row."
-  [ttRowLesson rowNum]
-  )
+  "Shifts a lesson from its original row up to the given row.
+
+   The parameter `augTTLessonInfo` is a `TimetableLessonInfo` object augmented
+   with the `:day` and `:rowNum` keys."
+  [destinationRowNum augTTLessonInfo $divElem]
+  (let [day                     (:day augTTLessonInfo)
+        sourceRowNum            (:rowNum augTTLessonInfo)
+        startTime               (:startTime augTTLessonInfo)
+        endTime                 (:endTime augTTLessonInfo)
+        slotsOccupied           (- endTime startTime)
+        [hourClass minuteClass] (get-css-hour-minute-classes-for-time startTime)
+        tdSelectorString        (str "td" "." hourClass "." minuteClass)
+        $sourceTableRow         (nth (children (nth HTML-Timetable day) "tr")
+                                     sourceRowNum)
+        $sourceTd               (nth
+                                  (children $sourceTableRow tdSelectorString)
+                                  0)
+        $destTableRow           (nth (children (nth HTML-Timetable day) "tr")
+                                     destinationRowNum)
+        $destTd                 (nth
+                                  (children $destTableRow tdSelectorString)
+                                  0)
+        ttLessonInfo            (dissoc augTTLessonInfo :day :rowNum)]
+    ; Transfer lesson <div> to the destination <td>
+    (.append $destTd $divElem)
+    ; restore the colspan of the source <td>
+    (remove-attr $sourceTd "colspan")
+    ; fill in removed <td> for the source <td>
+    (add-missing-td-elements-replacing-lesson $sourceTd augTTLessonInfo)
+    ; remove sibling <td> for the destination <td> to make way for columns
+    ; occupied by $divElem
+    (doseq [$siblingTd (take (dec slotsOccupied) (.nextAll $destTd))]
+      (.remove $siblingTd))
+    ; update colspan of destination <td>
+    (attr $destTd "colspan" slotsOccupied)
+    ; update `Timetable` global
+    (timetable-remove-lesson day sourceRowNum ttLessonInfo)
+    (timetable-add-lesson day destinationRowNum ttLessonInfo $divElem)))
 
 (defn- shift-lessons-upwards-to-replace-empty-slots
   "For each removed lesson, see if there are any lessons in rows below it that
    can be shifted upwards to occupy the empty slots resulting from its removal.
 
-   The paramter `removedAugmentedTTLessonInfoSeq` is a sequence of
+   The parameter `removedAugmentedTTLessonInfoSeq` is a sequence of
    `TimetableLessonInfo` objects augmented with the `:day` and `:rowNum` keys."
   [removedAugmentedTTLessonInfoSeq]
   (let [; we do not consider any lessons on empty rows for ease of
@@ -862,24 +896,26 @@
 
             ; find timeslot to shift up to replace gap
             :else
-            (let [augTTLessonInfo         (first sortedAugTTLessonInfoSeq)
-                  rowNum                  (:rowNum augTTLessonInfo)
-                  ; TODO: Rename this
-                  replacementTTRowLessons (find-replacement-lessons-within-time
-                                            augTTLessonInfo)]
-              ; TODO: Continue editing here
-              (doseq [ttRowLesson replacementTTRowLessons]
-                (shift-lesson-to-row ttRowLesson rowNum))
-              ; TODO: `replacementLessons` is not in the format we want. Make it so.
+            (let [currentAugTTLessonInfo (first sortedAugTTLessonInfoSeq)
+                  rowNum                 (:rowNum currentAugTTLessonInfo)
+
+                  ; map of augmented `TimeTableLessonInfo` objects to the
+                  ; jQuery <div> element
+                  augTTLessonInfoTo$DivElem
+                  (find-replacement-lessons-within-time currentAugTTLessonInfo)]
+
+              (doseq [[augTTLessonInfo $divElem] augTTLessonInfoTo$DivElem]
+                (shift-lesson-to-row rowNum augTTLessonInfo $divElem))
               (recur (rest sortedAugTTLessonInfoSeq)
                      ; append newly shifted lessons to nextLessonInfoVec
-                     (loop [newlyShiftedLessons    replacementLessons
-                            nextLessonInfoVecPrime nextLessonInfoVec]
-                       (if (empty? newlyShiftedLessons)
-                           nextLessonInfoVecPrime
-                           (recur (rest newlyShiftedLessons)
-                                  (conj nextLessonInfoVecPrime
-                                        (first newlyShiftedLessons)))))))))))
+                     (reduce (fn [augTTLessonInfoVec [augTTLessonInfo _]]
+                               (conj augTTLessonInfoVec augTTLessonInfo))
+                             nextLessonInfoVec
+                             augTTLessonInfoTo$DivElem)))))))
+
+(defn- timetable-prune-empty-rows
+  "Removes empty rows resulting from the removal of lessons on given days."
+  [affectedDaysSet])
 
 (defn remove-module
   "Removes a module from the timetable.
@@ -890,20 +926,34 @@
       (let [lessonTypes
             (keys (get ModulesSelected moduleCode))
 
-            ttLessonInfoAugmentedSeq
+            augTTLessonInfoSeq
             (flatten (map (fn [lessonType]
                             (remove-lesson-group-html moduleCode lessonType))
-                          lessonTypes))]
-        (doseq [ttLessonInfoAug ttLessonInfoAugmentedSeq]
-          (let [day          (:day ttLessonInfoAug)
-                rowNum       (:rowNum ttLessonInfoAug)
-                ttLessonInfo (dissoc ttLessonInfoAug :day :rowNum)]
-          (timetable-remove-lesson day rowNum ttLessonInfo)))
-        (shift-lessons-upwards-to-replace-empty-slots ttLessonInfoAugmentedSeq)
-        ; TODO: Modify `ModulesSelected` to update :rowNum
+                          lessonTypes))
 
-        ; Remove from `ModulesSelected`
+            affectedDaysSet
+            (reduce (fn [daySet augTTLessonInfo]
+                      (conj daySet (:day augTTLessonInfo)))
+                    #{}
+                    augTTLessonInfoSeq)]
+
+        ; Remove module from `ModulesSelected`
         (set! ModulesSelected (dissoc ModulesSelected moduleCode))
+
+        ; remove the lesson <div>s
+        (doseq [augTTLessonInfo augTTLessonInfoSeq]
+          (let [day          (:day augTTLessonInfo)
+                rowNum       (:rowNum augTTLessonInfo)
+                ttLessonInfo (dissoc augTTLessonInfo :day :rowNum)]
+          (timetable-remove-lesson day rowNum ttLessonInfo)))
+
+        ; Perform shifting due to removal of lesson <div>s
+        (shift-lessons-upwards-to-replace-empty-slots augTTLessonInfoSeq)
+        (timetable-prune-empty-rows affectedDaysSet)
+
+        ; Update `ModulesSelected`
+        (s)
+
         ; Remove from `ModulesSelectedOrder`
         (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))
         ; Update Exhibit3 box
