@@ -1,0 +1,34 @@
+http://127.0.0.1:3000/index.html#ACC1002_L=V1&ACC1002_T=V02&CS2010_L=1&CS2010_LAB=4&CS2010_T=3&MUA3195_L=1&CE2112_L=1&CE2112_T=4AB&ACC4612C_ST=C1&AR5952Z_L=1&AR5952Z_T=1&FMA1203H_SEM=1
+
+What you should see:
+
+Tuesday
+-------
+Row 0: SC2214 Tutorial E2 (1000-1200), ACC1002 Tutorial V02 (1300-1500),
+       CS2010 Lab 4 (1700-1800)
+Row 1: MUA3195 Lecture 1 (1200-1330), CE2112 Lecture 1 (1600-1800)
+Row 2: ACC4612C Sectional Teaching C1 (1400-1700)
+Row 3: AR5952Z Lecture 1 (1300-1600), SC2214 Lecture 1 (1600-1800)
+Row 4: FMA1203H Seminar-Style Module Class 1 (1200-1500)
+
+Wednesday
+---------
+Row 0: ACC1002 Lecture V1 (1000-1200), AR5952Z Lecture 1 (1400-1700)
+Row 1: CS2010 Tutorial 3 (1100-1200)
+
+Thursday
+--------
+Row 0: CS2010 Lecture 1 (1000-1200)
+
+Friday
+------
+Row 0: CE2112 Tutorial 4AB (1000-1100), CE2112 Lecture 1 (1100-1200),
+       MUA3195 Lecture 1 (1200-1330), AR5952Z Tutorial 1 (1400-1600)
+Row 1: AR5952Z Lecture 1 (1100-1300)
+
+
+Focus on Tuesday.
+Removing the ACC1002 module should shift:
+- MUA3195 Lecture and ACC4612C Sectional Teaching to the 0th row
+- AR5952Z Lecture to 1st row
+- FMA1203H Seminar-Style Module Class 1 and SC2214 Lecture 1 to 2nd row
