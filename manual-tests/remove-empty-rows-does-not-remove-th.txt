@@ -16,7 +16,7 @@ Observations:
    respectively
 -> For Friday, CS1010E should be shifted up to row 0
 
-Step: Remove the CS3601 module.
+Step: Remove the ACC3601 module.
 Observations:
 -> <th> containing "WED" should be present and have a rowspan of 2
 -> For Wednesday, CS1010E should be shifted to row 0
