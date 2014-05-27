@@ -8,3 +8,4 @@ Module addition via URL hash on initialization
 - timetable.cljs
   -> Create functions for retrieving <td> elements and similar. Replace the
      code in `add-module-lesson` and `shift-lesson-to-row`
+  -> Handle modules on Saturday
