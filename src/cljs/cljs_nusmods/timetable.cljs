@@ -226,6 +226,18 @@
     (aset (aget js/document "location") "hash"
           (str orgUrlHash (if (empty? orgUrlHash) "" "&") moduleUrlHash))))
 
+(defn- remove-module-from-document-location-hash
+  "Removes a module from `document.location.hash`"
+  [moduleCode]
+  (let [orgUrlHash (aget (aget js/document "location") "hash")
+
+        urlHashWithoutModule
+        (clojure.string/replace
+          orgUrlHash
+          (re-pattern (str moduleCode "_[A-Z]{1,3}=[^&]+&?")) "")]
+    (aset (aget js/document "location") "hash"
+          (clojure.string/replace urlHashWithoutModule #"&$" ""))))
+
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
        :private true
@@ -1124,6 +1136,8 @@
         (update-ModulesSelected-for-affected-days affectedDaysSet)
         (.log js/console "Boo ya!")
         (.log js/console (str "ModulesSelected:" (.stringify js/JSON (clj->js ModulesSelected))))
+
+        (remove-module-from-document-location-hash moduleCode)
 
         ; Remove from `ModulesSelectedOrder`
         (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))
