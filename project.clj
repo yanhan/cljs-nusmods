@@ -20,7 +20,8 @@
         :optimizations :advanced
         :externs ["externs/jquery-1.9.js"
                   "externs/exhibit3.js"
-                  "externs/select2.js"]}
+                  "externs/select2.js"
+                  "externs/jquery-ui.js"]}
     } {
       :source-paths ["src/cljs" "test/cljs"]
       :compiler {

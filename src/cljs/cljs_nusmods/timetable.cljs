@@ -452,8 +452,9 @@
       (doseq [siblingTdElem (take (- slotsOcc 1) (.nextAll tdHTMLElem))]
         (.remove siblingTdElem))
 
-      ; Returns a ModulesSelectedLessonInfo object
-      {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime})))
+      ; Returns a `ModulesSelectedLessonInfo` object augmented with the $divElem
+      {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
+       :divElem $divElem})))
 
 (defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable."
@@ -464,15 +465,17 @@
         modulesMapLessonSeq (get-in ModulesMap [moduleCode "lessons" lessonType
                                                 lessonLabel])]
     (if (and moduleName modulesMapLessonSeq)
-        (let [lessonInfoSeq (doall
-                              (map (fn [modulesMapLesson]
-                                     (add-module-lesson moduleCode
-                                                        moduleName
-                                                        lessonType
-                                                        lessonLabel
-                                                        modulesMapLesson
-                                                        bgColorCssClass))
-                                   modulesMapLessonSeq))]
+        (let [augLessonInfoSeq (map (fn [modulesMapLesson]
+                                      (add-module-lesson moduleCode
+                                                         moduleName
+                                                         lessonType
+                                                         lessonLabel
+                                                         modulesMapLesson
+                                                         bgColorCssClass))
+                                    modulesMapLessonSeq)
+              lessonInfoSeq    (doall (map #(dissoc %1 :divElem)
+                                           augLessonInfoSeq))
+              $divElemSeq      (map #(:divElem %1) augLessonInfoSeq)]
           ; Update ModulesSelected with the lesson group
           (set! ModulesSelected
                 (assoc-in ModulesSelected [moduleCode lessonType]
@@ -488,7 +491,11 @@
                 ;       a workaround.
                 (select2/select2-box-set-val
                   select2/$Select2-Box
-                  (get-selected-module-codes-as-js-array))))))))
+                  (get-selected-module-codes-as-js-array))))
+          
+          ; And Drag event handler
+          (doseq [$divElem $divElemSeq]
+            (.draggable $divElem))))))
 
 (defn add-module
   "Adds a module to the timetable.
