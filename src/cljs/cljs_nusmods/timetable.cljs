@@ -456,6 +456,19 @@
       {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
        :divElem $divElem})))
 
+(defn- lesson-draggable-start-evt-handler-maker
+  "Returns a function that can be used as the `start` event handler for a
+   draggable lesson.
+
+   Details of the returned function can be found here:
+
+       http://api.jqueryui.com/draggable/#event-start"
+  [moduleCode lessonType lessonGroup]
+  (let []
+    (fn [evt ui])
+    )
+  )
+
 (defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable."
   [moduleCode lessonType lessonLabel bgColorCssClass
@@ -492,10 +505,17 @@
                 (select2/select2-box-set-val
                   select2/$Select2-Box
                   (get-selected-module-codes-as-js-array))))
-          
+
           ; And Drag event handler
           (doseq [$divElem $divElemSeq]
-            (.draggable $divElem))))))
+            (.draggable $divElem
+                        (js-obj
+                          "zIndex" 100
+                          ; TODO: Replace this `revert` function
+                          "revert" (fn [] true)
+                          "start"  (lesson-draggable-start-evt-handler-maker
+                                     moduleCode lessonType lessonLabel)
+                                )))))))
 
 (defn add-module
   "Adds a module to the timetable.
