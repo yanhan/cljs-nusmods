@@ -295,6 +295,43 @@
   [day]
   (count (get-timetable-day day)))
 
+(def ^{:doc     "HTML string for the <td> elements in a <tr> on the Timetable
+                 Builder page"
+       :private true}
+  Timetable-Row-TD-HTML-String
+  "<td class='h08 m00'></td>
+   <td class='h08 m30'></td>
+   <td class='h09 m00'></td>
+   <td class='h09 m30'></td>
+   <td class='h10 m00'></td>
+   <td class='h10 m30'></td>
+   <td class='h11 m00'></td>
+   <td class='h11 m30'></td>
+   <td class='h12 m00'></td>
+   <td class='h12 m30'></td>
+   <td class='h13 m00'></td>
+   <td class='h13 m30'></td>
+   <td class='h14 m00'></td>
+   <td class='h14 m30'></td>
+   <td class='h15 m00'></td>
+   <td class='h15 m30'></td>
+   <td class='h16 m00'></td>
+   <td class='h16 m30'></td>
+   <td class='h17 m00'></td>
+   <td class='h17 m30'></td>
+   <td class='h18 m00'></td>
+   <td class='h18 m30'></td>
+   <td class='h19 m00'></td>
+   <td class='h19 m30'></td>
+   <td class='h20 m00'></td>
+   <td class='h20 m30'></td>
+   <td class='h21 m00'></td>
+   <td class='h21 m30'></td>
+   <td class='h22 m00'></td>
+   <td class='h22 m30'></td>
+   <td class='h23 m00'></td>
+   <td class='h23 m30'></td>")
+
 (defn- add-new-row-to-timetable-day
   "Adds a new row to the 0-indexed day in the Timetable, where 0 = Monday,
    1 = Tuesday, until 4 = Friday."
@@ -304,40 +341,7 @@
                    (fn [ttDay]
                      (conj ttDay (create-empty-timetable-row)))))
   (.append (nth HTML-Timetable day)
-           ($ "<tr class='day-row'>
-                 <td class='h08 m00'></td>
-                 <td class='h08 m30'></td>
-                 <td class='h09 m00'></td>
-                 <td class='h09 m30'></td>
-                 <td class='h10 m00'></td>
-                 <td class='h10 m30'></td>
-                 <td class='h11 m00'></td>
-                 <td class='h11 m30'></td>
-                 <td class='h12 m00'></td>
-                 <td class='h12 m30'></td>
-                 <td class='h13 m00'></td>
-                 <td class='h13 m30'></td>
-                 <td class='h14 m00'></td>
-                 <td class='h14 m30'></td>
-                 <td class='h15 m00'></td>
-                 <td class='h15 m30'></td>
-                 <td class='h16 m00'></td>
-                 <td class='h16 m30'></td>
-                 <td class='h17 m00'></td>
-                 <td class='h17 m30'></td>
-                 <td class='h18 m00'></td>
-                 <td class='h18 m30'></td>
-                 <td class='h19 m00'></td>
-                 <td class='h19 m30'></td>
-                 <td class='h20 m00'></td>
-                 <td class='h20 m30'></td>
-                 <td class='h21 m00'></td>
-                 <td class='h21 m30'></td>
-                 <td class='h22 m00'></td>
-                 <td class='h22 m30'></td>
-                 <td class='h23 m00'></td>
-                 <td class='h23 m30'></td>
-               </tr>"))
+           ($ (str "<tr class='day-row'>" Timetable-Row-TD-HTML-String "</tr>")))
   ; Modify the rowspan of the <th> in the 0th row in the timetable
   (let [nrRows (get-nr-rows-in-timetable-day day)
         thElem (.find (nth HTML-Timetable day) "tr > th")]
@@ -1358,6 +1362,22 @@
 (defn remove-all-modules
   "Removes all modules from the timetable"
   []
-  ; !!!
-  nil
-  )
+  (.remove ($ ".lesson"))
+  (doseq [day (range 5)]
+    (let [nrRows   (get-nr-rows-in-timetable-day day)
+          $dayElem (nth HTML-Timetable day)]
+      ; Remove rows >= 2
+      (doseq [rowIdx (reverse (range 2 nrRows))]
+        (.remove (nth (children $dayElem "tr") rowIdx)))
+      ; Remove all <td>
+      (.remove (.find $dayElem "td"))
+      ; Add clean <td>
+      (doseq [rowIdx (range 2)]
+        (.append (nth (children $dayElem "tr") rowIdx)
+                 ($ Timetable-Row-TD-HTML-String)))
+      (attr (.find $dayElem "tr > th") "rowspan" 2)))
+  (init)
+  (set! ModulesSelected {})
+  (set! ModulesSelectedOrder [])
+  (select2/select2-box-set-val select2/$Select2-Box (array))
+  (aset (aget js/document "location") "hash" ""))
