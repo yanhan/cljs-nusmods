@@ -531,7 +531,6 @@
       (timetable-prune-empty-rows affectedDaysSet)
       (set! Lessons-Created-By-Draggable nil))))
 
-; TODO: Make lesson type with only a single lessongroup non-draggable
 (defn- make-added-lessons-draggable
   "Makes the <div> elements of selected lessons draggable."
   [$divElemSeq moduleCode lessonType lessonLabel bgColorCssClass]
@@ -600,8 +599,14 @@
                         select2/$Select2-Box
                         (get-selected-module-codes-as-js-array))))
 
-                (make-added-lessons-draggable $divElemSeq moduleCode lessonType
-                                              lessonLabel bgColorCssClass)))
+                ; Only lesson types with more than 1 option of lesson group
+                ; will be draggable
+                (if (> (count (get-in ModulesMap [moduleCode "lessons"
+                                                  lessonType]))
+                       1)
+                    (make-added-lessons-draggable $divElemSeq moduleCode
+                                                  lessonType lessonLabel
+                                                  bgColorCssClass))))
           augLessonInfoSeq))))
 
 (defn add-module
