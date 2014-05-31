@@ -2,8 +2,6 @@ Module addition via URL hash on initialization
 - On going through the entire url hash, if we encounter a module whose
   lesson types / lesson groups are all non existent, should we go on to add the
   module? I'd say yes
-- Mutate `document.location.hash` to a canonical representation after
-  initialization
 
 - timetable.cljs
   -> Create functions for retrieving <td> elements and similar. Replace the
