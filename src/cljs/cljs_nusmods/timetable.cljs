@@ -484,6 +484,7 @@
        http://api.jqueryui.com/draggable/#event-start"
   [moduleCode lessonType selectedLessonGroup bgColorCssClass]
   (fn [evt ui]
+    (.css (aget ui "helper") "cursor" "grabbing")
     (let [ModulesMap         (aget js/window "ModulesMap")
           ; Get all lesson groups
           allLessonGroupsMap (get-in ModulesMap [moduleCode "lessons"
@@ -507,6 +508,7 @@
   "Returns a function used as the `stop` event handler for a draggable lesson."
   []
   (fn [evt ui]
+    (.css (aget ui "helper") "cursor" "grab")
     (let [affectedDaysSet
           (reduce (fn [daySet ttLessonInfo]
                     (conj daySet (:day ttLessonInfo)))
@@ -536,6 +538,7 @@
   [$divElemSeq moduleCode lessonType lessonLabel bgColorCssClass]
   ; And Drag event handler
   (doseq [$divElem $divElemSeq]
+    (.css $divElem "cursor" "grab")
     (.draggable $divElem
                 (js-obj "zIndex" 100
                         ; TODO: Replace this `revert` function with one
