@@ -1,7 +1,7 @@
 (ns ^{:doc "Code for Timetable Builder page"}
   cljs-nusmods.timetable
-  (:use [jayq.core :only [$ attr before children hide insert-after is parent
-                          prepend prevent remove-attr show text width]])
+  (:use [jayq.core :only [$ attr before children data hide insert-after is
+                          parent prepend prevent remove-attr show text width]])
   (:require [clojure.set]
             [clojure.string]
             [cljs-nusmods.select2 :as select2]
@@ -237,6 +237,19 @@
           (re-pattern (str moduleCode "_[A-Z]{1,3}=[^&]+&?")) "")]
     (aset (aget js/document "location") "hash"
           (clojure.string/replace urlHashWithoutModule #"&$" ""))))
+
+(defn- update-document-location-hash-with-changed-lesson-group
+  "Updates a module's lesson type in `document.location.hash` with a changed
+   changed lesson group."
+  [moduleCode lessonTypeLongForm newLessonGroup]
+  (let [orgUrlHash (aget (aget js/document "location") "hash")
+        lessonType (Lesson-Type-Long-To-Short-Form lessonTypeLongForm)
+        newUrlHash (clojure.string/replace
+                     orgUrlHash
+                     (re-pattern (str moduleCode "_" lessonType "=[^&]+"))
+                     (str moduleCode "_" lessonType "=" newLessonGroup))]
+    (aset (aget js/document "location") "hash"
+          newUrlHash)))
 
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
@@ -474,6 +487,15 @@
 (declare add-module-lesson-group)
 (declare timetable-prune-empty-rows)
 (declare add-missing-td-elements-replacing-lesson)
+(declare remove-lesson-group-html)
+(declare shift-lessons-upwards-to-replace-empty-slots)
+(declare update-ModulesSelected-for-affected-days)
+
+(def ^{:doc     "Key for a data attribute added to a draggable <div> helper
+                 when the helper has been dropped onto a droppable <div>.
+                 This is used to detect if a lesson group switch has occurred."
+       :private true}
+  LESSON-GROUP-CHANGE-KEY "lessonGroupChangeTo")
 
 (defn- lesson-draggable-start-evt-handler-maker
   "Returns a function that can be used as the `start` event handler for a
@@ -503,14 +525,14 @@
                    unselectedLessonGroupsMap)))]
       (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq))))
 
-; TODO: Account for a user dropping the draggable lesson onto a different lesson
-;       from the one selected.
 (defn- lesson-draggable-stop-evt-handler-maker
   "Returns a function used as the `stop` event handler for a draggable lesson."
-  []
+  [moduleCode lessonType lessonGroup bgColorCssClass]
   (fn [evt ui]
-    (.css (aget ui "helper") "cursor" "grab")
-    (let [affectedDaysSet
+    (let [$helper         (aget ui "helper")
+          destLessonGroup (data $helper LESSON-GROUP-CHANGE-KEY)
+
+          affectedDaysSet
           (reduce (fn [daySet ttLessonInfo]
                     (conj daySet (:day ttLessonInfo)))
                   #{}
@@ -532,7 +554,35 @@
           (add-missing-td-elements-replacing-lesson $parentTd augTTLessonInfo)))
 
       (timetable-prune-empty-rows affectedDaysSet)
-      (set! Lessons-Created-By-Draggable nil))))
+      (set! Lessons-Created-By-Draggable nil)
+      (.css $helper "cursor" "grab")
+
+      ; User has dropped the draggable helper <div> onto a droppable
+      (if (not (nil? destLessonGroup))
+          (let [augTTLessonInfoSeq (remove-lesson-group-html moduleCode
+                                                             lessonType)
+                affectedDaysSet    (reduce (fn [daySet augTTLessonInfo]
+                                             (conj daySet
+                                                   (:day augTTLessonInfo)))
+                                           #{}
+                                           augTTLessonInfoSeq)]
+            ; remove the current lesson group
+            (doseq [augTTLessonInfo augTTLessonInfoSeq]
+              (let [day          (:day augTTLessonInfo)
+                    rowNum       (:rowNum augTTLessonInfo)
+                    ttLessonInfo (dissoc augTTLessonInfo :day :rowNum)]
+                (timetable-remove-lesson day rowNum ttLessonInfo)))
+
+            (shift-lessons-upwards-to-replace-empty-slots augTTLessonInfoSeq)
+            (timetable-prune-empty-rows affectedDaysSet)
+            (update-ModulesSelected-for-affected-days affectedDaysSet)
+
+            ; add the newly selected lesson group
+            (add-module-lesson-group moduleCode lessonType destLessonGroup
+                                     bgColorCssClass true)
+
+            (update-document-location-hash-with-changed-lesson-group
+              moduleCode lessonType destLessonGroup))))))
 
 (defn- make-added-lessons-draggable
   "Makes the <div> elements of selected lessons draggable."
@@ -543,32 +593,43 @@
     (.draggable $divElem
                 (js-obj "zIndex" 100
                         "helper" "clone"
-                        ; TODO: Replace this `revert` function with one
-                        ;       which detects whether a revert should
-                        ;       occur
-                        "revert" (fn [] true)
+                        "revert" "invalid"
                         "start"  (lesson-draggable-start-evt-handler-maker
                                    moduleCode lessonType lessonLabel
                                    bgColorCssClass)
-                        "stop"   (lesson-draggable-stop-evt-handler-maker)))))
+                        "stop"   (lesson-draggable-stop-evt-handler-maker
+                                   moduleCode lessonType lessonLabel
+                                   bgColorCssClass)))))
 
 (defn- make-fake-lessons-droppable
   "For 'fake' lessons created due to a lesson <div> being dragged, we make
    them droppable in order for the user to switch lesson groups."
-  [$divElemSeq]
-  (doseq [$divElem $divElemSeq]
-    (.droppable $divElem
-                (js-obj "tolerance" "intersect"
+  [augModuleSelectedLessonInfoSeq]
+  (doseq [augModuleSelectedLessonInfo augModuleSelectedLessonInfoSeq]
+    (let [$divElem (:divElem augModuleSelectedLessonInfo)]
+      (.droppable
+        $divElem
+        (js-obj "tolerance" "intersect"
 
-                        "over"
-                        (fn [evt ui]
-                          (.removeClass $divElem "lesson-droppable-not-hover")
-                          (.addClass $divElem "lesson-droppable-hover"))
+                "over"
+                (fn [evt ui]
+                  (.removeClass $divElem "lesson-droppable-not-hover")
+                  (.addClass $divElem "lesson-droppable-hover"))
 
-                        "out"
-                        (fn [evt ui]
-                          (.removeClass $divElem "lesson-droppable-hover")
-                          (.addClass $divElem "lesson-droppable-not-hover"))))))
+                "out"
+                (fn [evt ui]
+                  (.removeClass $divElem "lesson-droppable-hover")
+                  (.addClass $divElem "lesson-droppable-not-hover"))
+
+                "drop"
+                (fn [evt ui]
+                  (let [$helper (aget ui "helper")]
+                    ; Set a data attribute on the draggable helper to signal
+                    ; that the user has dropped the <div> on a droppable to
+                    ; change the lesson group
+                    (data $helper
+                          LESSON-GROUP-CHANGE-KEY
+                          (:lessonGroup augModuleSelectedLessonInfo)))))))))
 
 (defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable.
@@ -633,7 +694,7 @@
 
               ; lesson was added due to draggable <div>
               ; Make it droppable
-              (make-fake-lessons-droppable $divElemSeq))
+              (make-fake-lessons-droppable augLessonInfoSeq))
           augLessonInfoSeq))))
 
 (defn add-module
