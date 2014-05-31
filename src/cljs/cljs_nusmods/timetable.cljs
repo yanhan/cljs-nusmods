@@ -462,6 +462,14 @@
        :moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonLabel,
        :divElem $divElem})))
 
+(def ^{:doc     "Sequence of `TimetableLessonInfo` objects augmented with the
+                 `:divElem`, `:moduleCode`, `:lessonType`, `:lessonGroup` keys.
+                 These are 'fake' lessons created when a selected lesson is
+                 being dragged by the user, in order for him/her to switch to
+                 a different lesson group for that lesson type."
+       :private true}
+  Lessons-Created-By-Draggable nil)
+
 ; Forward declaration
 (declare add-module-lesson-group)
 
@@ -487,7 +495,49 @@
             (map (fn [[lessonGroup _]]
                    (add-module-lesson-group moduleCode lessonType lessonGroup
                                             bgColorCssClass false))
-                 unselectedLessonGroupsMap))])))
+                 unselectedLessonGroupsMap))]
+      (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq))))
+
+; TODO: Account for a user dropping the draggable lesson onto a different lesson
+;       from the one selected.
+(defn- lesson-draggable-stop-evt-handler-maker
+  "Returns a function used as the `stop` event handler for a draggable lesson."
+  []
+  (fn [evt ui]
+    (let [$divElemSeq (map #(:divElem %1) Lessons-Created-By-Draggable)
+
+          daysAndRowsAffected
+          (reduce (fn [dayVec ttLessonInfo]
+                    (update-in dayVec [(:day ttLessonInfo)]
+                               (fn [rowSet]
+                                 (conj rowSet (:rowNum ttLessonInfo)))))
+                  [#{} #{} #{} #{} #{}]
+                  Lessons-Created-By-Draggable)
+
+          ; This should not be placed here.
+          ; We should only remove such rows after we update the `Timetable`
+          ; global
+          emptyRowsToRemove
+          (map (fn [[day rowSet]]
+                 (let [ttDay (get-timetable-day day)]
+                   [day,
+                    (sort > (filter (fn [rowNum]
+                                      (and (> rowNum 1)
+                                           (zero? (count (nth ttDay rowNum)))))
+                                    rowSet))]))
+               (map vector (range (count daysAndRowsAffected))
+                    daysAndRowsAffected))]
+      (doseq [augTTLessonInfo Lessons-Created-By-Draggable]
+        (timetable-remove-lesson (:day augTTLessonInfo)
+                                 (:rowNum augTTLessonInfo)
+                                 (dissoc augTTLessonInfo :divElem :day
+                                         :rowNum)))
+      (doseq [$divElem $divElemSeq]
+        (.remove $divElem))
+      (doseq [[day rowsToRemove]]
+        (s)
+        )
+      )))
 
 ; TODO: Make lesson type with only a single lessongroup non-draggable
 (defn- make-added-lessons-draggable
@@ -503,7 +553,8 @@
                         "revert" (fn [] true)
                         "start"  (lesson-draggable-start-evt-handler-maker
                                    moduleCode lessonType lessonLabel
-                                   bgColorCssClass)))))
+                                   bgColorCssClass)
+                        "stop"   (lesson-draggable-stop-evt-handler-maker)))))
 
 (defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable.
