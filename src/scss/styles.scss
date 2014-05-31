@@ -134,6 +134,14 @@ div.tab-content.hide {
   padding: 2px;
 }
 
+.lesson-droppable-not-hover {
+  opacity: 0.5
+}
+
+.lesson-droppable-hover {
+  opacity: 1;
+}
+
 .lesson > p {
   margin: 0;
 }

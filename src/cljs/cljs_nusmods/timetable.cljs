@@ -442,7 +442,7 @@
     (width $divElem (str (* half-hour-pixels slotsOcc) "px"))
     ; make the <div> less opaque for a lesson added by jQuery UI draggable
     (if (not isActuallySelected?)
-        (.css $divElem "opacity" 0.5))
+        (.addClass $divElem "lesson-droppable-not-hover"))
     (let [dayHTMLElem (nth HTML-Timetable day)
           rowHTMLElem (nth (children dayHTMLElem "tr") rowNum)
           tdHTMLElem  (nth (children
@@ -550,6 +550,24 @@
                                    bgColorCssClass)
                         "stop"   (lesson-draggable-stop-evt-handler-maker)))))
 
+(defn- make-fake-lessons-droppable
+  "For 'fake' lessons created due to a lesson <div> being dragged, we make
+   them droppable in order for the user to switch lesson groups."
+  [$divElemSeq]
+  (doseq [$divElem $divElemSeq]
+    (.droppable $divElem
+                (js-obj "tolerance" "intersect"
+
+                        "over"
+                        (fn [evt ui]
+                          (.removeClass $divElem "lesson-droppable-not-hover")
+                          (.addClass $divElem "lesson-droppable-hover"))
+
+                        "out"
+                        (fn [evt ui]
+                          (.removeClass $divElem "lesson-droppable-hover")
+                          (.addClass $divElem "lesson-droppable-not-hover"))))))
+
 (defn- add-module-lesson-group
   "Adds a lesson group of a module to the timetable.
 
@@ -609,7 +627,11 @@
                        1)
                     (make-added-lessons-draggable $divElemSeq moduleCode
                                                   lessonType lessonLabel
-                                                  bgColorCssClass))))
+                                                  bgColorCssClass)))
+
+              ; lesson was added due to draggable <div>
+              ; Make it droppable
+              (make-fake-lessons-droppable $divElemSeq))
           augLessonInfoSeq))))
 
 (defn add-module
