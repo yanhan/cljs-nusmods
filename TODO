@@ -8,4 +8,48 @@ Module addition via URL hash on initialization
 - timetable.cljs
   -> Create functions for retrieving <td> elements and similar. Replace the
      code in `add-module-lesson` and `shift-lesson-to-row`
-  -> Handle modules on Saturday
+  -> Handle modules with lessons on Saturday, such as CN2108
+  -> Handle modules whose lesson time begins before 0800, such as MNO4319
+     (NUSMods does not show such lessons, cors.bicrement.com does)
+  -> Refactor code!
+
+document.location.hash
+- Handle modules without _any_ lessons, such as CS1231R
+
+Select2 box
+- Focus remains in the input box after selecting a module. This should not
+  be the case.
+- Disable use of backspace key to remove modules
+- Let each module occupy 1 line. Currently everything is cluttered together
+
+Support switching to different semester
+
+Exhibit 3.0 Library
+- See what files we can remove, and remove them
+
+Timetable Builder page
+- Show Exam Timetable and warn about exam date clashes
+- Show / Hide
+  -> Module Code
+  -> Module Title
+  -> Lesson Group
+  -> Lesson Venue
+  -> Module Week
+- URL Shortening
+- Facebook Sharing
+- Twitter Sharing
+- Exports
+  -> Excel
+  -> HTML
+  -> iCalendar File
+  -> JPG
+  -> PDF
+
+Module Finder Page
+- For moduld details, add an `IVLE` button and `Add` button
+
+Automated Tests
+- We need them!
+
+Styling
+- We _really_ need to work on this...
