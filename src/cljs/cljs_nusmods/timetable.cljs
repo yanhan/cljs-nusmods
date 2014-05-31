@@ -409,7 +409,8 @@
 (defn- add-module-lesson
   "Adds a single lesson of a module (obtained from the `ModulesMap` global) to
    the timetable, and returns its jQuery div element."
-  [moduleCode moduleName lessonType lessonLabel modulesMapLesson bgColorCssClass]
+  [moduleCode moduleName lessonType lessonLabel modulesMapLesson bgColorCssClass
+   isActuallySelected?]
   (let [rowNum    (find-free-row-for-lesson modulesMapLesson)
         day       (:day modulesMapLesson)
         startTime (:startTime modulesMapLesson)
@@ -439,6 +440,9 @@
     (.append $divElem (text ($ "<p />") (str lessonType " [" lessonLabel "]")))
     (.append $divElem (text ($ "<p />") (:venue modulesMapLesson)))
     (width $divElem (str (* half-hour-pixels slotsOcc) "px"))
+    ; make the <div> less opaque for a lesson added by jQuery UI draggable
+    (if (not isActuallySelected?)
+        (.css $divElem "opacity" 0.5))
     (let [dayHTMLElem (nth HTML-Timetable day)
           rowHTMLElem (nth (children dayHTMLElem "tr") rowNum)
           tdHTMLElem  (nth (children
@@ -452,9 +456,14 @@
       (doseq [siblingTdElem (take (- slotsOcc 1) (.nextAll tdHTMLElem))]
         (.remove siblingTdElem))
 
-      ; Returns a `ModulesSelectedLessonInfo` object augmented with the $divElem
+      ; Returns a `ModulesSelectedLessonInfo` object augmented with the
+      ; `:divElem`, `:moduleCode`, `:lessonType`, and `:lessonGroup` keys
       {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
+       :moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonLabel,
        :divElem $divElem})))
+
+; Forward declaration
+(declare add-module-lesson-group)
 
 (defn- lesson-draggable-start-evt-handler-maker
   "Returns a function that can be used as the `start` event handler for a
@@ -463,59 +472,94 @@
    Details of the returned function can be found here:
 
        http://api.jqueryui.com/draggable/#event-start"
-  [moduleCode lessonType lessonGroup]
-  (let []
-    (fn [evt ui])
-    )
-  )
+  [moduleCode lessonType selectedLessonGroup bgColorCssClass]
+  (fn [evt ui]
+    (let [ModulesMap         (aget js/window "ModulesMap")
+          ; Get all lesson groups
+          allLessonGroupsMap (get-in ModulesMap [moduleCode "lessons"
+                                                 lessonType])
+          ; Exclude the selected lesson group
+          unselectedLessonGroupsMap
+          (dissoc allLessonGroupsMap selectedLessonGroup)
+          ; Add all the <div> elements
+          augmentedTTLessonInfoSeq
+          (doall
+            (map (fn [[lessonGroup _]]
+                   (add-module-lesson-group moduleCode lessonType lessonGroup
+                                            bgColorCssClass false))
+                 unselectedLessonGroupsMap))])))
+
+; TODO: Make lesson type with only a single lessongroup non-draggable
+(defn- make-added-lessons-draggable
+  "Makes the <div> elements of selected lessons draggable."
+  [$divElemSeq moduleCode lessonType lessonLabel bgColorCssClass]
+  ; And Drag event handler
+  (doseq [$divElem $divElemSeq]
+    (.draggable $divElem
+                (js-obj "zIndex" 100
+                        ; TODO: Replace this `revert` function with one
+                        ;       which detects whether a revert should
+                        ;       occur
+                        "revert" (fn [] true)
+                        "start"  (lesson-draggable-start-evt-handler-maker
+                                   moduleCode lessonType lessonLabel
+                                   bgColorCssClass)))))
 
 (defn- add-module-lesson-group
-  "Adds a lesson group of a module to the timetable."
-  [moduleCode lessonType lessonLabel bgColorCssClass
+  "Adds a lesson group of a module to the timetable.
+
+   The `isActuallySelected?` param is used to indicate if the current lesson
+   group is selected by the user.
+   A value of `true` indicates that the user actually selected the lesson group.
+   A value of `false` indicates that the current lesson group is added by the
+   `lesson-draggable-start-evt-handler-maker` function and is not selected by
+   the user.
+
+   Returns a sequence of `ModulesSelectedLessonInfo` objects each augmented
+   with the `:divElem`, `:moduleCode`, `:lessonType`, `:lessonGroup` keys."
+  [moduleCode lessonType lessonLabel bgColorCssClass isActuallySelected?
    & {:keys [ModulesMap]
       :or   {ModulesMap (aget js/window "ModulesMap")}}]
   (let [moduleName          (get-in ModulesMap [moduleCode "name"])
         modulesMapLessonSeq (get-in ModulesMap [moduleCode "lessons" lessonType
                                                 lessonLabel])]
     (if (and moduleName modulesMapLessonSeq)
-        (let [augLessonInfoSeq (map (fn [modulesMapLesson]
-                                      (add-module-lesson moduleCode
-                                                         moduleName
-                                                         lessonType
-                                                         lessonLabel
-                                                         modulesMapLesson
-                                                         bgColorCssClass))
-                                    modulesMapLessonSeq)
-              lessonInfoSeq    (doall (map #(dissoc %1 :divElem)
-                                           augLessonInfoSeq))
-              $divElemSeq      (map #(:divElem %1) augLessonInfoSeq)]
-          ; Update ModulesSelected with the lesson group
-          (set! ModulesSelected
-                (assoc-in ModulesSelected [moduleCode lessonType]
-                          {:label lessonLabel, :info lessonInfoSeq}))
+        (let [augLessonInfoSeq
+              (doall (map (fn [modulesMapLesson]
+                            (add-module-lesson moduleCode moduleName
+                                                          lessonType
+                                                          lessonLabel
+                                                          modulesMapLesson
+                                                          bgColorCssClass
+                                                          isActuallySelected?))
+                                    modulesMapLessonSeq))
+              lessonInfoSeq (map #(dissoc %1 :divElem :moduleCode :lessonType
+                                          :lessonGroup)
+                                 augLessonInfoSeq)
+              $divElemSeq   (map #(:divElem %1) augLessonInfoSeq)]
 
-          ; Add to ModulesSelectedOrder
-          (if (not-any? #{moduleCode} ModulesSelectedOrder)
+          (if isActuallySelected?
               (do
-                (set! ModulesSelectedOrder
-                      (conj ModulesSelectedOrder moduleCode))
-                ; Update select2 box.
-                ; NOTE: This does a quadratic amount of work but I do not have
-                ;       a workaround.
-                (select2/select2-box-set-val
-                  select2/$Select2-Box
-                  (get-selected-module-codes-as-js-array))))
+                ; Update ModulesSelected with the lesson group
+                (set! ModulesSelected
+                      (assoc-in ModulesSelected [moduleCode lessonType]
+                                {:label lessonLabel, :info lessonInfoSeq}))
+  
+                ; Add to ModulesSelectedOrder
+                (if (not-any? #{moduleCode} ModulesSelectedOrder)
+                    (do
+                      (set! ModulesSelectedOrder
+                            (conj ModulesSelectedOrder moduleCode))
+                      ; Update select2 box.
+                      ; NOTE: This does a quadratic amount of work but I do not
+                      ;       have a workaround.
+                      (select2/select2-box-set-val
+                        select2/$Select2-Box
+                        (get-selected-module-codes-as-js-array))))
 
-          ; And Drag event handler
-          (doseq [$divElem $divElemSeq]
-            (.draggable $divElem
-                        (js-obj
-                          "zIndex" 100
-                          ; TODO: Replace this `revert` function
-                          "revert" (fn [] true)
-                          "start"  (lesson-draggable-start-evt-handler-maker
-                                     moduleCode lessonType lessonLabel)
-                                )))))))
+                (make-added-lessons-draggable $divElemSeq moduleCode lessonType
+                                              lessonLabel bgColorCssClass)
+                augLessonInfoSeq))))))
 
 (defn add-module
   "Adds a module to the timetable.
@@ -543,6 +587,7 @@
                                    (:lessonType moduleInfo)
                                    (:lessonGroup moduleInfo)
                                    bgColorCssClass
+                                   true
                                    ModulesMap))
 
         ; Update URL hash with newly added module
@@ -706,7 +751,8 @@
         (add-module-lesson-group moduleCode
                                  (:lessonType modInfo)
                                  (:lessonGroup modInfo)
-                                 bgColorCssClass)))
+                                 bgColorCssClass
+                                 true)))
 
     ; Update url hash
     (set-document-location-hash-based-on-modules-order)))
