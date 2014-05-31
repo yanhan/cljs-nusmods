@@ -484,6 +484,7 @@
        http://api.jqueryui.com/draggable/#event-start"
   [moduleCode lessonType selectedLessonGroup bgColorCssClass]
   (fn [evt ui]
+    (.addClass (aget ui "helper") "lesson-draggable-helper")
     (.css (aget ui "helper") "cursor" "grabbing")
     (let [ModulesMap         (aget js/window "ModulesMap")
           ; Get all lesson groups
@@ -541,6 +542,7 @@
     (.css $divElem "cursor" "grab")
     (.draggable $divElem
                 (js-obj "zIndex" 100
+                        "helper" "clone"
                         ; TODO: Replace this `revert` function with one
                         ;       which detects whether a revert should
                         ;       occur
