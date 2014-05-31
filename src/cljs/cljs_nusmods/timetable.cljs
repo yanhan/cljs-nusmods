@@ -472,6 +472,8 @@
 
 ; Forward declaration
 (declare add-module-lesson-group)
+(declare timetable-prune-empty-rows)
+(declare add-missing-td-elements-replacing-lesson)
 
 (defn- lesson-draggable-start-evt-handler-maker
   "Returns a function that can be used as the `start` event handler for a
@@ -492,10 +494,11 @@
           ; Add all the <div> elements
           augmentedTTLessonInfoSeq
           (doall
-            (map (fn [[lessonGroup _]]
-                   (add-module-lesson-group moduleCode lessonType lessonGroup
-                                            bgColorCssClass false))
-                 unselectedLessonGroupsMap))]
+            (flatten
+              (map (fn [[lessonGroup _]]
+                     (add-module-lesson-group moduleCode lessonType lessonGroup
+                                              bgColorCssClass false))
+                   unselectedLessonGroupsMap)))]
       (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq))))
 
 ; TODO: Account for a user dropping the draggable lesson onto a different lesson
@@ -504,40 +507,29 @@
   "Returns a function used as the `stop` event handler for a draggable lesson."
   []
   (fn [evt ui]
-    (let [$divElemSeq (map #(:divElem %1) Lessons-Created-By-Draggable)
+    (let [affectedDaysSet
+          (reduce (fn [daySet ttLessonInfo]
+                    (conj daySet (:day ttLessonInfo)))
+                  #{}
+                  Lessons-Created-By-Draggable)]
 
-          daysAndRowsAffected
-          (reduce (fn [dayVec ttLessonInfo]
-                    (update-in dayVec [(:day ttLessonInfo)]
-                               (fn [rowSet]
-                                 (conj rowSet (:rowNum ttLessonInfo)))))
-                  [#{} #{} #{} #{} #{}]
-                  Lessons-Created-By-Draggable)
-
-          ; This should not be placed here.
-          ; We should only remove such rows after we update the `Timetable`
-          ; global
-          emptyRowsToRemove
-          (map (fn [[day rowSet]]
-                 (let [ttDay (get-timetable-day day)]
-                   [day,
-                    (sort > (filter (fn [rowNum]
-                                      (and (> rowNum 1)
-                                           (zero? (count (nth ttDay rowNum)))))
-                                    rowSet))]))
-               (map vector (range (count daysAndRowsAffected))
-                    daysAndRowsAffected))]
       (doseq [augTTLessonInfo Lessons-Created-By-Draggable]
         (timetable-remove-lesson (:day augTTLessonInfo)
                                  (:rowNum augTTLessonInfo)
                                  (dissoc augTTLessonInfo :divElem :day
                                          :rowNum)))
-      (doseq [$divElem $divElemSeq]
-        (.remove $divElem))
-      (doseq [[day rowsToRemove]]
-        (s)
-        )
-      )))
+
+      (doseq [augTTLessonInfo Lessons-Created-By-Draggable]
+        (let [$divElem  (:divElem augTTLessonInfo)
+              $parentTd (parent $divElem)]
+          ; TODO: This part of the code is the same as in the
+          ;       `remove-lesson-group-html` function. Refactor it.
+          (remove-attr $parentTd "colspan")
+          (.remove $divElem)
+          (add-missing-td-elements-replacing-lesson $parentTd augTTLessonInfo)))
+
+      (timetable-prune-empty-rows affectedDaysSet)
+      (set! Lessons-Created-By-Draggable nil))))
 
 ; TODO: Make lesson type with only a single lessongroup non-draggable
 (defn- make-added-lessons-draggable
@@ -609,8 +601,8 @@
                         (get-selected-module-codes-as-js-array))))
 
                 (make-added-lessons-draggable $divElemSeq moduleCode lessonType
-                                              lessonLabel bgColorCssClass)
-                augLessonInfoSeq))))))
+                                              lessonLabel bgColorCssClass)))
+          augLessonInfoSeq))))
 
 (defn add-module
   "Adds a module to the timetable.
