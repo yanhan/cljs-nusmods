@@ -119,7 +119,7 @@
        :private true}
   ModulesSelectedOrder [])
 
-(defn nr-modules-selected
+(defn get-nr-modules-selected
   "Return the number of modules selected by the user"
   []
   (count ModulesSelected))
