@@ -218,6 +218,11 @@
   [moduleCode]
   (not-any? #{moduleCode} ModulesSelectedOrder))
 
+(defn- add-to-ModulesSelectedOrder!
+  "Appends a module to `ModulesSelectedOrder`"
+  [moduleCode]
+  (set! ModulesSelectedOrder (conj ModulesSelectedOrder moduleCode)))
+
 (defn is-module-selected?
   "Determines if a module has been selected"
   [moduleCode]
@@ -788,8 +793,7 @@
               ; Add to ModulesSelectedOrder
               (if (module-not-in-ModulesSelectedOrder? moduleCode)
                   (do
-                    (set! ModulesSelectedOrder
-                          (conj ModulesSelectedOrder moduleCode))
+                    (add-to-ModulesSelectedOrder! moduleCode)
                     ; Update select2 box.
                     ; NOTE: This does a quadratic amount of work but I do not
                     ;       have a workaround.
