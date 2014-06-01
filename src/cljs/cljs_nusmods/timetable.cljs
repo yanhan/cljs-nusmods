@@ -537,7 +537,7 @@
   "Adds a single lesson of a module the timetable.
    Returns a `ModulesSelectedLessonInfo` object augmented with the `:divElem`,
    `:moduleCode`, `:lessonType` and `:lessonGroup` keys."
-  [moduleCode moduleName lessonType lessonLabel modulesMapLesson bgColorCssClass
+  [moduleCode moduleName lessonType lessonGroup modulesMapLesson bgColorCssClass
    isActuallySelected?]
   (let [rowNum    (find-free-row-for-lesson modulesMapLesson)
         day       (:day modulesMapLesson)
@@ -551,7 +551,7 @@
 
         $divElem
         (create-lesson-div :moduleCode moduleCode, :moduleName moduleName,
-                           :lessonType lessonType, :lessonGroup lessonLabel,
+                           :lessonType lessonType, :lessonGroup lessonGroup,
                            :venue venue, :slotsOcc slotsOcc,
                            :bgColorCssClass bgColorCssClass,
                            :isActuallySelected? isActuallySelected?)]
@@ -564,7 +564,7 @@
                            rowNum
                            {:moduleCode moduleCode,
                             :lessonType lessonType,
-                            :lessonGroup lessonLabel,
+                            :lessonGroup lessonGroup,
                             :startTime startTime,
                             :endTime endTime}
                            $divElem)
@@ -579,7 +579,7 @@
         (.remove $siblingTd))
 
       {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
-       :moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonLabel,
+       :moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonGroup,
        :divElem $divElem})))
 
 (def ^{:doc     "Sequence of `TimetableLessonInfo` objects augmented with the
@@ -693,7 +693,7 @@
 
 (defn- make-added-lessons-draggable
   "Makes the <div> elements of selected lessons draggable."
-  [$divElemSeq moduleCode lessonType lessonLabel bgColorCssClass]
+  [$divElemSeq moduleCode lessonType lessonGroup bgColorCssClass]
   ; And Drag event handler
   (doseq [$divElem $divElemSeq]
     (.css $divElem "cursor" "grab")
@@ -702,10 +702,10 @@
                         "helper" "clone"
                         "revert" "invalid"
                         "start"  (lesson-draggable-start-evt-handler-maker
-                                   moduleCode lessonType lessonLabel
+                                   moduleCode lessonType lessonGroup
                                    bgColorCssClass)
                         "stop"   (lesson-draggable-stop-evt-handler-maker
-                                   moduleCode lessonType lessonLabel
+                                   moduleCode lessonType lessonGroup
                                    bgColorCssClass)))))
 
 (defn- make-fake-lessons-droppable
@@ -750,16 +750,16 @@
 
    Returns a sequence of `ModulesSelectedLessonInfo` objects each augmented
    with the `:divElem`, `:moduleCode`, `:lessonType`, `:lessonGroup` keys."
-  [moduleCode lessonType lessonLabel bgColorCssClass isActuallySelected?]
-  (if (module-has-lesson-group? moduleCode lessonType lessonLabel)
+  [moduleCode lessonType lessonGroup bgColorCssClass isActuallySelected?]
+  (if (module-has-lesson-group? moduleCode lessonType lessonGroup)
       (let [moduleName          (get-module-name-from-module-code moduleCode)
             modulesMapLessonSeq (get-ModulesMapLesson-seq moduleCode lessonType
-                                                          lessonLabel)
+                                                          lessonGroup)
 
             augLessonInfoSeq
             (doall (map (fn [modulesMapLesson]
                           (add-module-lesson! moduleCode moduleName lessonType
-                                              lessonLabel modulesMapLesson
+                                              lessonGroup modulesMapLesson
                                               bgColorCssClass
                                               isActuallySelected?))
                         modulesMapLessonSeq))
@@ -773,7 +773,7 @@
               ; Update ModulesSelected with the lesson group
               (set! ModulesSelected
                     (assoc-in ModulesSelected [moduleCode lessonType]
-                              {:label lessonLabel, :info lessonInfoSeq}))
+                              {:label lessonGroup, :info lessonInfoSeq}))
 
               ; Add to ModulesSelectedOrder
               (if (not-any? #{moduleCode} ModulesSelectedOrder)
@@ -792,7 +792,7 @@
               (if (module-lesson-type-has-multiple-choices? moduleCode
                                                             lessonType)
                   (make-added-lessons-draggable $divElemSeq moduleCode
-                                                lessonType lessonLabel
+                                                lessonType lessonGroup
                                                 bgColorCssClass)))
 
             ; lesson was added due to draggable <div>
