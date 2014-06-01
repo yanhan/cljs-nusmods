@@ -207,6 +207,12 @@
   []
   (count ModulesSelected))
 
+(defn- update-ModulesSelected-with-lesson-group!
+  [moduleCode lessonType lessonGroup lessonInfoSeq]
+  (set! ModulesSelected
+        (assoc-in ModulesSelected [moduleCode lessonType]
+                  {:label lessonGroup, :info lessonInfoSeq})))
+
 (def ^{:doc     "Vector containing module code strings in the order the modules
                  were added."
        :private true}
@@ -785,12 +791,9 @@
             $divElemSeq         (map #(:divElem %1) augLessonInfoSeq)]
         (if isActuallySelected?
             (do
-              ; Update ModulesSelected with the lesson group
-              (set! ModulesSelected
-                    (assoc-in ModulesSelected [moduleCode lessonType]
-                              {:label lessonGroup, :info lessonInfoSeq}))
-
-              ; Add to ModulesSelectedOrder
+              (update-ModulesSelected-with-lesson-group! moduleCode lessonType
+                                                         lessonGroup
+                                                         lessonInfoSeq)
               (if (module-not-in-ModulesSelectedOrder? moduleCode)
                   (do
                     (add-to-ModulesSelectedOrder! moduleCode)
