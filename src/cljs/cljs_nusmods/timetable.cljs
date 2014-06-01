@@ -237,6 +237,8 @@
 (defn- select2-box-update-modules
   "Update the select2 box with the currently selected modules"
   []
+  ; NOTE: Internally, this does a quadratic amount of work but I do not
+  ;       have a workaround.
   (select2/select2-box-set-val select2/$Select2-Box
                                (get-selected-module-codes-as-js-array)))
 
@@ -771,7 +773,8 @@
 
    Returns a sequence of `ModulesSelectedLessonInfo` objects each augmented
    with the `:divElem`, `:moduleCode`, `:lessonType`, `:lessonGroup` keys."
-  [moduleCode lessonType lessonGroup bgColorCssClass isActuallySelected?]
+  [moduleCode lessonType lessonGroup bgColorCssClass isActuallySelected?
+   & {:keys [addedViaUrlHashInit?] :or {addedViaUrlHashInit? false}}]
   (if (module-has-lesson-group? moduleCode lessonType lessonGroup)
       (let [moduleName          (get-module-name-from-module-code moduleCode)
             modulesMapLessonSeq (get-ModulesMapLesson-seq moduleCode lessonType
@@ -803,10 +806,10 @@
               (if (module-not-in-ModulesSelectedOrder? moduleCode)
                   (do
                     (add-to-ModulesSelectedOrder! moduleCode)
-                    ; Update select2 box.
-                    ; NOTE: This does a quadratic amount of work but I do not
-                    ;       have a workaround.
-                    (select2-box-update-modules)))
+                    ; Micro optimization for modules added via url hash
+                    ; during initialization
+                    (if (not addedViaUrlHashInit?)
+                        (select2-box-update-modules))))
 
               ; Only lesson types with more than 1 option of lesson group
               ; will be draggable
@@ -1003,8 +1006,12 @@
                                   (:lessonType modInfo)
                                   (:lessonGroup modInfo)
                                   bgColorCssClass
-                                  true)))
+                                  true
+                                  :addedViaUrlHashInit? true)))
 
+    ; Update Select2 box, since this is not done in `add-module-lesson-group!`.
+    ; Repeated work will be done there if we did so
+    (select2-box-update-modules)
     ; Update url hash
     (set-document-location-hash-based-on-modules-order!)))
 
