@@ -957,8 +957,8 @@
         ; Sequence of non-nil match arrays
         matchArraySeq
         (filter (fn [matchArray] (not (nil? matchArray)))
-          (map (fn [modUrlHash] (.exec modUrlHashRegex modUrlHash))
-               moduleUrlHashArray))
+                (map (fn [modUrlHash] (.exec modUrlHashRegex modUrlHash))
+                     moduleUrlHashArray))
 
         ; Sequence of existing lesson groups
         moduleInfoExistent
