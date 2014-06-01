@@ -431,9 +431,27 @@
     [(str "h" (if (< hour 10) "0" "") hour)
      (str "m" (if (not= minute 0) "30" "00"))]))
 
+(defn- create-lesson-div
+  "Creates a <div> element for a new lesson using jQuery"
+  [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
+             bgColorCssClass isActuallySelected?]}]
+  (let [$divElem  ($ "<div />" (js-obj "class" "lesson"))]
+    (.addClass $divElem bgColorCssClass)
+    ; add background color css class
+    (.append $divElem (text ($ "<p />") (str moduleCode " " moduleName)))
+    (.append $divElem (text ($ "<p />") (str lessonType " [" lessonGroup "]")))
+    (.append $divElem (text ($ "<p />") venue))
+    (width $divElem (str (* half-hour-pixels slotsOcc) "px"))
+    ; make the <div> less opaque for a lesson added by jQuery UI draggable
+    (if (not isActuallySelected?)
+        (.addClass $divElem "lesson-droppable-not-hover"))
+    $divElem))
+
 (defn- add-module-lesson!
   "Adds a single lesson of a module (obtained from the `ModulesMap` global) to
-   the timetable, and returns its jQuery div element."
+   the timetable.
+   Returns a `ModulesSelectedLessonInfo` object augmented with the `:divElem`,
+   `:moduleCode`, `:lessonType` and `:lessonGroup` keys."
   [moduleCode moduleName lessonType lessonLabel modulesMapLesson bgColorCssClass
    isActuallySelected?]
   (let [rowNum    (find-free-row-for-lesson modulesMapLesson)
@@ -441,10 +459,17 @@
         startTime (:startTime modulesMapLesson)
         endTime   (:endTime modulesMapLesson)
         slotsOcc  (- endTime startTime)
-        $divElem  ($ "<div />" (js-obj "class" "lesson"))
+        venue     (:venue modulesMapLesson)
 
         [hourClass minuteClass]
-        (get-css-hour-minute-classes-for-time startTime)]
+        (get-css-hour-minute-classes-for-time startTime)
+
+        $divElem
+        (create-lesson-div :moduleCode moduleCode, :moduleName moduleName,
+                           :lessonType lessonType, :lessonGroup lessonLabel,
+                           :venue venue, :slotsOcc slotsOcc,
+                           :bgColorCssClass bgColorCssClass,
+                           :isActuallySelected? isActuallySelected?)]
     ; Create new row if necessary
     (if (= rowNum (get-nr-rows-in-timetable-day day))
         (add-new-row-to-timetable-day! day))
@@ -459,15 +484,6 @@
                             :endTime endTime}
                            $divElem)
 
-    ; add background color css class
-    (.addClass $divElem bgColorCssClass)
-    (.append $divElem (text ($ "<p />") (str moduleCode " " moduleName)))
-    (.append $divElem (text ($ "<p />") (str lessonType " [" lessonLabel "]")))
-    (.append $divElem (text ($ "<p />") (:venue modulesMapLesson)))
-    (width $divElem (str (* half-hour-pixels slotsOcc) "px"))
-    ; make the <div> less opaque for a lesson added by jQuery UI draggable
-    (if (not isActuallySelected?)
-        (.addClass $divElem "lesson-droppable-not-hover"))
     (let [dayHTMLElem (nth HTML-Timetable day)
           rowHTMLElem (nth (children dayHTMLElem "tr") rowNum)
           tdHTMLElem  (nth (children
@@ -481,8 +497,6 @@
       (doseq [siblingTdElem (take (- slotsOcc 1) (.nextAll tdHTMLElem))]
         (.remove siblingTdElem))
 
-      ; Returns a `ModulesSelectedLessonInfo` object augmented with the
-      ; `:divElem`, `:moduleCode`, `:lessonType`, and `:lessonGroup` keys
       {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
        :moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonLabel,
        :divElem $divElem})))
