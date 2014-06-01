@@ -340,7 +340,7 @@
    <td class='h23 m00'></td>
    <td class='h23 m30'></td>")
 
-(defn- add-new-row-to-timetable-day
+(defn- add-new-row-to-timetable-day!
   "Adds a new row to the 0-indexed day in the Timetable, where 0 = Monday,
    1 = Tuesday, until 4 = Friday."
   [day]
@@ -431,7 +431,7 @@
     [(str "h" (if (< hour 10) "0" "") hour)
      (str "m" (if (not= minute 0) "30" "00"))]))
 
-(defn- add-module-lesson
+(defn- add-module-lesson!
   "Adds a single lesson of a module (obtained from the `ModulesMap` global) to
    the timetable, and returns its jQuery div element."
   [moduleCode moduleName lessonType lessonLabel modulesMapLesson bgColorCssClass
@@ -447,7 +447,7 @@
         (get-css-hour-minute-classes-for-time startTime)]
     ; Create new row if necessary
     (if (= rowNum (get-nr-rows-in-timetable-day day))
-        (add-new-row-to-timetable-day day))
+        (add-new-row-to-timetable-day! day))
 
     ; Update in-memory representation of timetable
     (timetable-add-lesson day
@@ -664,13 +664,13 @@
     (if (and moduleName modulesMapLessonSeq)
         (let [augLessonInfoSeq
               (doall (map (fn [modulesMapLesson]
-                            (add-module-lesson moduleCode moduleName
-                                                          lessonType
-                                                          lessonLabel
-                                                          modulesMapLesson
-                                                          bgColorCssClass
-                                                          isActuallySelected?))
-                                    modulesMapLessonSeq))
+                            (add-module-lesson! moduleCode moduleName
+                                                           lessonType
+                                                           lessonLabel
+                                                           modulesMapLesson
+                                                           bgColorCssClass
+                                                           isActuallySelected?))
+                          modulesMapLessonSeq))
               lessonInfoSeq (map #(dissoc %1 :divElem :moduleCode :lessonType
                                           :lessonGroup)
                                  augLessonInfoSeq)
@@ -913,7 +913,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- add-missing-td-elements-replacing-lesson
-  "Adds <td> elements that were removed by the `add-module-lesson` function
+  "Adds <td> elements that were removed by the `add-module-lesson!` function
    to make way for the lesson."
   [$parentTd ttLessonInfo]
   (let [startTime (:startTime ttLessonInfo)
