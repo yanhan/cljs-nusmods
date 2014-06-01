@@ -758,12 +758,10 @@
 
             augLessonInfoSeq
             (doall (map (fn [modulesMapLesson]
-                          (add-module-lesson! moduleCode moduleName
-                                                         lessonType
-                                                         lessonLabel
-                                                         modulesMapLesson
-                                                         bgColorCssClass
-                                                         isActuallySelected?))
+                          (add-module-lesson! moduleCode moduleName lessonType
+                                              lessonLabel modulesMapLesson
+                                              bgColorCssClass
+                                              isActuallySelected?))
                         modulesMapLessonSeq))
 
             lessonInfoSeq       (map #(dissoc %1 :divElem :moduleCode
