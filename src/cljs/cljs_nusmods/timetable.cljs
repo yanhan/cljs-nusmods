@@ -614,7 +614,7 @@
     (let [allLessonGroups
           (get-all-lesson-group-strings moduleCode lessonType)
 
-          unselectedLessonGroups
+          notSelectedLessonGroups
           (remove #{selectedLessonGroup} allLessonGroups)
 
           ; Add all the <div> elements
@@ -625,7 +625,7 @@
                      (add-module-lesson-group! moduleCode lessonType
                                                unselectedLessonGroup
                                                bgColorCssClass false))
-                   unselectedLessonGroups)))]
+                   notSelectedLessonGroups)))]
       (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq))))
 
 (defn- lesson-draggable-stop-evt-handler-maker
