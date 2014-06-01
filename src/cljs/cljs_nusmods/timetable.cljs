@@ -628,6 +628,15 @@
                    notSelectedLessonGroups)))]
       (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq))))
 
+(defn- $lesson-div-remove
+  "Removes the <div> object of a lesson module, and replaces the former
+   columns occupied by its parent <td> with new <td> elements."
+  [$lessonDiv startTime endTime]
+  (let [$parentTd (parent $lessonDiv)]
+    (remove-attr $parentTd "colspan")
+    (.remove $lessonDiv)
+    (add-missing-td-elements-replacing-lesson $parentTd startTime endTime)))
+
 (defn- lesson-draggable-stop-evt-handler-maker
   "Returns a function used as the `stop` event handler for a draggable lesson."
   [moduleCode lessonType lessonGroup bgColorCssClass]
@@ -648,13 +657,9 @@
                                           :rowNum)))
 
       (doseq [augTTLessonInfo Lessons-Created-By-Draggable]
-        (let [$divElem  (:divElem augTTLessonInfo)
-              $parentTd (parent $divElem)]
-          ; TODO: This part of the code is the same as in the
-          ;       `remove-lesson-group-html` function. Refactor it.
-          (remove-attr $parentTd "colspan")
-          (.remove $divElem)
-          (add-missing-td-elements-replacing-lesson $parentTd augTTLessonInfo)))
+        (let [$divElem  (:divElem augTTLessonInfo)]
+          ($lesson-div-remove $divElem (:startTime augTTLessonInfo)
+                              (:endTime augTTLessonInfo))))
 
       (timetable-prune-empty-rows affectedDaysSet)
       (set! Lessons-Created-By-Draggable nil)
@@ -999,22 +1004,20 @@
 (defn- add-missing-td-elements-replacing-lesson
   "Adds <td> elements that were removed by the `add-module-lesson!` function
    to make way for the lesson."
-  [$parentTd ttLessonInfo]
-  (let [startTime (:startTime ttLessonInfo)
-        endTime   (:endTime ttLessonInfo)]
-    (loop [$currentTd $parentTd
-           timeIdx    (inc startTime)]
-      (if (>= timeIdx endTime)
-          nil
-          (let [[hourClass minuteClass]
-                (get-css-hour-minute-classes-for-time timeIdx)
+  [$parentTd startTime endTime]
+  (loop [$currentTd $parentTd
+         timeIdx    (inc startTime)]
+    (if (>= timeIdx endTime)
+        nil
+        (let [[hourClass minuteClass]
+              (get-css-hour-minute-classes-for-time timeIdx)
 
-                $newTdElem
-                ($ "<td />" (js-obj "class" (str hourClass " " minuteClass)))]
-            ; Insert after new <td> after the current <td>
-            (insert-after $newTdElem $currentTd)
-            ; Then use the new <td> as the current <td> in the next iteration
-            (recur $newTdElem (inc timeIdx)))))))
+              $newTdElem
+              ($ "<td />" (js-obj "class" (str hourClass " " minuteClass)))]
+          ; Insert after new <td> after the current <td>
+          (insert-after $newTdElem $currentTd)
+          ; Then use the new <td> as the current <td> in the next iteration
+          (recur $newTdElem (inc timeIdx))))))
 
 (defn- remove-lesson-group-html
   "Removes a lesson group for a module from the HTML timetable.
@@ -1035,15 +1038,8 @@
                  ttLessonInfo {:moduleCode moduleCode, :lessonType lessonType,
                                :lessonGroup lessonGroup, :startTime startTime,
                                :endTime endTime}
-                 $lessonDiv   (get ttRow ttLessonInfo)
-                 $parentTd    (parent $lessonDiv)]
-             ; Remove the `colspan` attribute of the parent <td> so it has
-             ; colspan=1
-             (remove-attr $parentTd "colspan")
-             ; Remove the HTML div elem
-             (.remove $lessonDiv)
-             ; Add the missing <td> elements
-             (add-missing-td-elements-replacing-lesson $parentTd ttLessonInfo)
+                 $lessonDiv   (get ttRow ttLessonInfo)]
+             ($lesson-div-remove $lessonDiv startTime endTime)
              (assoc ttLessonInfo :day day, :rowNum rowNum)))
          lessonInfoSeq)))
 
@@ -1223,7 +1219,7 @@
     ; restore the colspan of the source <td>
     (remove-attr $sourceTd "colspan")
     ; fill in removed <td> for the source <td>
-    (add-missing-td-elements-replacing-lesson $sourceTd augTTLessonInfo)
+    (add-missing-td-elements-replacing-lesson $sourceTd startTime endTime)
     ; remove sibling <td> for the destination <td> to make way for columns
     ; occupied by $divElem
     (doseq [$siblingTd (take (dec slotsOccupied) (.nextAll $destTd))]
