@@ -62,6 +62,11 @@
 ;                                          `:lessonType`
 ;   }
 
+(defn- get-ModulesMap
+  "Retrieves the `ModulesMap` JavaScript global variable"
+  []
+  (aget js/window "ModulesMap"))
+
 (def ^{:doc     "Width in pixels of a half hour timeslot"
        :private true
        }
@@ -542,7 +547,7 @@
   (fn [evt ui]
     (.addClass (aget ui "helper") "lesson-draggable-helper")
     (.css (aget ui "helper") "cursor" "grabbing")
-    (let [ModulesMap         (aget js/window "ModulesMap")
+    (let [ModulesMap         (get-ModulesMap)
           ; Get all lesson groups
           allLessonGroupsMap (get-in ModulesMap [moduleCode "lessons"
                                                  lessonType])
@@ -679,7 +684,7 @@
    with the `:divElem`, `:moduleCode`, `:lessonType`, `:lessonGroup` keys."
   [moduleCode lessonType lessonLabel bgColorCssClass isActuallySelected?
    & {:keys [ModulesMap]
-      :or   {ModulesMap (aget js/window "ModulesMap")}}]
+      :or   {ModulesMap (get-ModulesMap)}}]
   (let [moduleName          (get-in ModulesMap [moduleCode "name"])
         modulesMapLessonSeq (get-in ModulesMap [moduleCode "lessons" lessonType
                                                 lessonLabel])]
@@ -738,7 +743,7 @@
    be added."
   [moduleCode]
   (if (not (contains? ModulesSelected moduleCode))
-      (let [ModulesMap      (aget js/window "ModulesMap")
+      (let [ModulesMap      (get-ModulesMap)
             module          (get ModulesMap moduleCode)
             lessonsMap      (get module "lessons")
             bgColorCssClass (get-next-lesson-bg-color-css-class)
@@ -779,7 +784,7 @@
    NOTE: This function should only be called by
          `add-module-lesson-groups-from-url-hash!`"
   [moduleInfoSeq]
-  (let [ModulesMap         (aget js/window "ModulesMap")
+  (let [ModulesMap         (get-ModulesMap)
 
         moduleLessonGroupsMap
         (reduce (fn [lgMap modInfo]
@@ -861,7 +866,7 @@
 
    NOTE: This function should only be called once."
   [urlHash]
-  (let [ModulesMap         (aget js/window "ModulesMap")
+  (let [ModulesMap         (get-ModulesMap)
         moduleUrlHashArray (.split urlHash "&")
 
         modUrlHashRegex
@@ -1072,7 +1077,7 @@
         rowNum     (:rowNum removedAugTTLessonInfo)
         startTime  (:startTime removedAugTTLessonInfo)
         endTime    (:endTime removedAugTTLessonInfo)
-        ModulesMap (aget js/window "ModulesMap")
+        ModulesMap (get-ModulesMap)
         ttDay      (get-timetable-day day)
 
         ; This is the time range freed up by removal of the lesson
