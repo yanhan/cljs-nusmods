@@ -807,20 +807,19 @@
    be added."
   [moduleCode]
   (if (not (contains? ModulesSelected moduleCode))
-      (let [; TODO: Refactor
-            ModulesMap      (get-ModulesMap)
-            module          (get ModulesMap moduleCode)
-            lessonsMap      (get module "lessons")
+      (let [lessonTypes     (get-all-lesson-types-for-module moduleCode)
             bgColorCssClass (get-next-lesson-bg-color-css-class)
 
             newModInfoSeq
-            (reduce (fn [moduleInfoSeq [lessonType lessonGroupsMap]]
+            (reduce (fn [moduleInfoSeq lessonType]
                       (conj moduleInfoSeq
-                            {:moduleCode  moduleCode
-                             :lessonType  lessonType
-                             :lessonGroup (first (keys lessonGroupsMap))}))
+                            {:moduleCode  moduleCode,
+                             :lessonType  lessonType,
+                             :lessonGroup
+                             (get-first-lesson-group-for-module-lesson-type
+                               moduleCode lessonType)}))
                     []
-                    lessonsMap)]
+                    lessonTypes)]
 
         (doseq [moduleInfo newModInfoSeq]
           (add-module-lesson-group! (:moduleCode moduleInfo)
