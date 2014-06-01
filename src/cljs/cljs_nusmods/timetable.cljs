@@ -136,6 +136,15 @@
   [moduleCode lessonType lessonGroup]
   (get (get-module-lesson-groups-map moduleCode lessonType) lessonGroup))
 
+(defn- get-set-from-seq-of-maps-with-day-key
+  "Returns a set of days from a sequence of maps, where each map has the `:day`
+   key."
+  [s]
+  (reduce (fn [daySet m]
+            (conj daySet (:day m)))
+          #{}
+          s))
+
 (def ^{:doc     "Width in pixels of a half hour timeslot"
        :private true
        }
@@ -641,10 +650,7 @@
           destLessonGroup (data $helper LESSON-GROUP-CHANGE-KEY)
 
           affectedDaysSet
-          (reduce (fn [daySet ttLessonInfo]
-                    (conj daySet (:day ttLessonInfo)))
-                  #{}
-                  Lessons-Created-By-Draggable)]
+          (get-set-from-seq-of-maps-with-day-key Lessons-Created-By-Draggable)]
 
       (doseq [augTTLessonInfo Lessons-Created-By-Draggable]
         (timetable-remove-lesson! (:day augTTLessonInfo)
@@ -664,11 +670,8 @@
       (if (not (nil? destLessonGroup))
           (let [augTTLessonInfoSeq (remove-lesson-group-html moduleCode
                                                              lessonType)
-                affectedDaysSet    (reduce (fn [daySet augTTLessonInfo]
-                                             (conj daySet
-                                                   (:day augTTLessonInfo)))
-                                           #{}
-                                           augTTLessonInfoSeq)]
+                affectedDaysSet    (get-set-from-seq-of-maps-with-day-key
+                                     augTTLessonInfoSeq)]
             ; remove the current lesson group
             (doseq [augTTLessonInfo augTTLessonInfoSeq]
               (let [day          (:day augTTLessonInfo)
@@ -1400,10 +1403,7 @@
                           lessonTypes))
 
             affectedDaysSet
-            (reduce (fn [daySet augTTLessonInfo]
-                      (conj daySet (:day augTTLessonInfo)))
-                    #{}
-                    augTTLessonInfoSeq)]
+            (get-set-from-seq-of-maps-with-day-key augTTLessonInfoSeq)]
 
         ; Remove module from `ModulesSelected`
         (set! ModulesSelected (dissoc ModulesSelected moduleCode))
