@@ -234,6 +234,12 @@
   [moduleCode]
   (set! ModulesSelectedOrder (conj ModulesSelectedOrder moduleCode)))
 
+(defn- select2-box-update-modules
+  "Update the select2 box with the currently selected modules"
+  []
+  (select2/select2-box-set-val select2/$Select2-Box
+                               (get-selected-module-codes-as-js-array)))
+
 (def ^{:doc     "Converts a short form lesson type string to its long form"
        :private true}
   Lesson-Type-Short-To-Long-Form
@@ -800,9 +806,7 @@
                     ; Update select2 box.
                     ; NOTE: This does a quadratic amount of work but I do not
                     ;       have a workaround.
-                    (select2/select2-box-set-val
-                      select2/$Select2-Box
-                      (get-selected-module-codes-as-js-array))))
+                    (select2-box-update-modules)))
 
               ; Only lesson types with more than 1 option of lesson group
               ; will be draggable
@@ -1445,9 +1449,8 @@
         ; Remove from `ModulesSelectedOrder`
         (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))
         (.log js/console "I hear and obey!")
-        ; Update Exhibit3 box
-        (select2/select2-box-set-val select2/$Select2-Box
-                                     (get-selected-module-codes-as-js-array)))))
+        ; Update Select2 box
+        (select2-box-update-modules))))
 
 (defn remove-all-modules
   "Removes all modules from the timetable"
@@ -1469,5 +1472,5 @@
   (timetable-create!)
   (set! ModulesSelected {})
   (set! ModulesSelectedOrder [])
-  (select2/select2-box-set-val select2/$Select2-Box (array))
+  (select2-box-update-modules)
   (set-document-location-hash! ""))
