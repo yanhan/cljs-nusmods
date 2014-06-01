@@ -222,7 +222,7 @@
                            (map #(preToUrlHashModule-to-url-hash-string %1)
                                 preToUrlHashModuleSeq)))))
 
-(defn- update-document-location-hash-with-new-module
+(defn- update-document-location-hash-with-new-module!
   "Updates document.location.hash with the `PreToUrlHashModule` of a
    newly added module."
   [preToUrlHashModule]
@@ -235,7 +235,7 @@
     (set-document-location-hash!
       (str orgUrlHash (if (empty? orgUrlHash) "" "&") moduleUrlHash))))
 
-(defn- remove-module-from-document-location-hash
+(defn- remove-module-from-document-location-hash!
   "Removes a module from `document.location.hash`"
   [moduleCode]
   (let [orgUrlHash (get-document-location-hash)
@@ -247,7 +247,7 @@
     (set-document-location-hash!
       (clojure.string/replace urlHashWithoutModule #"&$" ""))))
 
-(defn- update-document-location-hash-with-changed-lesson-group
+(defn- update-document-location-hash-with-changed-lesson-group!
   "Updates a module's lesson type in `document.location.hash` with a changed
    changed lesson group."
   [moduleCode lessonTypeLongForm newLessonGroup]
@@ -593,7 +593,7 @@
             (add-module-lesson-group moduleCode lessonType destLessonGroup
                                      bgColorCssClass true)
 
-            (update-document-location-hash-with-changed-lesson-group
+            (update-document-location-hash-with-changed-lesson-group!
               moduleCode lessonType destLessonGroup))))))
 
 (defn- make-added-lessons-draggable
@@ -709,7 +709,7 @@
               (make-fake-lessons-droppable augLessonInfoSeq))
           augLessonInfoSeq))))
 
-(defn add-module
+(defn add-module!
   "Adds a module to the timetable.
 
    A random lesson group of each type of lesson (Lecture, Tutorial, etc) will
@@ -739,7 +739,7 @@
                                    ModulesMap))
 
         ; Update URL hash with newly added module
-        (update-document-location-hash-with-new-module
+        (update-document-location-hash-with-new-module!
           {:moduleCode moduleCode,
 
            :preToUrlHashLessonGroupSeqSorted
@@ -1315,7 +1315,7 @@
                          :startTime startTime,
                          :endTime endTime}))))))))))
 
-(defn remove-module
+(defn remove-module!
   "Removes a module from the timetable.
 
    This deletes every lesson of the module from the timetable."
@@ -1358,7 +1358,7 @@
         (.log js/console "Boo ya!")
         (.log js/console (str "ModulesSelected:" (.stringify js/JSON (clj->js ModulesSelected))))
 
-        (remove-module-from-document-location-hash moduleCode)
+        (remove-module-from-document-location-hash! moduleCode)
 
         ; Remove from `ModulesSelectedOrder`
         (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))

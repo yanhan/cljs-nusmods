@@ -169,7 +169,7 @@
             (let [moduleCode (aget (aget evt "added") "id")]
               (if (and moduleCode
                        (not (timetable/is-module-selected? moduleCode)))
-                  (timetable/add-module moduleCode)))
+                  (timetable/add-module! moduleCode)))
             (if (is $someSelectedDiv ":visible")
                 (.text $someSelectedDivText
                        (str "Selected " (timetable/get-nr-modules-selected)
@@ -181,7 +181,7 @@
           ; some module was removed
           (aget evt "removed")
           (do
-            (timetable/remove-module (aget (aget evt "removed") "id"))
+            (timetable/remove-module! (aget (aget evt "removed") "id"))
             (let [nrModulesSelected (timetable/get-nr-modules-selected)]
               (cond
                 (<= nrModulesSelected 0)
