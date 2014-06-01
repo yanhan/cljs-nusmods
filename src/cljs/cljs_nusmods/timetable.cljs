@@ -213,6 +213,11 @@
   []
   (clj->js ModulesSelectedOrder))
 
+(defn- module-not-in-ModulesSelectedOrder?
+  "Determines if a module is in `ModulesSelectedOrder`"
+  [moduleCode]
+  (not-any? #{moduleCode} ModulesSelectedOrder))
+
 (defn is-module-selected?
   "Determines if a module has been selected"
   [moduleCode]
@@ -781,7 +786,7 @@
                               {:label lessonGroup, :info lessonInfoSeq}))
 
               ; Add to ModulesSelectedOrder
-              (if (not-any? #{moduleCode} ModulesSelectedOrder)
+              (if (module-not-in-ModulesSelectedOrder? moduleCode)
                   (do
                     (set! ModulesSelectedOrder
                           (conj ModulesSelectedOrder moduleCode))
