@@ -925,8 +925,7 @@
 
    NOTE: This function should only be called once."
   [urlHash]
-  (let [ModulesMap         (get-ModulesMap)
-        moduleUrlHashArray (.split urlHash "&")
+  (let [moduleUrlHashArray (.split urlHash "&")
 
         modUrlHashRegex
         #"^([A-Z]+\d{4}[A-Z]*)_(DL|L|LAB|PL|PT|R|SEM|ST|T|T2|T3)=([A-Z0-9]+)$"
@@ -1133,7 +1132,6 @@
         rowNum     (:rowNum removedAugTTLessonInfo)
         startTime  (:startTime removedAugTTLessonInfo)
         endTime    (:endTime removedAugTTLessonInfo)
-        ModulesMap (get-ModulesMap)
         ttDay      (get-timetable-day day)
 
         ; This is the time range freed up by removal of the lesson
