@@ -10,6 +10,20 @@
 ; Data type Definitions
 ; =====================
 ;
+; ModulesMapLesson
+; ----------------
+; A Lesson in the `ModulesMap` JavaScript global.
+;
+; {
+;   :venue     -> String of the lesson venue
+;   :day       -> 0-indexed integer of the day, where 0 = Monday,
+;                 1 = Tuesday, etc, until 4 = Friday
+;   :startTime -> 0-indexed integer of the time, where 0 = 0800, 1 = 030, and
+;                 so on.
+;   :endTime   -> similar to :startTime
+; }
+;
+;
 ; TimetableLessonInfo (abbrev: ttLessonInfo)
 ; ------------------------------------------
 ; Describes a lesson in the `Timetable` global; this is the key used for each
@@ -115,6 +129,12 @@
   [moduleCode lessonType lessonGroup]
   (let [lessonGroupsMap (get-module-lesson-groups-map moduleCode lessonType)]
     (not (nil? (get lessonGroupsMap lessonGroup)))))
+
+(defn- get-ModulesMapLesson-seq
+  "Returns a sequence of `ModulesMapLesson` objects representing all lessons
+   for a lesson group of the module."
+  [moduleCode lessonType lessonGroup]
+  (get (get-module-lesson-groups-map moduleCode lessonType) lessonGroup))
 
 (def ^{:doc     "Width in pixels of a half hour timeslot"
        :private true
@@ -514,8 +534,7 @@
     $divElem))
 
 (defn- add-module-lesson!
-  "Adds a single lesson of a module (obtained from the `ModulesMap` global) to
-   the timetable.
+  "Adds a single lesson of a module the timetable.
    Returns a `ModulesSelectedLessonInfo` object augmented with the `:divElem`,
    `:moduleCode`, `:lessonType` and `:lessonGroup` keys."
   [moduleCode moduleName lessonType lessonLabel modulesMapLesson bgColorCssClass
@@ -731,63 +750,57 @@
 
    Returns a sequence of `ModulesSelectedLessonInfo` objects each augmented
    with the `:divElem`, `:moduleCode`, `:lessonType`, `:lessonGroup` keys."
-  [moduleCode lessonType lessonLabel bgColorCssClass isActuallySelected?
-   & {:keys [ModulesMap]
-      :or   {ModulesMap (get-ModulesMap)}}]
+  [moduleCode lessonType lessonLabel bgColorCssClass isActuallySelected?]
+  (if (module-has-lesson-group? moduleCode lessonType lessonLabel)
+      (let [moduleName          (get-module-name-from-module-code moduleCode)
+            modulesMapLessonSeq (get-ModulesMapLesson-seq moduleCode lessonType
+                                                          lessonLabel)
 
-  (let [; TODO: Refactor
-        modulesMapLessonSeq (get-in ModulesMap [moduleCode "lessons" lessonType
-                                                lessonLabel])]
+            augLessonInfoSeq
+            (doall (map (fn [modulesMapLesson]
+                          (add-module-lesson! moduleCode moduleName
+                                                         lessonType
+                                                         lessonLabel
+                                                         modulesMapLesson
+                                                         bgColorCssClass
+                                                         isActuallySelected?))
+                        modulesMapLessonSeq))
 
-    (if (module-has-lesson-group? moduleCode lessonType lessonLabel)
-        (let [moduleName (get-module-name-from-module-code moduleCode)
+            lessonInfoSeq       (map #(dissoc %1 :divElem :moduleCode
+                                              :lessonType :lessonGroup)
+                                     augLessonInfoSeq)
+            $divElemSeq         (map #(:divElem %1) augLessonInfoSeq)]
+        (if isActuallySelected?
+            (do
+              ; Update ModulesSelected with the lesson group
+              (set! ModulesSelected
+                    (assoc-in ModulesSelected [moduleCode lessonType]
+                              {:label lessonLabel, :info lessonInfoSeq}))
 
-              augLessonInfoSeq
-              (doall (map (fn [modulesMapLesson]
-                            (add-module-lesson! moduleCode moduleName
-                                                           lessonType
-                                                           lessonLabel
-                                                           modulesMapLesson
-                                                           bgColorCssClass
-                                                           isActuallySelected?))
-                          modulesMapLessonSeq))
+              ; Add to ModulesSelectedOrder
+              (if (not-any? #{moduleCode} ModulesSelectedOrder)
+                  (do
+                    (set! ModulesSelectedOrder
+                          (conj ModulesSelectedOrder moduleCode))
+                    ; Update select2 box.
+                    ; NOTE: This does a quadratic amount of work but I do not
+                    ;       have a workaround.
+                    (select2/select2-box-set-val
+                      select2/$Select2-Box
+                      (get-selected-module-codes-as-js-array))))
 
-              lessonInfoSeq (map #(dissoc %1 :divElem :moduleCode :lessonType
-                                          :lessonGroup)
-                                 augLessonInfoSeq)
-              $divElemSeq   (map #(:divElem %1) augLessonInfoSeq)]
+              ; Only lesson types with more than 1 option of lesson group
+              ; will be draggable
+              (if (module-lesson-type-has-multiple-choices? moduleCode
+                                                            lessonType)
+                  (make-added-lessons-draggable $divElemSeq moduleCode
+                                                lessonType lessonLabel
+                                                bgColorCssClass)))
 
-          (if isActuallySelected?
-              (do
-                ; Update ModulesSelected with the lesson group
-                (set! ModulesSelected
-                      (assoc-in ModulesSelected [moduleCode lessonType]
-                                {:label lessonLabel, :info lessonInfoSeq}))
-  
-                ; Add to ModulesSelectedOrder
-                (if (not-any? #{moduleCode} ModulesSelectedOrder)
-                    (do
-                      (set! ModulesSelectedOrder
-                            (conj ModulesSelectedOrder moduleCode))
-                      ; Update select2 box.
-                      ; NOTE: This does a quadratic amount of work but I do not
-                      ;       have a workaround.
-                      (select2/select2-box-set-val
-                        select2/$Select2-Box
-                        (get-selected-module-codes-as-js-array))))
-
-                ; Only lesson types with more than 1 option of lesson group
-                ; will be draggable
-                (if (module-lesson-type-has-multiple-choices? moduleCode
-                                                              lessonType)
-                    (make-added-lessons-draggable $divElemSeq moduleCode
-                                                  lessonType lessonLabel
-                                                  bgColorCssClass)))
-
-              ; lesson was added due to draggable <div>
-              ; Make it droppable
-              (make-fake-lessons-droppable augLessonInfoSeq))
-          augLessonInfoSeq))))
+            ; lesson was added due to draggable <div>
+            ; Make it droppable
+            (make-fake-lessons-droppable augLessonInfoSeq))
+        augLessonInfoSeq)))
 
 (defn add-module!
   "Adds a module to the timetable.
@@ -816,8 +829,7 @@
                                    (:lessonType moduleInfo)
                                    (:lessonGroup moduleInfo)
                                    bgColorCssClass
-                                   true
-                                   ModulesMap))
+                                   true))
 
         ; Update URL hash with newly added module
         (update-document-location-hash-with-new-module!
