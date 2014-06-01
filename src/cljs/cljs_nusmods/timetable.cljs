@@ -476,10 +476,8 @@
 
    The `moduleMapLesson` parameter should be a lesson from the `ModulesMap`
    global"
-  [moduleMapLesson]
-  (let [ttDay     (get-timetable-day (:day moduleMapLesson))
-        startTime (:startTime moduleMapLesson)
-        endTime   (:endTime moduleMapLesson)]
+  [day startTime endTime]
+  (let [ttDay (get-timetable-day day)]
     (:rowIndex
       (reduce
         (fn [result ttRow]
@@ -537,14 +535,12 @@
   "Adds a single lesson of a module the timetable.
    Returns a `ModulesSelectedLessonInfo` object augmented with the `:divElem`,
    `:moduleCode`, `:lessonType` and `:lessonGroup` keys."
-  [moduleCode moduleName lessonType lessonGroup modulesMapLesson bgColorCssClass
-   isActuallySelected?]
-  (let [rowNum    (find-free-row-for-lesson modulesMapLesson)
-        day       (:day modulesMapLesson)
-        startTime (:startTime modulesMapLesson)
-        endTime   (:endTime modulesMapLesson)
+  [& {:keys [moduleCode moduleName lessonType lessonGroup
+             day startTime endTime venue
+             bgColorCssClass isActuallySelected?]}]
+  (let [; TODO: Change find-free-row-for-lesson
+        rowNum    (find-free-row-for-lesson day startTime endTime)
         slotsOcc  (- endTime startTime)
-        venue     (:venue modulesMapLesson)
 
         [hourClass minuteClass]
         (get-css-hour-minute-classes-for-time startTime)
@@ -757,12 +753,18 @@
                                                           lessonGroup)
 
             augLessonInfoSeq
-            (doall (map (fn [modulesMapLesson]
-                          (add-module-lesson! moduleCode moduleName lessonType
-                                              lessonGroup modulesMapLesson
-                                              bgColorCssClass
-                                              isActuallySelected?))
-                        modulesMapLessonSeq))
+            (doall
+              (map (fn [modulesMapLesson]
+                     (add-module-lesson!
+                       :moduleCode moduleCode, :moduleName moduleName,
+                       :lessonType lessonType, :lessonGroup lessonGroup,
+                       :day        (:day modulesMapLesson),
+                       :startTime  (:startTime modulesMapLesson),
+                       :endTime    (:endTime modulesMapLesson),
+                       :venue      (:venue modulesMapLesson),
+                       :bgColorCssClass bgColorCssClass,
+                       :isActuallySelected? isActuallySelected?))
+                   modulesMapLessonSeq))
 
             lessonInfoSeq       (map #(dissoc %1 :divElem :moduleCode
                                               :lessonType :lessonGroup)
