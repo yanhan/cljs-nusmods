@@ -538,8 +538,7 @@
   [& {:keys [moduleCode moduleName lessonType lessonGroup
              day startTime endTime venue
              bgColorCssClass isActuallySelected?]}]
-  (let [; TODO: Change find-free-row-for-lesson
-        rowNum    (find-free-row-for-lesson day startTime endTime)
+  (let [rowNum    (find-free-row-for-lesson day startTime endTime)
         slotsOcc  (- endTime startTime)
 
         [hourClass minuteClass]
