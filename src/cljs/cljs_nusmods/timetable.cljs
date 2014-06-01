@@ -916,30 +916,25 @@
 
         ; similar to `moduleLessonGroupsMap`, but includes missing lesson types
         moduleLessonGroupsMapFinal
-        (reduce (fn [lgMapFinal moduleCode]
-                  (let [missingLessonTypes
-                        (get missingModuleLessonTypes moduleCode)]
-                    (reduce
-                      (fn [lgMap lessonType]
-                        (assoc-in lgMap [moduleCode lessonType]
-                                  (get-first-lesson-group-for-module-lesson-type
-                                    moduleCode lessonType)))
-                      lgMapFinal
-                      missingLessonTypes)))
+        (reduce (fn [lgMapFinal [moduleCode missingLessonTypes]]
+                  (reduce
+                    (fn [lgMap lessonType]
+                      (assoc-in lgMap [moduleCode lessonType]
+                                (get-first-lesson-group-for-module-lesson-type
+                                  moduleCode lessonType)))
+                    lgMapFinal
+                    missingLessonTypes))
                 moduleLessonGroupsMap
-                (keys missingModuleLessonTypes))]
+                missingModuleLessonTypes)]
 
     ; Produce the final module info sequence
     (flatten
       (map (fn [moduleCode]
-             (let [lessonTypesMap
-                   (get moduleLessonGroupsMapFinal moduleCode)]
-               (map (fn [lessonType]
-                      (let [lessonGroup (get lessonTypesMap lessonType)]
-                        {:moduleCode  moduleCode
-                         :lessonType  lessonType
-                         :lessonGroup lessonGroup}))
-                    (keys lessonTypesMap))))
+             (map (fn [[lessonType lessonGroup]]
+                    {:moduleCode  moduleCode
+                     :lessonType  lessonType
+                     :lessonGroup lessonGroup})
+                  (get moduleLessonGroupsMapFinal moduleCode)))
            moduleCodesSeq))))
 
 (defn add-module-lesson-groups-from-url-hash!
