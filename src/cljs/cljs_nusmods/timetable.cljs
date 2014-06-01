@@ -548,6 +548,11 @@
         {:foundFreeRow false, :rowIndex 0}
         ttDay))))
 
+(defn- timetable-get-lesson-div
+  "Retrieves the jQuery object for a lesson <div>"
+  [day rowNum ttLessonInfo]
+  (get-in Timetable [day rowNum ttLessonInfo]))
+
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
@@ -1039,11 +1044,11 @@
                  rowNum       (:rowNum modSelLessonInfo)
                  startTime    (:startTime modSelLessonInfo)
                  endTime      (:endTime modSelLessonInfo)
-                 ttRow        (get-in Timetable [day rowNum])
                  ttLessonInfo {:moduleCode moduleCode, :lessonType lessonType,
                                :lessonGroup lessonGroup, :startTime startTime,
                                :endTime endTime}
-                 $lessonDiv   (get ttRow ttLessonInfo)]
+                 $lessonDiv   (timetable-get-lesson-div day rowNum
+                                                        ttLessonInfo)]
              ($lesson-div-remove $lessonDiv startTime endTime)
              (assoc ttLessonInfo :day day, :rowNum rowNum)))
          lessonInfoSeq)))
