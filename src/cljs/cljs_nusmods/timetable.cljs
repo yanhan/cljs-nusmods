@@ -182,7 +182,7 @@
   (sort (fn [a b] (< (:lessonType a) (:lessonType b)))
         preToUrlHashLessonGroupSeq))
 
-(defn- get-PreToUrlHashLessonGroup-seq-for-module
+(defn- get-PreToUrlHashLessonGroup-seq-for-selected-module
   "Given the module code of a module that has been selected, returns a sequence
    of `PreToUrlHashLessonGroup` objects for that module."
   [moduleCode]
@@ -191,20 +191,21 @@
           :lessonGroup (:label lessonTypeVal)})
        (get ModulesSelected moduleCode)))
 
-(defn- get-PreToUrlHashModule-for-module
+(defn- get-PreToUrlHashModule-for-selected-module
   "Retrieves a `PreToUrlHashModule` for a selected module."
   [moduleCode]
   {:moduleCode moduleCode,
 
    :preToUrlHashLessonGroupSeqSorted
    (sort-PreToUrlHashLessonGroup-seq
-     (get-PreToUrlHashLessonGroup-seq-for-module moduleCode))})
+     (get-PreToUrlHashLessonGroup-seq-for-selected-module moduleCode))})
 
 (defn- set-document-location-hash-based-on-modules-order
   "Sets document.location.hash based on the `ModulesSelectedOrder` global."
   []
   (let [preToUrlHashModuleSeq
-        (map #(get-PreToUrlHashModule-for-module %1) ModulesSelectedOrder)]
+        (map #(get-PreToUrlHashModule-for-selected-module %1)
+             ModulesSelectedOrder)]
     (.log js/console (str "ModulesSelectedOrder = " (.stringify js/JSON (clj->js ModulesSelectedOrder))))
     (aset (aget js/document "location") "hash"
           (clojure.string/join
