@@ -659,7 +659,6 @@
 
       (timetable-prune-empty-rows affectedDaysSet)
       (set! Lessons-Created-By-Draggable nil)
-      (.css $helper "cursor" "grab")
 
       ; User has dropped the draggable helper <div> onto a droppable
       (if (not (nil? destLessonGroup))
