@@ -355,7 +355,7 @@
         thElem (.find (nth HTML-Timetable day) "tr > th")]
     (attr thElem "rowspan" nrRows)))
 
-(defn- timetable-add-lesson
+(defn- timetable-add-lesson!
   "Adds a lesson to the `Timetable` global, effectively 'marking' the
    time interval for that lesson as being occupied."
   [day rowNum ttLessonInfo $lessonDiv]
@@ -365,7 +365,7 @@
                    (fn [ttRow]
                      (assoc ttRow ttLessonInfo $lessonDiv)))))
 
-(defn- timetable-remove-lesson
+(defn- timetable-remove-lesson!
   "Removes a lesson from the `Timetable` global, effectively 'marking' the
    time interval occupied by that lesson as free."
   [day rowNum ttLessonInfo]
@@ -450,14 +450,14 @@
         (add-new-row-to-timetable-day! day))
 
     ; Update in-memory representation of timetable
-    (timetable-add-lesson day
-                          rowNum
-                          {:moduleCode moduleCode,
-                           :lessonType lessonType,
-                           :lessonGroup lessonLabel,
-                           :startTime startTime,
-                           :endTime endTime}
-                          $divElem)
+    (timetable-add-lesson! day
+                           rowNum
+                           {:moduleCode moduleCode,
+                            :lessonType lessonType,
+                            :lessonGroup lessonLabel,
+                            :startTime startTime,
+                            :endTime endTime}
+                           $divElem)
 
     ; add background color css class
     (.addClass $divElem bgColorCssClass)
@@ -500,7 +500,7 @@
 (declare timetable-prune-empty-rows)
 (declare add-missing-td-elements-replacing-lesson)
 (declare remove-lesson-group-html)
-(declare shift-lessons-upwards-to-replace-empty-slots)
+(declare shift-lessons-upwards-to-replace-empty-slots!)
 (declare update-ModulesSelected-for-affected-days)
 
 (def ^{:doc     "Key for a data attribute added to a draggable <div> helper
@@ -551,10 +551,10 @@
                   Lessons-Created-By-Draggable)]
 
       (doseq [augTTLessonInfo Lessons-Created-By-Draggable]
-        (timetable-remove-lesson (:day augTTLessonInfo)
-                                 (:rowNum augTTLessonInfo)
-                                 (dissoc augTTLessonInfo :divElem :day
-                                         :rowNum)))
+        (timetable-remove-lesson! (:day augTTLessonInfo)
+                                  (:rowNum augTTLessonInfo)
+                                  (dissoc augTTLessonInfo :divElem :day
+                                          :rowNum)))
 
       (doseq [augTTLessonInfo Lessons-Created-By-Draggable]
         (let [$divElem  (:divElem augTTLessonInfo)
@@ -583,9 +583,9 @@
               (let [day          (:day augTTLessonInfo)
                     rowNum       (:rowNum augTTLessonInfo)
                     ttLessonInfo (dissoc augTTLessonInfo :day :rowNum)]
-                (timetable-remove-lesson day rowNum ttLessonInfo)))
+                (timetable-remove-lesson! day rowNum ttLessonInfo)))
 
-            (shift-lessons-upwards-to-replace-empty-slots augTTLessonInfoSeq)
+            (shift-lessons-upwards-to-replace-empty-slots! augTTLessonInfoSeq)
             (timetable-prune-empty-rows affectedDaysSet)
             (update-ModulesSelected-for-affected-days affectedDaysSet)
 
@@ -1113,7 +1113,7 @@
         ; go through each row in the day, below the current row
         (drop (inc rowNum) (map vector (range (count ttDay)) ttDay))))))
 
-(defn- shift-lesson-to-row
+(defn- shift-lesson-to-row!
   "Shifts a lesson from its original row up to the given row.
 
    The parameter `augTTLessonInfo` is a `TimetableLessonInfo` object augmented
@@ -1152,10 +1152,10 @@
     ; update colspan of destination <td>
     (attr $destTd "colspan" slotsOccupied)
     ; update `Timetable` global
-    (timetable-remove-lesson day sourceRowNum ttLessonInfo)
-    (timetable-add-lesson day destinationRowNum ttLessonInfo $divElem)))
+    (timetable-remove-lesson! day sourceRowNum ttLessonInfo)
+    (timetable-add-lesson! day destinationRowNum ttLessonInfo $divElem)))
 
-(defn- shift-lessons-upwards-to-replace-empty-slots
+(defn- shift-lessons-upwards-to-replace-empty-slots!
   "For each removed lesson, see if there are any lessons in rows below it that
    can be shifted upwards to occupy the empty slots resulting from its removal.
 
@@ -1210,7 +1210,7 @@
 
               (doseq [[augTTLessonInfo $divElem] augTTLessonInfoTo$DivElem]
                 (.log js/console "shift-lesson-to-row")
-                (shift-lesson-to-row rowNum augTTLessonInfo $divElem))
+                (shift-lesson-to-row! rowNum augTTLessonInfo $divElem))
               (.log js/console "gonna recur...")
               (recur (rest sortedAugTTLessonInfoSeq)
                      ; append newly shifted lessons to nextLessonInfoVec
@@ -1343,12 +1343,12 @@
           (let [day          (:day augTTLessonInfo)
                 rowNum       (:rowNum augTTLessonInfo)
                 ttLessonInfo (dissoc augTTLessonInfo :day :rowNum)]
-          (timetable-remove-lesson day rowNum ttLessonInfo)))
+          (timetable-remove-lesson! day rowNum ttLessonInfo)))
 
         (.log js/console "Reached here man")
 
         ; Perform shifting due to removal of lesson <div>s
-        (shift-lessons-upwards-to-replace-empty-slots augTTLessonInfoSeq)
+        (shift-lessons-upwards-to-replace-empty-slots! augTTLessonInfoSeq)
         (.log js/console "Here too bro")
         (timetable-prune-empty-rows affectedDaysSet)
         (.log js/console "Whats up")
