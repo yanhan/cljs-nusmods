@@ -591,7 +591,7 @@
   Lessons-Created-By-Draggable nil)
 
 ; Forward declaration
-(declare add-module-lesson-group)
+(declare add-module-lesson-group!)
 (declare timetable-prune-empty-rows)
 (declare add-missing-td-elements-replacing-lesson)
 (declare remove-lesson-group-html)
@@ -626,9 +626,9 @@
           (doall
             (flatten
               (map (fn [unselectedLessonGroup]
-                     (add-module-lesson-group moduleCode lessonType
-                                              unselectedLessonGroup
-                                              bgColorCssClass false))
+                     (add-module-lesson-group! moduleCode lessonType
+                                               unselectedLessonGroup
+                                               bgColorCssClass false))
                    unselectedLessonGroups)))]
       (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq))))
 
@@ -685,8 +685,8 @@
             (update-ModulesSelected-for-affected-days affectedDaysSet)
 
             ; add the newly selected lesson group
-            (add-module-lesson-group moduleCode lessonType destLessonGroup
-                                     bgColorCssClass true)
+            (add-module-lesson-group! moduleCode lessonType destLessonGroup
+                                      bgColorCssClass true)
 
             (update-document-location-hash-with-changed-lesson-group!
               moduleCode lessonType destLessonGroup))))))
@@ -738,7 +738,7 @@
                           LESSON-GROUP-CHANGE-KEY
                           (:lessonGroup augModuleSelectedLessonInfo)))))))))
 
-(defn- add-module-lesson-group
+(defn- add-module-lesson-group!
   "Adds a lesson group of a module to the timetable.
 
    The `isActuallySelected?` param is used to indicate if the current lesson
@@ -825,11 +825,11 @@
                     lessonsMap)]
 
         (doseq [moduleInfo newModInfoSeq]
-          (add-module-lesson-group (:moduleCode moduleInfo)
-                                   (:lessonType moduleInfo)
-                                   (:lessonGroup moduleInfo)
-                                   bgColorCssClass
-                                   true))
+          (add-module-lesson-group! (:moduleCode moduleInfo)
+                                    (:lessonType moduleInfo)
+                                    (:lessonGroup moduleInfo)
+                                    bgColorCssClass
+                                    true))
 
         ; Update URL hash with newly added module
         (update-document-location-hash-with-new-module!
@@ -982,11 +982,11 @@
     (doseq [modInfo moduleInfoFinal]
       (let [moduleCode      (:moduleCode modInfo)
             bgColorCssClass (get moduleToColorsMap moduleCode)]
-        (add-module-lesson-group moduleCode
-                                 (:lessonType modInfo)
-                                 (:lessonGroup modInfo)
-                                 bgColorCssClass
-                                 true)))
+        (add-module-lesson-group! moduleCode
+                                  (:lessonType modInfo)
+                                  (:lessonGroup modInfo)
+                                  bgColorCssClass
+                                  true)))
 
     ; Update url hash
     (set-document-location-hash-based-on-modules-order!)))
