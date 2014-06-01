@@ -197,15 +197,20 @@
   }
   ModulesSelected {})
 
-(def ^{:doc     "Vector containing module code strings in the order the modules
-                 were added."
-       :private true}
-  ModulesSelectedOrder [])
+(defn is-module-selected?
+  "Determines if a module has been selected"
+  [moduleCode]
+  (contains? ModulesSelected moduleCode))
 
 (defn get-nr-modules-selected
   "Return the number of modules selected by the user"
   []
   (count ModulesSelected))
+
+(def ^{:doc     "Vector containing module code strings in the order the modules
+                 were added."
+       :private true}
+  ModulesSelectedOrder [])
 
 (defn get-selected-module-codes-as-js-array
   "Returns a JavaScript Array of Strings, where each String is the module code
@@ -222,11 +227,6 @@
   "Appends a module to `ModulesSelectedOrder`"
   [moduleCode]
   (set! ModulesSelectedOrder (conj ModulesSelectedOrder moduleCode)))
-
-(defn is-module-selected?
-  "Determines if a module has been selected"
-  [moduleCode]
-  (contains? ModulesSelected moduleCode))
 
 (def ^{:doc     "Converts a short form lesson type string to its long form"
        :private true}
