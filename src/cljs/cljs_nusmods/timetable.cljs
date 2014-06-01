@@ -541,9 +541,6 @@
   (let [rowNum    (find-free-row-for-lesson day startTime endTime)
         slotsOcc  (- endTime startTime)
 
-        [hourClass minuteClass]
-        (get-css-hour-minute-classes-for-time startTime)
-
         $divElem
         (create-lesson-div :moduleCode moduleCode, :moduleName moduleName,
                            :lessonType lessonType, :lessonGroup lessonGroup,
