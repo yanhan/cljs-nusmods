@@ -283,7 +283,7 @@
   []
   [(create-empty-timetable-row) (create-empty-timetable-row)])
 
-(defn init
+(defn timetable-create!
   "Initializes the in-memory representation of the timetable.
 
    The timetable is a vector of 5 rows, with each row representing a day from
@@ -1384,7 +1384,7 @@
         (.append (nth (children $dayElem "tr") rowIdx)
                  ($ Timetable-Row-TD-HTML-String)))
       (attr (.find $dayElem "tr > th") "rowspan" 2)))
-  (init)
+  (timetable-create!)
   (set! ModulesSelected {})
   (set! ModulesSelectedOrder [])
   (select2/select2-box-set-val select2/$Select2-Box (array))

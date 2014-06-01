@@ -335,7 +335,7 @@
     (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
 
     ; Initialize timetable
-    (timetable/init)
+    (timetable/timetable-create!)
 
     ; Iniialize Select2
     (select2/init-select2-element select2/$Select2-Box)
