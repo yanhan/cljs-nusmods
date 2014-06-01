@@ -588,7 +588,7 @@
 
                       (and (not (nil? ttLessonInfoAfter))
                            (>= startTime timeIdx)
-                           (< startTime (:endTime ttLessonInfoAfter)))
+                           (< startTime (:startTime ttLessonInfoAfter)))
                       ttLessonInfo
 
                       :else ttLessonInfoAfter)))
