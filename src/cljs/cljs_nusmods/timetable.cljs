@@ -265,6 +265,27 @@
       }
   HTML-Timetable (vec ($ :.day-container)))
 
+(defn- get-css-hour-minute-classes-for-time
+  "Returns the .hXX and .mXX classes for a 0-indexed time"
+  [timeIdx]
+  (let [time50 (time-helper/convert-time-index-to-mult-of-50-int timeIdx)
+        hour   (quot time50 100)
+        minute (rem time50 100)]
+    [(str "h" (if (< hour 10) "0" "") hour)
+     (str "m" (if (not= minute 0) "30" "00"))]))
+
+(defn- $html-timetable-get-td-from-day-row-startTimeIdx
+  "Given a day, row and start time index of a lesson, retrieves the
+   jQuery object for the <td> element in the HTML representation of the
+   Timetable."
+  [day rowNum timeIdx]
+  (let [$day (nth HTML-Timetable day)
+        $row (nth (children $day "tr") rowNum)
+
+        [hourClass minuteClass]
+        (get-css-hour-minute-classes-for-time timeIdx)]
+    (nth (children $row (str "td" "." hourClass "." minuteClass)) 0)))
+
 (defn- create-empty-timetable-row
   "Creates an in-memory representation of an empty timetable row.
 
@@ -422,15 +443,6 @@
         {:foundFreeRow false, :rowIndex 0}
         ttDay))))
 
-(defn- get-css-hour-minute-classes-for-time
-  "Returns the .hXX and .mXX classes for a 0-indexed time"
-  [timeIdx]
-  (let [time50 (time-helper/convert-time-index-to-mult-of-50-int timeIdx)
-        hour   (quot time50 100)
-        minute (rem time50 100)]
-    [(str "h" (if (< hour 10) "0" "") hour)
-     (str "m" (if (not= minute 0) "30" "00"))]))
-
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
@@ -484,18 +496,14 @@
                             :endTime endTime}
                            $divElem)
 
-    (let [dayHTMLElem (nth HTML-Timetable day)
-          rowHTMLElem (nth (children dayHTMLElem "tr") rowNum)
-          tdHTMLElem  (nth (children
-                             rowHTMLElem
-                             (str "td" "." hourClass "." minuteClass))
-                           0)]
-      (.append tdHTMLElem $divElem)
+    (let [$td ($html-timetable-get-td-from-day-row-startTimeIdx
+                day rowNum startTime)]
+      (.append $td $divElem)
       ; Increase colspan and delete the <td> after it that occupy the timeslot
       ; of the lesson
-      (attr tdHTMLElem "colspan" slotsOcc)
-      (doseq [siblingTdElem (take (- slotsOcc 1) (.nextAll tdHTMLElem))]
-        (.remove siblingTdElem))
+      (attr $td "colspan" slotsOcc)
+      (doseq [$siblingTd (take (- slotsOcc 1) (.nextAll $td))]
+        (.remove $siblingTd))
 
       {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
        :moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonLabel,
@@ -1138,19 +1146,15 @@
         startTime               (:startTime augTTLessonInfo)
         endTime                 (:endTime augTTLessonInfo)
         slotsOccupied           (- endTime startTime)
-        [hourClass minuteClass] (get-css-hour-minute-classes-for-time startTime)
-        tdSelectorString        (str "td" "." hourClass "." minuteClass)
-        $sourceTableRow         (do (.log js/console (str "sourceRowNum = " sourceRowNum))
-                                    (nth (children (nth HTML-Timetable day) "tr")
-                                     sourceRowNum))
-        $sourceTd               (nth
-                                  (children $sourceTableRow tdSelectorString)
-                                  0)
-        $destTableRow           (nth (children (nth HTML-Timetable day) "tr")
-                                     destinationRowNum)
-        $destTd                 (nth
-                                  (children $destTableRow tdSelectorString)
-                                  0)
+
+        $sourceTd
+        ($html-timetable-get-td-from-day-row-startTimeIdx day sourceRowNum
+                                                          startTime)
+
+        $destTd
+        ($html-timetable-get-td-from-day-row-startTimeIdx day destinationRowNum
+                                                          startTime)
+
         ttLessonInfo            (dissoc augTTLessonInfo :day :rowNum)]
     (.log js/console (str "day = " day ", sourceRowNum = " sourceRowNum ", destinationRowNum = " destinationRowNum))
     ; Transfer lesson <div> to the destination <td>
