@@ -26,6 +26,10 @@ Exhibit 3.0 Library
 - See what files we can remove, and remove them
 
 Timetable Builder page
+- Firefox Bugs
+  -> scrolling down the page, then dragging a lesson <div> will cause the helper
+     <div> to appear a similar amount of pixels below the cursor
+  -> <td> without any lessons in that column occupy less width
 - Show Exam Timetable and warn about exam date clashes
 - Show / Hide
   -> Module Code
