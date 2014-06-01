@@ -830,7 +830,7 @@
    A random lesson group of each type of lesson (Lecture, Tutorial, etc) will
    be added."
   [moduleCode]
-  (if (not (contains? ModulesSelected moduleCode))
+  (if (not (is-module-selected? moduleCode))
       (let [lessonTypes     (get-all-lesson-types-for-module moduleCode)
             bgColorCssClass (get-next-lesson-bg-color-css-class)
 
@@ -1400,7 +1400,7 @@
 
    This deletes every lesson of the module from the timetable."
   [moduleCode]
-  (if (contains? ModulesSelected moduleCode)
+  (if (is-module-selected? moduleCode)
       (let [lessonTypes
             (keys (get ModulesSelected moduleCode))
 
