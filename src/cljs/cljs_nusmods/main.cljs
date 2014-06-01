@@ -365,7 +365,7 @@
       (if (and (not (empty? urlHash))
                (= (first urlHash) "#")
                (> (.-length urlHash) 1))
-          (timetable/add-module-lesson-groups-from-url-hash
+          (timetable/add-module-lesson-groups-from-url-hash!
             (.substring urlHash 1))))
 
     ; Create modules

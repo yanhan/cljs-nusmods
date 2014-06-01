@@ -200,7 +200,7 @@
    (sort-PreToUrlHashLessonGroup-seq
      (get-PreToUrlHashLessonGroup-seq-for-selected-module moduleCode))})
 
-(defn- set-document-location-hash-based-on-modules-order
+(defn- set-document-location-hash-based-on-modules-order!
   "Sets document.location.hash based on the `ModulesSelectedOrder` global."
   []
   (let [preToUrlHashModuleSeq
@@ -747,7 +747,7 @@
    on page initialization.
 
    NOTE: This function should only be called by
-         `add-module-lesson-groups-from-url-hash`"
+         `add-module-lesson-groups-from-url-hash!`"
   [moduleInfoSeq]
   (let [ModulesMap         (aget js/window "ModulesMap")
 
@@ -824,7 +824,7 @@
                     (keys lessonTypesMap))))
            moduleCodesSeq))))
 
-(defn add-module-lesson-groups-from-url-hash
+(defn add-module-lesson-groups-from-url-hash!
   "Adds the module lesson groups available in the url hash. Erroneous lesson
    groups are ignored. If there are missing lesson groups for any module after
    going through the url hash, a random lesson group is chosen.
@@ -895,7 +895,7 @@
                                  true)))
 
     ; Update url hash
-    (set-document-location-hash-based-on-modules-order)))
+    (set-document-location-hash-based-on-modules-order!)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
