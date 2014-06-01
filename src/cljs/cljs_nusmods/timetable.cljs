@@ -200,6 +200,16 @@
    (sort-PreToUrlHashLessonGroup-seq
      (get-PreToUrlHashLessonGroup-seq-for-selected-module moduleCode))})
 
+(defn- get-document-location-hash
+  "Retrieves the current value of `document.location.hash`"
+  []
+  (aget (aget js/document "location") "hash"))
+
+(defn- set-document-location-hash!
+  "Sets `document.location.hash` to a given string"
+  [newDocLocationHash]
+  (aset (aget js/document "location") "hash" newDocLocationHash))
+
 (defn- set-document-location-hash-based-on-modules-order!
   "Sets document.location.hash based on the `ModulesSelectedOrder` global."
   []
@@ -207,49 +217,47 @@
         (map #(get-PreToUrlHashModule-for-selected-module %1)
              ModulesSelectedOrder)]
     (.log js/console (str "ModulesSelectedOrder = " (.stringify js/JSON (clj->js ModulesSelectedOrder))))
-    (aset (aget js/document "location") "hash"
-          (clojure.string/join
-            "&"
-            (map #(preToUrlHashModule-to-url-hash-string %1)
-                 preToUrlHashModuleSeq)))))
+    (set-document-location-hash!
+      (clojure.string/join "&"
+                           (map #(preToUrlHashModule-to-url-hash-string %1)
+                                preToUrlHashModuleSeq)))))
 
 (defn- update-document-location-hash-with-new-module
   "Updates document.location.hash with the `PreToUrlHashModule` of a
    newly added module."
   [preToUrlHashModule]
-  (let [orgUrlHash    (aget (aget js/document "location") "hash")
+  (let [orgUrlHash    (get-document-location-hash)
 
         moduleUrlHash
         (preToUrlHashModule-to-url-hash-string preToUrlHashModule)]
     (.log js/console (str "orgUrlHash = \"" orgUrlHash "\""))
     (.log js/console (str "preToUrlHashModule = " (.stringify js/JSON (clj->js preToUrlHashModule))))
-    (aset (aget js/document "location") "hash"
-          (str orgUrlHash (if (empty? orgUrlHash) "" "&") moduleUrlHash))))
+    (set-document-location-hash!
+      (str orgUrlHash (if (empty? orgUrlHash) "" "&") moduleUrlHash))))
 
 (defn- remove-module-from-document-location-hash
   "Removes a module from `document.location.hash`"
   [moduleCode]
-  (let [orgUrlHash (aget (aget js/document "location") "hash")
+  (let [orgUrlHash (get-document-location-hash)
 
         urlHashWithoutModule
         (clojure.string/replace
           orgUrlHash
           (re-pattern (str moduleCode "_[A-Z]{1,3}=[^&]+&?")) "")]
-    (aset (aget js/document "location") "hash"
-          (clojure.string/replace urlHashWithoutModule #"&$" ""))))
+    (set-document-location-hash!
+      (clojure.string/replace urlHashWithoutModule #"&$" ""))))
 
 (defn- update-document-location-hash-with-changed-lesson-group
   "Updates a module's lesson type in `document.location.hash` with a changed
    changed lesson group."
   [moduleCode lessonTypeLongForm newLessonGroup]
-  (let [orgUrlHash (aget (aget js/document "location") "hash")
+  (let [orgUrlHash (get-document-location-hash)
         lessonType (Lesson-Type-Long-To-Short-Form lessonTypeLongForm)
         newUrlHash (clojure.string/replace
                      orgUrlHash
                      (re-pattern (str moduleCode "_" lessonType "=[^&]+"))
                      (str moduleCode "_" lessonType "=" newLessonGroup))]
-    (aset (aget js/document "location") "hash"
-          newUrlHash)))
+    (set-document-location-hash! newUrlHash)))
 
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
@@ -1380,4 +1388,4 @@
   (set! ModulesSelected {})
   (set! ModulesSelectedOrder [])
   (select2/select2-box-set-val select2/$Select2-Box (array))
-  (aset (aget js/document "location") "hash" ""))
+  (set-document-location-hash! ""))
