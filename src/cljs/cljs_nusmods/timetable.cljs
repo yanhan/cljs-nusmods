@@ -133,8 +133,7 @@
 (defn is-module-selected?
   "Determines if a module has been selected"
   [moduleCode]
-  (let [containsModule (contains? ModulesSelected moduleCode)]
-    containsModule))
+  (contains? ModulesSelected moduleCode))
 
 (def ^{:doc     "Converts a short form lesson type string to its long form"
        :private true}
