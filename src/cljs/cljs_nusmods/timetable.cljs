@@ -954,10 +954,6 @@
         modUrlHashRegex
         #"^([A-Z]+\d{4}[A-Z]*)_(DL|L|LAB|PL|PT|R|SEM|ST|T|T2|T3)=([A-Z0-9]+)$"
 
-        get-module-code-from-match-array  (fn [matchArray] (nth matchArray 1))
-        get-lesson-type-from-match-array  (fn [matchArray] (nth matchArray 2))
-        get-lesson-group-from-match-array (fn [matchArray] (nth matchArray 3))
-
         ; Sequence of non-nil match arrays
         matchArraySeq
         (filter (fn [matchArray] (not (nil? matchArray)))
@@ -971,12 +967,10 @@
                                      (:lessonGroup %1))
           ; convert matchArrays to maps
           (map (fn [matchArray]
-                 {:moduleCode  (get-module-code-from-match-array
-                                 matchArray)
+                 {:moduleCode  (nth matchArray 1)
                   :lessonType  (Lesson-Type-Short-To-Long-Form
-                                 (get-lesson-type-from-match-array matchArray))
-                  :lessonGroup (get-lesson-group-from-match-array
-                                 matchArray)})
+                                 (nth matchArray 2))
+                  :lessonGroup (nth matchArray 3)})
                matchArraySeq))
 
         ; Module code to CSS class for lesson div background color
