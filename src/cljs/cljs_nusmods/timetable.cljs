@@ -949,19 +949,14 @@
 
    NOTE: This function should only be called once."
   [urlHash]
-  (let [moduleUrlHashArray (.split urlHash "&")
+  (let [moduleUrlHashArray                (.split urlHash "&")
 
         modUrlHashRegex
         #"^([A-Z]+\d{4}[A-Z]*)_(DL|L|LAB|PL|PT|R|SEM|ST|T|T2|T3)=([A-Z0-9]+)$"
 
-        get-module-code-from-match-array
-        (fn [matchArray] (nth matchArray 1))
-
-        get-lesson-type-from-match-array
-        (fn [matchArray] (nth matchArray 2))
-
-        get-lesson-group-from-match-array
-        (fn [matchArray] (nth matchArray 3))
+        get-module-code-from-match-array  (fn [matchArray] (nth matchArray 1))
+        get-lesson-type-from-match-array  (fn [matchArray] (nth matchArray 2))
+        get-lesson-group-from-match-array (fn [matchArray] (nth matchArray 3))
 
         ; Sequence of non-nil match arrays
         matchArraySeq
