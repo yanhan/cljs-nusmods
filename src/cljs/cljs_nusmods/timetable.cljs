@@ -67,6 +67,55 @@
   []
   (aget js/window "ModulesMap"))
 
+(defn- get-module-name-from-module-code
+  "Given a module code, returns the name of the module"
+  [moduleCode]
+  (let [modulesMap (get-ModulesMap)]
+    (get-in modulesMap [moduleCode "name"])))
+
+(defn- get-module-lesson-groups-map
+  "Retrieves the map of lesson group strings to vector of lessons"
+  [moduleCode lessonType]
+  (let [modulesMap (get-ModulesMap)]
+    (get-in modulesMap [moduleCode "lessons" lessonType])))
+
+(defn- module-lesson-type-has-multiple-choices?
+  "Given a module code and a long form lesson type, determines if there are
+   multiple choices of lesson groups for that lesson type (eg. multiple
+   tutorial choices for a module)."
+  [moduleCode lessonType]
+  (let [lessonGroupsMap (get-module-lesson-groups-map moduleCode lessonType)]
+    (> (count lessonGroupsMap) 1)))
+
+(defn- get-all-lesson-types-for-module
+  "Returns a sequence of strings, where each string is a long form lesson type
+   for a module."
+  [moduleCode]
+  (let [modulesMap (get-ModulesMap)]
+    (keys (get-in modulesMap [moduleCode "lessons"]))))
+
+(defn- get-all-lesson-group-strings
+  "Given a module and a lesson type, returns a sequence of all its lesson
+   group strings."
+  [moduleCode lessonType]
+  (let [lessonGroupsMap (get-module-lesson-groups-map moduleCode lessonType)]
+    (keys lessonGroupsMap)))
+
+(defn- get-first-lesson-group-for-module-lesson-type
+  "Given a module and a lesson type, retrieves the 'first' lesson group string
+   for that module.
+   This is used for selecting a random lesson group for a lesson type of a
+   module."
+  [moduleCode lessonType]
+  (first (get-all-lesson-group-strings moduleCode lessonType)))
+
+(defn- module-has-lesson-group?
+  "Given a module code, a lesson type, and a lesson group, determines if the
+   module has such a lesson group."
+  [moduleCode lessonType lessonGroup]
+  (let [lessonGroupsMap (get-module-lesson-groups-map moduleCode lessonType)]
+    (not (nil? (get lessonGroupsMap lessonGroup)))))
+
 (def ^{:doc     "Width in pixels of a half hour timeslot"
        :private true
        }
@@ -547,21 +596,21 @@
   (fn [evt ui]
     (.addClass (aget ui "helper") "lesson-draggable-helper")
     (.css (aget ui "helper") "cursor" "grabbing")
-    (let [ModulesMap         (get-ModulesMap)
-          ; Get all lesson groups
-          allLessonGroupsMap (get-in ModulesMap [moduleCode "lessons"
-                                                 lessonType])
-          ; Exclude the selected lesson group
-          unselectedLessonGroupsMap
-          (dissoc allLessonGroupsMap selectedLessonGroup)
+    (let [allLessonGroups
+          (get-all-lesson-group-strings moduleCode lessonType)
+
+          unselectedLessonGroups
+          (remove #{selectedLessonGroup} allLessonGroups)
+
           ; Add all the <div> elements
           augmentedTTLessonInfoSeq
           (doall
             (flatten
-              (map (fn [[lessonGroup _]]
-                     (add-module-lesson-group moduleCode lessonType lessonGroup
+              (map (fn [unselectedLessonGroup]
+                     (add-module-lesson-group moduleCode lessonType
+                                              unselectedLessonGroup
                                               bgColorCssClass false))
-                   unselectedLessonGroupsMap)))]
+                   unselectedLessonGroups)))]
       (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq))))
 
 (defn- lesson-draggable-stop-evt-handler-maker
@@ -685,11 +734,15 @@
   [moduleCode lessonType lessonLabel bgColorCssClass isActuallySelected?
    & {:keys [ModulesMap]
       :or   {ModulesMap (get-ModulesMap)}}]
-  (let [moduleName          (get-in ModulesMap [moduleCode "name"])
+
+  (let [; TODO: Refactor
         modulesMapLessonSeq (get-in ModulesMap [moduleCode "lessons" lessonType
                                                 lessonLabel])]
-    (if (and moduleName modulesMapLessonSeq)
-        (let [augLessonInfoSeq
+
+    (if (module-has-lesson-group? moduleCode lessonType lessonLabel)
+        (let [moduleName (get-module-name-from-module-code moduleCode)
+
+              augLessonInfoSeq
               (doall (map (fn [modulesMapLesson]
                             (add-module-lesson! moduleCode moduleName
                                                            lessonType
@@ -698,6 +751,7 @@
                                                            bgColorCssClass
                                                            isActuallySelected?))
                           modulesMapLessonSeq))
+
               lessonInfoSeq (map #(dissoc %1 :divElem :moduleCode :lessonType
                                           :lessonGroup)
                                  augLessonInfoSeq)
@@ -724,9 +778,8 @@
 
                 ; Only lesson types with more than 1 option of lesson group
                 ; will be draggable
-                (if (> (count (get-in ModulesMap [moduleCode "lessons"
-                                                  lessonType]))
-                       1)
+                (if (module-lesson-type-has-multiple-choices? moduleCode
+                                                              lessonType)
                     (make-added-lessons-draggable $divElemSeq moduleCode
                                                   lessonType lessonLabel
                                                   bgColorCssClass)))
@@ -743,7 +796,8 @@
    be added."
   [moduleCode]
   (if (not (contains? ModulesSelected moduleCode))
-      (let [ModulesMap      (get-ModulesMap)
+      (let [; TODO: Refactor
+            ModulesMap      (get-ModulesMap)
             module          (get ModulesMap moduleCode)
             lessonsMap      (get module "lessons")
             bgColorCssClass (get-next-lesson-bg-color-css-class)
@@ -784,9 +838,7 @@
    NOTE: This function should only be called by
          `add-module-lesson-groups-from-url-hash!`"
   [moduleInfoSeq]
-  (let [ModulesMap         (get-ModulesMap)
-
-        moduleLessonGroupsMap
+  (let [moduleLessonGroupsMap
         (reduce (fn [lgMap modInfo]
                   ; Replaces earlier lesson groups with later ones if we
                   ; encounter a duplicate lesson type
@@ -805,12 +857,12 @@
                 {}
                 moduleCodesSeq)
 
-        ; Similar to `moduleLessonTypes`, but obtained from ModulesMap
+        ; Similar to `moduleLessonTypes`, but contains the full sequence of
+        ; lesson type strings
         moduleLessonTypesFull
         (reduce (fn [lessonTypesMap moduleCode]
                   (assoc lessonTypesMap moduleCode
-                         (keys (get-in ModulesMap
-                                       [moduleCode "lessons"]))))
+                         (get-all-lesson-types-for-module moduleCode)))
                 {}
                 moduleCodesSeq)
 
@@ -836,11 +888,9 @@
                         (get missingModuleLessonTypes moduleCode)]
                     (reduce
                       (fn [lgMap lessonType]
-                        (let [lessonGroups
-                              (get-in ModulesMap
-                                      [moduleCode "lessons" lessonType])]
-                          (assoc-in lgMap [moduleCode lessonType]
-                                           (first (keys lessonGroups)))))
+                        (assoc-in lgMap [moduleCode lessonType]
+                                  (get-first-lesson-group-for-module-lesson-type
+                                    moduleCode lessonType)))
                       lgMapFinal
                       missingLessonTypes)))
                 moduleLessonGroupsMap
@@ -890,11 +940,8 @@
         ; Sequence of existing lesson groups
         moduleInfoExistent
         (filter
-          (fn [modInfo]
-            (not (nil? (get-in ModulesMap
-                               [(:moduleCode modInfo) "lessons"
-                                (:lessonType modInfo)
-                                (:lessonGroup modInfo)]))))
+          #(module-has-lesson-group? (:moduleCode %1) (:lessonType %1)
+                                     (:lessonGroup %1))
           ; convert matchArrays to maps
           (map (fn [matchArray]
                  {:moduleCode  (get-module-code-from-match-array
