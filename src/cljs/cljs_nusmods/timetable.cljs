@@ -553,6 +553,48 @@
   [day rowNum ttLessonInfo]
   (get-in Timetable [day rowNum ttLessonInfo]))
 
+(defn- timetable-get-closest-TimetableLessonInfo-before-time
+  "Retrieves the `TimetableLessonInfo` which ends before a given time and is
+   the one on the row closest to that time.
+   If such a `TimetableLessonInfo` object does not exist, returns nil."
+  [day rowNum timeIdx]
+  (let [ttRow (get-in Timetable [day rowNum])]
+    (reduce (fn [ttLessonInfoBefore [ttLessonInfo _]]
+              (let [endTime   (:endTime ttLessonInfo)]
+                (cond (and (nil? ttLessonInfoBefore)
+                           (<= endTime timeIdx))
+                      ttLessonInfo
+
+                      (and (not (nil? ttLessonInfoBefore))
+                           (<= endTime timeIdx)
+                           (> endTime (:endTime ttLessonInfoBefore)))
+                      ttLessonInfo
+
+                      :else ttLessonInfoBefore)))
+            nil
+            ttRow)))
+
+(defn- timetable-get-closest-TimetableLessonInfo-on-or-after-time
+  "Retrieves the `TimetableLessonInfo` which begins on or after a given time and
+   is the one on the row closest to that time.
+   If such a `TimetableLessonInfo` object does not exist, returns nil."
+  [day rowNum timeIdx]
+  (let [ttRow (get-in Timetable [day rowNum])]
+    (reduce (fn [ttLessonInfoAfter [ttLessonInfo _]]
+              (let [startTime (:startTime ttLessonInfo)]
+                (cond (and (nil? ttLessonInfoAfter)
+                           (>= startTime timeIdx))
+                      ttLessonInfo
+
+                      (and (not (nil? ttLessonInfoAfter))
+                           (>= startTime timeIdx)
+                           (< startTime (:endTime ttLessonInfoAfter)))
+                      ttLessonInfo
+
+                      :else ttLessonInfoAfter)))
+            nil
+            ttRow)))
+
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
@@ -1072,10 +1114,9 @@
    augmented with the `:day` and `:rowNum` keys."
   [removedAugTTLessonInfo]
   (let [day        (:day removedAugTTLessonInfo)
-        row        (:rowNum removedAugTTLessonInfo)
+        rowNum     (:rowNum removedAugTTLessonInfo)
         startTime  (:startTime removedAugTTLessonInfo)
         endTime    (:endTime removedAugTTLessonInfo)
-        ttRow      (get-in Timetable [day row])
         minTimeIdx time-helper/TIME-INDEX-MIN
         maxTimeIdx time-helper/TIME-INDEX-MAX]
 
@@ -1083,42 +1124,16 @@
     [
       ; Find the lesson right before the removed lesson
       (let [immediateTTLessonInfoBefore
-            (reduce (fn [ttLessonInfoBefore [ttLessonInfo _]]
-                      (let [stime (:startTime ttLessonInfo)
-                            etime (:endTime ttLessonInfo)]
-                        (cond (and (nil? ttLessonInfoBefore)
-                                   (<= etime startTime))
-                              ttLessonInfo
-
-                              (and (not (nil? ttLessonInfoBefore))
-                                   (<= etime startTime)
-                                   (> etime (:endTime ttLessonInfoBefore)))
-                              ttLessonInfo
-
-                              :else ttLessonInfoBefore)))
-                    nil
-                    ttRow)]
+            (timetable-get-closest-TimetableLessonInfo-before-time
+              day rowNum startTime)]
         (if (nil? immediateTTLessonInfoBefore)
             minTimeIdx
             (:endTime immediateTTLessonInfoBefore)))
 
       ; Find the lesson right after the removed lesson
       (let [immediateTTLessonInfoAfter
-            (reduce (fn [ttLessonInfoAfter [ttLessonInfo _]]
-                      (let [stime (:startTime ttLessonInfo)
-                            etime (:endTime ttLessonInfo)]
-                        (cond (and (nil? ttLessonInfoAfter)
-                                   (>= stime endTime))
-                              ttLessonInfo
-
-                              (and (not (nil? ttLessonInfoAfter))
-                                   (>= stime endTime)
-                                   (< stime (:endTime ttLessonInfoAfter)))
-                              ttLessonInfo
-
-                              :else ttLessonInfoAfter)))
-                    nil
-                    ttRow)]
+            (timetable-get-closest-TimetableLessonInfo-on-or-after-time
+              day rowNum endTime)]
         (if (nil? immediateTTLessonInfoAfter)
             maxTimeIdx
             (dec (:startTime immediateTTLessonInfoAfter))))
