@@ -1213,7 +1213,9 @@
                          ttLessonInfoToShift)})))
         {:augTTLessonInfoMapToShift {},
          ; nil = free slot, true = occupied slot
-         :occupiedVec      (vec (map (fn [t] nil) (range 800 2400 50)))}
+         :occupiedVec      (vec (map (fn [t] nil)
+                                     (range time-helper/TIME-INDEX-MIN
+                                            (inc time-helper/TIME-INDEX-MAX))))}
         ; go through each row in the day, below the current row
         (drop (inc rowNum) (map vector (range (count ttDay)) ttDay))))))
 
