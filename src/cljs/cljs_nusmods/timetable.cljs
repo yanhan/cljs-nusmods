@@ -381,7 +381,7 @@
     [(str "h" (if (< hour 10) "0" "") hour)
      (str "m" (if (not= minute 0) "30" "00"))]))
 
-(defn- $html-timetable-get-td-from-day-row-startTimeIdx
+(defn- html-timetable-get-td
   "Given a day, row and start time index of a lesson, retrieves the
    jQuery object for the <td> element in the HTML representation of the
    Timetable."
@@ -641,8 +641,7 @@
                             :endTime endTime}
                            $divElem)
 
-    (let [$td ($html-timetable-get-td-from-day-row-startTimeIdx
-                day rowNum startTime)]
+    (let [$td (html-timetable-get-td day rowNum startTime)]
       (.append $td $divElem)
       ; Increase colspan and delete the <td> after it that occupy the timeslot
       ; of the lesson
@@ -1231,13 +1230,8 @@
         endTime                 (:endTime augTTLessonInfo)
         slotsOccupied           (- endTime startTime)
 
-        $sourceTd
-        ($html-timetable-get-td-from-day-row-startTimeIdx day sourceRowNum
-                                                          startTime)
-
-        $destTd
-        ($html-timetable-get-td-from-day-row-startTimeIdx day destinationRowNum
-                                                          startTime)
+        $sourceTd     (html-timetable-get-td day sourceRowNum startTime)
+        $destTd       (html-timetable-get-td day destinationRowNum startTime)
 
         ttLessonInfo            (dissoc augTTLessonInfo :day :rowNum)]
     (.log js/console (str "day = " day ", sourceRowNum = " sourceRowNum ", destinationRowNum = " destinationRowNum))
