@@ -425,6 +425,11 @@
   [day]
   (nth Timetable day))
 
+(defn- timetable-get-day-row
+  "Retrieves a row for a given day in `Timetable`."
+  [day rowNum]
+  (nth (timetable-get-day day) rowNum))
+
 (defn- get-nr-rows-in-timetable-day
   "Returns the total number of rows in the given 0-indexed day in the Timetable,
    where 0 = Monday, 1 = Tuesday, until 4 = Friday."
@@ -594,6 +599,12 @@
                       :else ttLessonInfoAfter)))
             nil
             ttRow)))
+
+(defn- timetable-row-not-empty?
+  "Returns true if there no lesson for a given day and row in `Timetable`.
+   Returns false otherwise."
+  [day rowNum]
+  (not (empty? (timetable-get-day-row day rowNum))))
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
@@ -1260,10 +1271,9 @@
         ; implementation
         exclude-lessons-on-empty-rows
         (fn [lessonInfoSeq]
-          (filter #(let [day   (:day %1)
-                         row   (:rowNum %1)
-                         ttRow (get-in Timetable [day row])]
-                     (not (empty? ttRow)))
+          (filter #(let [day    (:day %1)
+                         rowNum (:rowNum %1)]
+                     (timetable-row-not-empty? day rowNum))
                   lessonInfoSeq))
 
         sort-lesson-info-seq
