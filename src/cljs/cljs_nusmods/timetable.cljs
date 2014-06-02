@@ -1160,12 +1160,8 @@
    Returns a map, where keys are `TimetableLessonInfo` objects augmented with
    `:day` and `:rowNum` keys, and values are jQuery <div> objects for the
    shifted lesson."
-  [removedAugTTLessonInfo]
-  (let [day        (:day removedAugTTLessonInfo)
-        rowNum     (:rowNum removedAugTTLessonInfo)
-        startTime  (:startTime removedAugTTLessonInfo)
-        endTime    (:endTime removedAugTTLessonInfo)
-        ttDay      (timetable-get-day day)
+  [{:keys [day rowNum startTime endTime] :as removedAugTTLessonInfo}]
+  (let [ttDay (timetable-get-day day)
 
         ; This is the time range freed up by removal of the lesson
         [lowTimeIdx highTimeIdx]
