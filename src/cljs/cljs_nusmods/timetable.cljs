@@ -419,7 +419,7 @@
   []
   (set! Timetable (vec (map (fn [x] (create-day-repr)) (range 0 5)))))
 
-(defn- get-timetable-day
+(defn- timetable-get-day
   "Retrieves the in-memory representation of the given 0-indexed day in the
    Timetable, where 0 = Monday, 1 = Tuesday, until 4 = Friday."
   [day]
@@ -429,7 +429,7 @@
   "Returns the total number of rows in the given 0-indexed day in the Timetable,
    where 0 = Monday, 1 = Tuesday, until 4 = Friday."
   [day]
-  (count (get-timetable-day day)))
+  (count (timetable-get-day day)))
 
 (def ^{:doc     "HTML string for the <td> elements in a <tr> on the Timetable
                  Builder page"
@@ -510,7 +510,7 @@
    The `moduleMapLesson` parameter should be a lesson from the `ModulesMap`
    global"
   [day startTime endTime]
-  (let [ttDay (get-timetable-day day)]
+  (let [ttDay (timetable-get-day day)]
     (:rowIndex
       (reduce
         (fn [result ttRow]
@@ -1155,7 +1155,7 @@
         rowNum     (:rowNum removedAugTTLessonInfo)
         startTime  (:startTime removedAugTTLessonInfo)
         endTime    (:endTime removedAugTTLessonInfo)
-        ttDay      (get-timetable-day day)
+        ttDay      (timetable-get-day day)
 
         ; This is the time range freed up by removal of the lesson
         [lowTimeIdx highTimeIdx]
@@ -1324,7 +1324,7 @@
   [affectedDaysSet]
   (doseq [day affectedDaysSet]
     (let [nrRows          (get-nr-rows-in-timetable-day day)
-          ttDay           (get-timetable-day day)
+          ttDay           (timetable-get-day day)
 
           rowsPartition
           (reduce (fn [rPart [rowIdx ttRow]]
@@ -1389,7 +1389,7 @@
    lessons, update the individual entries in the `ModulesSelected` global."
   [affectedDaysSet]
   (doseq [day affectedDaysSet]
-    (let [ttDay (get-timetable-day day)]
+    (let [ttDay (timetable-get-day day)]
       (doseq [[rowIdx ttRow] (map vector (range (count ttDay)) ttDay)]
         (doseq [[ttLessonInfo _] ttRow]
           (let [moduleCode  (:moduleCode ttLessonInfo)
