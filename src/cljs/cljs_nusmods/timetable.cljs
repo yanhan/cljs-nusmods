@@ -1276,9 +1276,8 @@
         ; implementation
         exclude-lessons-on-empty-rows
         (fn [lessonInfoSeq]
-          (filter #(let [day    (:day %1)
-                         rowNum (:rowNum %1)]
-                     (timetable-row-not-empty? day rowNum))
+          (filter (fn [{:keys [day rowNum]}]
+                    (timetable-row-not-empty? day rowNum))
                   lessonInfoSeq))
 
         sort-lesson-info-seq
