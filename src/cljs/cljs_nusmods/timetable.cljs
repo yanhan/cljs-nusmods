@@ -1242,16 +1242,13 @@
 
    The parameter `augTTLessonInfo` is a `TimetableLessonInfo` object augmented
    with the `:day` and `:rowNum` keys."
-  [destinationRowNum augTTLessonInfo $divElem]
-  (let [day           (:day augTTLessonInfo)
-        sourceRowNum  (:rowNum augTTLessonInfo)
-        startTime     (:startTime augTTLessonInfo)
-        endTime       (:endTime augTTLessonInfo)
-        slotsOccupied (- endTime startTime)
-        $sourceTd     (html-timetable-get-td day sourceRowNum startTime)
+  [destinationRowNum {:keys [day rowNum startTime endTime] :as augTTLessonInfo}
+   $divElem]
+  (let [slotsOccupied (- endTime startTime)
+        $sourceTd     (html-timetable-get-td day rowNum startTime)
         $destTd       (html-timetable-get-td day destinationRowNum startTime)
         ttLessonInfo  (dissoc augTTLessonInfo :day :rowNum)]
-    (.log js/console (str "day = " day ", sourceRowNum = " sourceRowNum ", destinationRowNum = " destinationRowNum))
+    (.log js/console (str "day = " day ", sourceRowNum = " rowNum ", destinationRowNum = " destinationRowNum))
     ; Transfer lesson <div> to the destination <td>
     (.append $destTd $divElem)
     ; restore the colspan of the source <td>
@@ -1265,7 +1262,7 @@
     ; update colspan of destination <td>
     (attr $destTd "colspan" slotsOccupied)
     ; update `Timetable` global
-    (timetable-remove-lesson! day sourceRowNum ttLessonInfo)
+    (timetable-remove-lesson! day rowNum ttLessonInfo)
     (timetable-add-lesson! day destinationRowNum ttLessonInfo $divElem)))
 
 (defn- shift-lessons-upwards-to-replace-empty-slots!
