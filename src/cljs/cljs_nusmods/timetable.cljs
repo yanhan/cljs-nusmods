@@ -600,11 +600,17 @@
             nil
             ttRow)))
 
+(defn- timetable-row-empty?
+  "Returns true if there is no lesson for a given day and row in `Timetable`.
+   Returns false otherwise."
+  [day rowNum]
+  (empty? (timetable-get-day-row day rowNum)))
+
 (defn- timetable-row-not-empty?
   "Returns true if there at least one lesson for a given day and row in
    `Timetable`. Returns false otherwise."
   [day rowNum]
-  (not (empty? (timetable-get-day-row day rowNum))))
+  (not (timetable-row-empty? day rowNum)))
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
