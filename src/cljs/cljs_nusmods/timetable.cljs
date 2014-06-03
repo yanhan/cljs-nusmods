@@ -1332,22 +1332,15 @@
   [affectedDaysSet]
   (doseq [day affectedDaysSet]
     (let [nrRows          (get-nr-rows-in-timetable-day day)
-          ttDay           (timetable-get-day day)
 
-          rowsPartition
-          (reduce (fn [rPart [rowIdx ttRow]]
-                    (if (empty? ttRow)
-                      (update-in rPart [:emptyRows]
-                                 (fn [emptyRowsVec]
-                                   (conj emptyRowsVec rowIdx)))
-                      (update-in rPart [:nonEmptyRows]
-                                 (fn [nonEmptyRowsVec]
-                                   (conj nonEmptyRowsVec rowIdx)))))
-                  {:emptyRows [], :nonEmptyRows []}
-                  (map vector (range (count ttDay)) ttDay))
+          {:keys [emptyRowsVec nonEmptyRowsVec]}
+          (reduce (fn [rPart rowIdx]
+                    (if (timetable-row-empty? day rowIdx)
+                        (update-in rPart [:emptyRowsVec] #(conj %1 rowIdx))
+                        (update-in rPart [:nonEmptyRowsVec] #(conj %1 rowIdx))))
+                  {:emptyRowsVec [], :nonEmptyRowsVec []}
+                  (range nrRows))
 
-          emptyRowsVec    (:emptyRows rowsPartition)
-          nonEmptyRowsVec (:nonEmptyRows rowsPartition)
           nrEmptyRows     (count emptyRowsVec)
           nrNonEmptyRows  (- nrRows nrEmptyRows)
           $day            (nth HTML-Timetable day)
