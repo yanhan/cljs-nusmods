@@ -612,6 +612,17 @@
   [day rowNum]
   (not (timetable-row-empty? day rowNum)))
 
+(defn- timetable-row-get-lessons-satisfying-pred
+  "Returns a sequence of vectors of `TimetableLessonInfo` object and the
+   jQuery <div> element associated with that lesson.
+   The `TimetableLessonInfo` objects must satisfy a criteria given by the
+   `predFn` predicate."
+  [day rowNum predFn]
+  (let [ttRow (timetable-get-day-row day rowNum)]
+    (filter (fn [[ttLessonInfo _]]
+              (predFn ttLessonInfo))
+            ttRow)))
+
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
@@ -1167,9 +1178,7 @@
    `:day` and `:rowNum` keys, and values are jQuery <div> objects for the
    shifted lesson."
   [{:keys [day rowNum startTime endTime] :as removedAugTTLessonInfo}]
-  (let [ttDay (timetable-get-day day)
-
-        ; This is the time range freed up by removal of the lesson
+  (let [; This is the time range freed up by removal of the lesson
         [lowTimeIdx highTimeIdx]
         (get-largest-consecutive-time-slot-freed-up-by-lesson
           removedAugTTLessonInfo)
@@ -1185,8 +1194,8 @@
     (.log js/console (str "lowTimeIdx = " lowTimeIdx ", highTimeIdx = " highTimeIdx))
     (:augTTLessonInfoMapToShift
       (reduce
-        (fn [reduceResult [rowIdx ttRow]]
-          (if (empty? ttRow)
+        (fn [reduceResult rowIdx]
+          (if (timetable-row-empty? day rowIdx)
               ; Skip empty row
               reduceResult
 
@@ -1194,14 +1203,12 @@
               (let [occupiedVec (:occupiedVec reduceResult)
 
                     ttLessonInfoToShift
-                    (filter (fn [[ttLessonInfo _]]
-                              (let [stime (:startTime ttLessonInfo)
-                                    etime (:endTime ttLessonInfo)]
-                                (.log js/console (str "Executing, startTime = " stime ", endTime = " etime))
-                                (and (>= stime lowTimeIdx)
-                                     (<= (dec etime) highTimeIdx)
-                                     (not-occupied? occupiedVec stime etime))))
-                            ttRow)]
+                    (timetable-row-get-lessons-satisfying-pred
+                      day rowIdx
+                      (fn [{:keys [startTime endTime]}]
+                        (and (>= startTime lowTimeIdx)
+                             (<= (dec endTime) highTimeIdx)
+                             (not-occupied? occupiedVec startTime endTime))))]
                 (.log js/console "suspect above")
                 (.log js/console (str "rowIdx = " rowIdx))
                 (.log js/console (str "occupiedVec = " (.stringify js/JSON (clj->js occupiedVec))))
@@ -1229,7 +1236,7 @@
                                      (range time-helper/TIME-INDEX-MIN
                                             (inc time-helper/TIME-INDEX-MAX))))}
         ; go through each row in the day, below the current row
-        (drop (inc rowNum) (map vector (range (count ttDay)) ttDay))))))
+        (drop (inc rowNum) (range (get-nr-rows-in-timetable-day day)))))))
 
 (defn- shift-lesson-to-row!
   "Shifts a lesson from its original row up to the given row.
