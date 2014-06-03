@@ -1194,15 +1194,15 @@
     (.log js/console (str "lowTimeIdx = " lowTimeIdx ", highTimeIdx = " highTimeIdx))
     (:augTTLessonInfoMapToShift
       (reduce
-        (fn [reduceResult rowIdx]
+        (fn [{:keys [augTTLessonInfoMapToShift occupiedVec]
+              :as   reduceResult}
+             rowIdx]
           (if (timetable-row-empty? day rowIdx)
               ; Skip empty row
               reduceResult
 
               ; Non-empty row
-              (let [occupiedVec (:occupiedVec reduceResult)
-
-                    ttLessonInfoToShift
+              (let [ttLessonInfoToShift
                     (timetable-row-get-lessons-satisfying-pred
                       day rowIdx
                       (fn [{:keys [startTime endTime]}]
@@ -1218,16 +1218,15 @@
                            (assoc augTTLessonInfoMap
                                   (assoc ttLessonInfo :day day :rowNum rowIdx)
                                   $divElem))
-                         (:augTTLessonInfoMapToShift reduceResult)
+                         augTTLessonInfoMapToShift
                          ttLessonInfoToShift)
 
                  :occupiedVec
-                 (reduce (fn [occVec [ttLessonInfo _]]
+                 (reduce (fn [occVec [{:keys [startTime endTime]}  _]]
                            (.log js/console ":occupiedVec")
                            (reduce (fn [ov timeIdx] (assoc ov timeIdx true))
                                    occVec
-                                   (range (:startTime ttLessonInfo)
-                                          (:endTime ttLessonInfo))))
+                                   (range startTime endTime)))
                          occupiedVec
                          ttLessonInfoToShift)})))
         {:augTTLessonInfoMapToShift {},
