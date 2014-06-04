@@ -430,11 +430,18 @@
   [day rowNum]
   (nth (timetable-get-day day) rowNum))
 
-(defn- get-nr-rows-in-timetable-day
-  "Returns the total number of rows in the given 0-indexed day in the Timetable,
-   where 0 = Monday, 1 = Tuesday, until 4 = Friday."
+; Returns the total number of rows for a given day in the Timetable.
+(defmulti get-nr-rows-in-timetable-day number? :default false)
+
+; Argument argument is a a 0-indexed integer representing the day, where
+; 0 = Monday, 1 = Tuesday, until 4 = Friday
+(defmethod get-nr-rows-in-timetable-day true [day]
   [day]
   (count (timetable-get-day day)))
+
+; Argument is a Timetable row returned by the `tiemtable-get-day-row` function
+(defmethod get-nr-rows-in-timetable-day false [ttDay]
+  (count ttDay))
 
 (def ^{:doc     "HTML string for the <td> elements in a <tr> on the Timetable
                  Builder page"
@@ -603,14 +610,16 @@
 (defn- timetable-row-empty?
   "Returns true if there is no lesson for a given day and row in `Timetable`.
    Returns false otherwise."
-  [day rowNum]
-  (empty? (timetable-get-day-row day rowNum)))
+  ([ttRow] (empty? ttRow))
+
+  ([day rowNum] (empty? (timetable-get-day-row day rowNum))))
 
 (defn- timetable-row-not-empty?
   "Returns true if there at least one lesson for a given day and row in
    `Timetable`. Returns false otherwise."
-  [day rowNum]
-  (not (timetable-row-empty? day rowNum)))
+  ([ttRow] (not (timetable-row-empty? ttRow)))
+
+  ([day rowNum] (not (timetable-row-empty? day rowNum))))
 
 (defn- timetable-row-get-lessons-satisfying-pred
   "Returns a sequence of vectors of `TimetableLessonInfo` object and the
@@ -622,6 +631,23 @@
     (filter (fn [[ttLessonInfo _]]
               (predFn ttLessonInfo))
             ttRow)))
+
+(defn- timetable-day-get-empty-and-non-empty-rows
+  "Returns a hash like this:
+   {
+     :emptyRows    -> vector of empty row indices for the day
+     :nonEmptyRows -> vector of non empty row indices for the day
+   }"
+  [day]
+  (let [ttDay (timetable-get-day day)]
+    (reduce (fn [dayPartition [rowIdx ttRow]]
+              (if (timetable-row-empty? ttRow)
+                  (update-in dayPartition [:emptyRows] #(conj %1 rowIdx))
+                  (update-in dayPartition [:nonEmptyRows] #(conj %1 rowIdx))))
+            {:emptyRows [], :nonEmptyRows []}
+            (map vector
+                 (range (get-nr-rows-in-timetable-day ttDay))
+                 ttDay))))
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
@@ -1333,50 +1359,45 @@
   (doseq [day affectedDaysSet]
     (let [nrRows          (get-nr-rows-in-timetable-day day)
 
-          {:keys [emptyRowsVec nonEmptyRowsVec]}
-          (reduce (fn [rPart rowIdx]
-                    (if (timetable-row-empty? day rowIdx)
-                        (update-in rPart [:emptyRowsVec] #(conj %1 rowIdx))
-                        (update-in rPart [:nonEmptyRowsVec] #(conj %1 rowIdx))))
-                  {:emptyRowsVec [], :nonEmptyRowsVec []}
-                  (range nrRows))
+          {:keys [emptyRows nonEmptyRows]}
+          (timetable-day-get-empty-and-non-empty-rows day)
 
-          nrEmptyRows     (count emptyRowsVec)
+          nrEmptyRows     (count emptyRows)
           nrNonEmptyRows  (- nrRows nrEmptyRows)
           $day            (nth HTML-Timetable day)
           $thElem         (.find $day "tr > th")]
-      (.log js/console (str "day = " day ", emptyRowsVec = "
-                            (.stringify js/JSON (clj->js emptyRowsVec))
-                            ", nonEmptyRowsVec = "
-                            (.stringify js/JSON (clj->js nonEmptyRowsVec))))
+      (.log js/console (str "day = " day ", emptyRows = "
+                            (.stringify js/JSON (clj->js emptyRows))
+                            ", nonEmptyRows = "
+                            (.stringify js/JSON (clj->js nonEmptyRows))))
       (set! Timetable
             (update-in Timetable [day]
                        (fn [ttDay]
                          (vec (map (fn [rowIdx] (nth ttDay rowIdx))
                                    (cond (>= nrNonEmptyRows 2)
-                                         nonEmptyRowsVec
+                                         nonEmptyRows
 
                                          (= nrNonEmptyRows 1)
-                                         [(first nonEmptyRowsVec)
-                                          (first emptyRowsVec)]
+                                         [(first nonEmptyRows)
+                                          (first emptyRows)]
 
                                          :else
-                                         (take 2 emptyRowsVec)))))))
+                                         (take 2 emptyRows)))))))
       ; shift <th> element to the new 0th row
-      (if (and (zero? (first emptyRowsVec)) (> nrNonEmptyRows 0))
-          (prepend (nth (children $day "tr") (first nonEmptyRowsVec)) $thElem))
+      (if (and (zero? (first emptyRows)) (> nrNonEmptyRows 0))
+          (prepend (nth (children $day "tr") (first nonEmptyRows)) $thElem))
 
       ; remove empty <tr> elements
       (let [rowsToRemove
-            (cond (>= nrNonEmptyRows 2) emptyRowsVec
-                  (=  nrNonEmptyRows 1) (rest emptyRowsVec)
-                  :else                 (drop 2 emptyRowsVec))]
+            (cond (>= nrNonEmptyRows 2) emptyRows
+                  (=  nrNonEmptyRows 1) (rest emptyRows)
+                  :else                 (drop 2 emptyRows))]
         (doseq [[idx rowIdx] (map vector (range (count rowsToRemove))
                                   rowsToRemove)]
           (.remove (nth (children $day "tr") (- rowIdx idx)))))
 
       (if (and (= nrNonEmptyRows 1)
-               (zero? (first emptyRowsVec)))
+               (zero? (first emptyRows)))
           (let [$trArray (children $day "tr")]
             (.log js/console "Am gonna swap this shit man")
             (.log js/console (str "$trArray = " $trArray ", 0th = " (nth $trArray 0) ", 1st = " (nth $trArray 1)))
