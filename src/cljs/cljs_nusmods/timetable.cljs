@@ -431,16 +431,16 @@
   (nth (timetable-get-day day) rowNum))
 
 ; Returns the total number of rows for a given day in the Timetable.
-(defmulti get-nr-rows-in-timetable-day number? :default false)
+(defmulti timetable-day-get-nr-rows number? :default false)
 
 ; Argument argument is a a 0-indexed integer representing the day, where
 ; 0 = Monday, 1 = Tuesday, until 4 = Friday
-(defmethod get-nr-rows-in-timetable-day true [day]
+(defmethod timetable-day-get-nr-rows true [day]
   [day]
   (count (timetable-get-day day)))
 
 ; Argument is a Timetable row returned by the `tiemtable-get-day-row` function
-(defmethod get-nr-rows-in-timetable-day false [ttDay]
+(defmethod timetable-day-get-nr-rows false [ttDay]
   (count ttDay))
 
 (def ^{:doc     "HTML string for the <td> elements in a <tr> on the Timetable
@@ -491,7 +491,7 @@
   (.append (nth HTML-Timetable day)
            ($ (str "<tr class='day-row'>" Timetable-Row-TD-HTML-String "</tr>")))
   ; Modify the rowspan of the <th> in the 0th row in the timetable
-  (let [nrRows (get-nr-rows-in-timetable-day day)
+  (let [nrRows (timetable-day-get-nr-rows day)
         thElem (.find (nth HTML-Timetable day) "tr > th")]
     (attr thElem "rowspan" nrRows)))
 
@@ -646,7 +646,7 @@
                   (update-in dayPartition [:nonEmptyRows] #(conj %1 rowIdx))))
             {:emptyRows [], :nonEmptyRows []}
             (map vector
-                 (range (get-nr-rows-in-timetable-day ttDay))
+                 (range (timetable-day-get-nr-rows ttDay))
                  ttDay))))
 
 (defn- create-lesson-div
@@ -682,7 +682,7 @@
                            :bgColorCssClass bgColorCssClass,
                            :isActuallySelected? isActuallySelected?)]
     ; Create new row if necessary
-    (if (= rowNum (get-nr-rows-in-timetable-day day))
+    (if (= rowNum (timetable-day-get-nr-rows day))
         (add-new-row-to-timetable-day! day))
 
     ; Update in-memory representation of timetable
@@ -1261,7 +1261,7 @@
                                      (range time-helper/TIME-INDEX-MIN
                                             (inc time-helper/TIME-INDEX-MAX))))}
         ; go through each row in the day, below the current row
-        (drop (inc rowNum) (range (get-nr-rows-in-timetable-day day)))))))
+        (drop (inc rowNum) (range (timetable-day-get-nr-rows day)))))))
 
 (defn- shift-lesson-to-row!
   "Shifts a lesson from its original row up to the given row.
@@ -1357,7 +1357,7 @@
   "Removes empty rows resulting from the removal of lessons on given days."
   [affectedDaysSet]
   (doseq [day affectedDaysSet]
-    (let [nrRows          (get-nr-rows-in-timetable-day day)
+    (let [nrRows          (timetable-day-get-nr-rows day)
 
           {:keys [emptyRows nonEmptyRows]}
           (timetable-day-get-empty-and-non-empty-rows day)
@@ -1490,7 +1490,7 @@
   []
   (.remove ($ ".lesson"))
   (doseq [day (range 5)]
-    (let [nrRows   (get-nr-rows-in-timetable-day day)
+    (let [nrRows   (timetable-day-get-nr-rows day)
           $dayElem (nth HTML-Timetable day)]
       ; Remove rows >= 2
       (doseq [rowIdx (reverse (range 2 nrRows))]
