@@ -721,7 +721,7 @@
 
 ; Forward declaration
 (declare add-module-lesson-group!)
-(declare timetable-prune-empty-rows)
+(declare overall-timetable-prune-empty-rows)
 (declare add-missing-td-elements-replacing-lesson)
 (declare remove-lesson-group-html)
 (declare shift-lessons-upwards-to-replace-empty-slots!)
@@ -791,7 +791,7 @@
           ($lesson-div-remove $divElem (:startTime augTTLessonInfo)
                               (:endTime augTTLessonInfo))))
 
-      (timetable-prune-empty-rows affectedDaysSet)
+      (overall-timetable-prune-empty-rows affectedDaysSet)
       (set! Lessons-Created-By-Draggable nil)
 
       ; User has dropped the draggable helper <div> onto a droppable
@@ -808,7 +808,7 @@
                 (timetable-remove-lesson! day rowNum ttLessonInfo)))
 
             (shift-lessons-upwards-to-replace-empty-slots! augTTLessonInfoSeq)
-            (timetable-prune-empty-rows affectedDaysSet)
+            (overall-timetable-prune-empty-rows affectedDaysSet)
             (update-ModulesSelected-for-affected-days affectedDaysSet)
 
             ; add the newly selected lesson group
@@ -1357,7 +1357,7 @@
                              nextLessonInfoVec
                              augTTLessonInfoTo$DivElem)))))))
 
-(defn- timetable-prune-empty-rows
+(defn- overall-timetable-prune-empty-rows
   "Removes empty rows resulting from the removal of lessons on given days."
   [affectedDaysSet]
   (doseq [day affectedDaysSet]
@@ -1473,7 +1473,7 @@
         ; Perform shifting due to removal of lesson <div>s
         (shift-lessons-upwards-to-replace-empty-slots! augTTLessonInfoSeq)
         (.log js/console "Here too bro")
-        (timetable-prune-empty-rows affectedDaysSet)
+        (overall-timetable-prune-empty-rows affectedDaysSet)
         (.log js/console "Whats up")
 
         ; Update `ModulesSelected`
