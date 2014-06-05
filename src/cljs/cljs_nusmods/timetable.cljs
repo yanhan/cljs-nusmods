@@ -449,7 +449,8 @@
   (count (timetable-get-day day)))
 
 ; Argument is a Timetable row returned by the `tiemtable-get-day-row` function
-(defmethod timetable-day-get-nr-rows false [ttDay]
+(defmethod timetable-day-get-nr-rows false
+  [ttDay]
   (count ttDay))
 
 (def ^{:doc     "HTML string for the <td> elements in a <tr> on the Timetable
