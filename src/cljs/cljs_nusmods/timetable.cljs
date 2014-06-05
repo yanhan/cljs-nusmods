@@ -440,7 +440,7 @@
   (nth ttDay rowNum))
 
 ; Returns the total number of rows for a given day in the Timetable.
-(defmulti timetable-day-get-nr-rows number? :default false)
+(defmulti timetable-day-get-nr-rows number? :default true)
 
 ; Argument argument is a a 0-indexed integer representing the day, where
 ; 0 = Monday, 1 = Tuesday, until 4 = Friday
