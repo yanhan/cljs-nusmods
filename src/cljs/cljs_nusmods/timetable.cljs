@@ -444,7 +444,7 @@
 
 ; Argument argument is a a 0-indexed integer representing the day, where
 ; 0 = Monday, 1 = Tuesday, until 4 = Friday
-(defmethod timetable-day-get-nr-rows true [day]
+(defmethod timetable-day-get-nr-rows true
   [day]
   (count (timetable-get-day day)))
 
