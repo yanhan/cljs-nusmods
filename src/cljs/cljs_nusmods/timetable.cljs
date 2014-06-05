@@ -425,10 +425,19 @@
   [day]
   (nth Timetable day))
 
-(defn- timetable-get-day-row
-  "Retrieves a row for a given day in `Timetable`."
+; Retrieves a row for a given day in `Timetable`
+(defmulti timetable-get-day-row (fn [a1 _] (number? a1)) :default true)
+
+; First argument is a 0-indexed integer of the day
+(defmethod timetable-get-day-row true
   [day rowNum]
   (nth (timetable-get-day day) rowNum))
+
+; First argument is a day in `Timetable - the return value of
+; `timetable-get-day` function
+(defmethod timetable-get-day-row false
+  [ttDay rowNum]
+  (nth ttDay rowNum))
 
 ; Returns the total number of rows for a given day in the Timetable.
 (defmulti timetable-day-get-nr-rows number? :default false)
@@ -652,6 +661,26 @@
                 (update-in dayPartition [:nonEmptyRows] #(conj %1 rowIdx))))
           {:emptyRows [], :nonEmptyRows []}
           (timetable-enumerate-rows-in-day day)))
+
+(defn- timetable-prune-empty-rows-for-day!
+  "Removes empty rows from a day in `Timetable`, based on the return value of
+   the `timetable-day-get-empty-and-non-empty-rows` function."
+  [day {:keys [emptyRows nonEmptyRows]}]
+  (let [nrNonEmptyRows (count nonEmptyRows)]
+    (set! Timetable
+          (update-in Timetable [day]
+                     (fn [ttDay]
+                       (vec (map (fn [rowIdx]
+                                   (timetable-get-day-row ttDay rowIdx))
+                                 (cond (>= nrNonEmptyRows 2)
+                                       nonEmptyRows
+
+                                       (= nrNonEmptyRows 1)
+                                       [(first nonEmptyRows)
+                                        (first emptyRows)]
+
+                                       :else
+                                       (take 2 emptyRows)))))))))
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
@@ -1374,19 +1403,10 @@
                             (.stringify js/JSON (clj->js emptyRows))
                             ", nonEmptyRows = "
                             (.stringify js/JSON (clj->js nonEmptyRows))))
-      (set! Timetable
-            (update-in Timetable [day]
-                       (fn [ttDay]
-                         (vec (map (fn [rowIdx] (nth ttDay rowIdx))
-                                   (cond (>= nrNonEmptyRows 2)
-                                         nonEmptyRows
 
-                                         (= nrNonEmptyRows 1)
-                                         [(first nonEmptyRows)
-                                          (first emptyRows)]
-
-                                         :else
-                                         (take 2 emptyRows)))))))
+      (timetable-prune-empty-rows-for-day! day
+                                           {:emptyRows    emptyRows,
+                                            :nonEmptyRows nonEmptyRows})
       ; shift <th> element to the new 0th row
       (if (and (zero? (first emptyRows)) (> nrNonEmptyRows 0))
           (prepend (nth (children $day "tr") (first nonEmptyRows)) $thElem))
