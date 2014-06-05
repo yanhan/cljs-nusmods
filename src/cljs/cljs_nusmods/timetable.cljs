@@ -632,6 +632,13 @@
               (predFn ttLessonInfo))
             ttRow)))
 
+(defn- timetable-enumerate-rows-in-day
+  "Returns a sequence of [rowIndex, timetableRow], where `rowIndex` is the
+   0-indexed row in the day, and `timetableRow` is the corresponding row."
+  [day]
+  (let [ttDay (timetable-get-day day)]
+    (map vector (range (timetable-day-get-nr-rows ttDay)) ttDay)))
+
 (defn- timetable-day-get-empty-and-non-empty-rows
   "Returns a hash like this:
    {
@@ -639,15 +646,12 @@
      :nonEmptyRows -> vector of non empty row indices for the day
    }"
   [day]
-  (let [ttDay (timetable-get-day day)]
-    (reduce (fn [dayPartition [rowIdx ttRow]]
-              (if (timetable-row-empty? ttRow)
-                  (update-in dayPartition [:emptyRows] #(conj %1 rowIdx))
-                  (update-in dayPartition [:nonEmptyRows] #(conj %1 rowIdx))))
-            {:emptyRows [], :nonEmptyRows []}
-            (map vector
-                 (range (timetable-day-get-nr-rows ttDay))
-                 ttDay))))
+  (reduce (fn [dayPartition [rowIdx ttRow]]
+            (if (timetable-row-empty? ttRow)
+                (update-in dayPartition [:emptyRows] #(conj %1 rowIdx))
+                (update-in dayPartition [:nonEmptyRows] #(conj %1 rowIdx))))
+          {:emptyRows [], :nonEmptyRows []}
+          (timetable-enumerate-rows-in-day day)))
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
