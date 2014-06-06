@@ -683,6 +683,39 @@
                                        :else
                                        (take 2 emptyRows)))))))))
 
+(defn- html-timetable-prune-empty-rows-for-day
+  "Removes <tr> elements corresponding to empty rows in `Timetable`.
+   The 2nd argument should be the return value of the
+   `timetable-day-get-empty-and-non-empty-rows` function."
+  [day {:keys [emptyRows nonEmptyRows]}]
+  (let [$day           (nth HTML-Timetable day)
+        $thElem        (.find $day "tr > th")
+        nrNonEmptyRows (count nonEmptyRows)
+
+        rowsToRemove
+        (cond (>= nrNonEmptyRows 2) emptyRows
+              (=  nrNonEmptyRows 1) (rest emptyRows)
+              :else                 (drop 2 emptyRows))]
+    ; shift <th> element to the new 0th row
+    (if (and (zero? (first emptyRows)) (> nrNonEmptyRows 0))
+        (prepend (nth (children $day "tr") (first nonEmptyRows)) $thElem))
+
+    ; remove empty <tr> elements
+    (doseq [[idx rowIdx] (map vector
+                              (range (count rowsToRemove))
+                              rowsToRemove)]
+      (.remove (nth (children $day "tr") (- rowIdx idx))))
+
+    (if (and (= nrNonEmptyRows 1)
+             (zero? (first emptyRows)))
+        (let [$trArray (children $day "tr")]
+          (.log js/console "Am gonna swap this shit man")
+          (.log js/console (str "$trArray = " $trArray ", 0th = " (nth $trArray 0) ", 1st = " (nth $trArray 1)))
+          (before (nth $trArray 0) (nth $trArray 1))))
+
+    ; adjust rowspan of <th>
+    (attr $thElem "rowspan" (max nrNonEmptyRows 2))))
+
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
@@ -1391,45 +1424,14 @@
   "Removes empty rows resulting from the removal of lessons on given days."
   [affectedDaysSet]
   (doseq [day affectedDaysSet]
-    (let [nrRows          (timetable-day-get-nr-rows day)
-
-          {:keys [emptyRows nonEmptyRows]}
-          (timetable-day-get-empty-and-non-empty-rows day)
-
-          nrEmptyRows     (count emptyRows)
-          nrNonEmptyRows  (- nrRows nrEmptyRows)
-          $day            (nth HTML-Timetable day)
-          $thElem         (.find $day "tr > th")]
+    (let [rowsPartition (timetable-day-get-empty-and-non-empty-rows day)]
       (.log js/console (str "day = " day ", emptyRows = "
-                            (.stringify js/JSON (clj->js emptyRows))
+                            (.stringify js/JSON (clj->js (:emptyRows rowsPartition)))
                             ", nonEmptyRows = "
-                            (.stringify js/JSON (clj->js nonEmptyRows))))
+                            (.stringify js/JSON (clj->js (:nonEmptyRows rowsPartition)))))
 
-      (timetable-prune-empty-rows-for-day! day
-                                           {:emptyRows    emptyRows,
-                                            :nonEmptyRows nonEmptyRows})
-      ; shift <th> element to the new 0th row
-      (if (and (zero? (first emptyRows)) (> nrNonEmptyRows 0))
-          (prepend (nth (children $day "tr") (first nonEmptyRows)) $thElem))
-
-      ; remove empty <tr> elements
-      (let [rowsToRemove
-            (cond (>= nrNonEmptyRows 2) emptyRows
-                  (=  nrNonEmptyRows 1) (rest emptyRows)
-                  :else                 (drop 2 emptyRows))]
-        (doseq [[idx rowIdx] (map vector (range (count rowsToRemove))
-                                  rowsToRemove)]
-          (.remove (nth (children $day "tr") (- rowIdx idx)))))
-
-      (if (and (= nrNonEmptyRows 1)
-               (zero? (first emptyRows)))
-          (let [$trArray (children $day "tr")]
-            (.log js/console "Am gonna swap this shit man")
-            (.log js/console (str "$trArray = " $trArray ", 0th = " (nth $trArray 0) ", 1st = " (nth $trArray 1)))
-            (before (nth $trArray 0) (nth $trArray 1))))
-
-      ; adjust rowspan of <th>
-      (attr $thElem "rowspan" (max nrNonEmptyRows 2)))))
+      (timetable-prune-empty-rows-for-day! day rowsPartition)
+      (html-timetable-prune-empty-rows-for-day day rowsPartition))))
 
 (defn- update-ModulesSelected-for-affected-days
   "Given a set of days that may possibly be affected by removal and shifting of
