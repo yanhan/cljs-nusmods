@@ -721,21 +721,15 @@
    lessons, update the individual entries in the `ModulesSelected` global."
   [affectedDaysSet]
   (doseq [day affectedDaysSet]
-    (let [ttDay (timetable-get-day day)]
-      (doseq [[rowIdx ttRow] (map vector (range (count ttDay)) ttDay)]
-        (doseq [[ttLessonInfo _] ttRow]
-          (let [moduleCode  (:moduleCode ttLessonInfo)
-                lessonType  (:lessonType ttLessonInfo)
-                lessonGroup (:lessonGroup ttLessonInfo)
-                startTime   (:startTime ttLessonInfo)
-                endTime     (:endTime ttLessonInfo)]
-            (set! ModulesSelected
-                  (update-in
-                    ModulesSelected
-                    [moduleCode lessonType :info]
-                    (fn [modSelLessonInfoSeq]
-                      (conj
-                        (filter (fn [modSelLessonInfo]
+    (doseq [[rowIdx ttRow] (timetable-enumerate-rows-in-day day)]
+      (doseq [[{:keys [moduleCode lessonType lessonGroup
+                       startTime endTime]} _] ttRow]
+        (set! ModulesSelected
+              (update-in
+                ModulesSelected
+                [moduleCode lessonType :info]
+                (fn [modSelLessonInfoSeq]
+                  (conj (filter (fn [modSelLessonInfo]
                                   (or (not= (:day modSelLessonInfo) day)
                                       (not= (:startTime modSelLessonInfo)
                                             startTime)
@@ -745,7 +739,7 @@
                         {:day day,
                          :rowNum rowIdx,
                          :startTime startTime,
-                         :endTime endTime}))))))))))
+                         :endTime endTime}))))))))
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
