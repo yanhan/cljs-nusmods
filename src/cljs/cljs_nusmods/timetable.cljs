@@ -716,6 +716,37 @@
     ; adjust rowspan of <th>
     (attr $thElem "rowspan" (max nrNonEmptyRows 2))))
 
+(defn- update-ModulesSelected-for-affected-days!
+  "Given a set of days that may possibly be affected by removal and shifting of
+   lessons, update the individual entries in the `ModulesSelected` global."
+  [affectedDaysSet]
+  (doseq [day affectedDaysSet]
+    (let [ttDay (timetable-get-day day)]
+      (doseq [[rowIdx ttRow] (map vector (range (count ttDay)) ttDay)]
+        (doseq [[ttLessonInfo _] ttRow]
+          (let [moduleCode  (:moduleCode ttLessonInfo)
+                lessonType  (:lessonType ttLessonInfo)
+                lessonGroup (:lessonGroup ttLessonInfo)
+                startTime   (:startTime ttLessonInfo)
+                endTime     (:endTime ttLessonInfo)]
+            (set! ModulesSelected
+                  (update-in
+                    ModulesSelected
+                    [moduleCode lessonType :info]
+                    (fn [modSelLessonInfoSeq]
+                      (conj
+                        (filter (fn [modSelLessonInfo]
+                                  (or (not= (:day modSelLessonInfo) day)
+                                      (not= (:startTime modSelLessonInfo)
+                                            startTime)
+                                      (not= (:endTime modSelLessonInfo)
+                                            endTime)))
+                                modSelLessonInfoSeq)
+                        {:day day,
+                         :rowNum rowIdx,
+                         :startTime startTime,
+                         :endTime endTime}))))))))))
+
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
@@ -788,7 +819,6 @@
 (declare add-missing-td-elements-replacing-lesson)
 (declare remove-lesson-group-html)
 (declare shift-lessons-upwards-to-replace-empty-slots!)
-(declare update-ModulesSelected-for-affected-days)
 
 (def ^{:doc     "Key for a data attribute added to a draggable <div> helper
                  when the helper has been dropped onto a droppable <div>.
@@ -872,7 +902,7 @@
 
             (shift-lessons-upwards-to-replace-empty-slots! augTTLessonInfoSeq)
             (overall-timetable-prune-empty-rows affectedDaysSet)
-            (update-ModulesSelected-for-affected-days affectedDaysSet)
+            (update-ModulesSelected-for-affected-days! affectedDaysSet)
 
             ; add the newly selected lesson group
             (add-module-lesson-group! moduleCode lessonType destLessonGroup
@@ -1433,37 +1463,6 @@
       (timetable-prune-empty-rows-for-day! day rowsPartition)
       (html-timetable-prune-empty-rows-for-day day rowsPartition))))
 
-(defn- update-ModulesSelected-for-affected-days
-  "Given a set of days that may possibly be affected by removal and shifting of
-   lessons, update the individual entries in the `ModulesSelected` global."
-  [affectedDaysSet]
-  (doseq [day affectedDaysSet]
-    (let [ttDay (timetable-get-day day)]
-      (doseq [[rowIdx ttRow] (map vector (range (count ttDay)) ttDay)]
-        (doseq [[ttLessonInfo _] ttRow]
-          (let [moduleCode  (:moduleCode ttLessonInfo)
-                lessonType  (:lessonType ttLessonInfo)
-                lessonGroup (:lessonGroup ttLessonInfo)
-                startTime   (:startTime ttLessonInfo)
-                endTime     (:endTime ttLessonInfo)]
-            (set! ModulesSelected
-                  (update-in
-                    ModulesSelected
-                    [moduleCode lessonType :info]
-                    (fn [modSelLessonInfoSeq]
-                      (conj
-                        (filter (fn [modSelLessonInfo]
-                                  (or (not= (:day modSelLessonInfo) day)
-                                      (not= (:startTime modSelLessonInfo)
-                                            startTime)
-                                      (not= (:endTime modSelLessonInfo)
-                                            endTime)))
-                                modSelLessonInfoSeq)
-                        {:day day,
-                         :rowNum rowIdx,
-                         :startTime startTime,
-                         :endTime endTime}))))))))))
-
 (defn remove-module!
   "Removes a module from the timetable.
 
@@ -1500,7 +1499,7 @@
         (.log js/console "Whats up")
 
         ; Update `ModulesSelected`
-        (update-ModulesSelected-for-affected-days affectedDaysSet)
+        (update-ModulesSelected-for-affected-days! affectedDaysSet)
         (.log js/console "Boo ya!")
         (.log js/console (str "ModulesSelected:" (.stringify js/JSON (clj->js ModulesSelected))))
 
