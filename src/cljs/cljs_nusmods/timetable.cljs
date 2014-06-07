@@ -248,6 +248,11 @@
   (set! ModulesSelected (dissoc ModulesSelected moduleCode))
   (update-ModulesSelected-for-affected-days! affectedDaysSet))
 
+(defn- reset-ModulesSelected!
+  "Resets `ModulesSelected`."
+  []
+  (set! ModulesSelected {}))
+
 (def ^{:doc     "Vector containing module code strings in the order the modules
                  were added."
        :private true}
@@ -1544,7 +1549,7 @@
                  ($ Timetable-Row-TD-HTML-String)))
       (attr (.find $dayElem "tr > th") "rowspan" 2)))
   (timetable-create!)
-  (set! ModulesSelected {})
+  (reset-ModulesSelected!)
   (set! ModulesSelectedOrder [])
   (select2-box-update-modules)
   (set-document-location-hash! ""))
