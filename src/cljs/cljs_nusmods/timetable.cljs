@@ -76,6 +76,10 @@
 ;                                          `:lessonType`
 ;   }
 
+(def ^{:doc     "Minimum number of rows for a day in the Timetable"
+       :private true}
+  TIMETABLE-MIN-ROWS-FOR-DAY 2)
+
 (defn- get-ModulesMap
   "Retrieves the `ModulesMap` JavaScript global variable"
   []
@@ -460,11 +464,17 @@
 (defn- create-day-repr
   "Creates in-memory representation of a single day in the timetable.
 
-   Each day is a vector of rows, and there is a minimum of 2 rows in each day.
+   Each day is a vector of rows, and there is a minimum of
+   `TIMETABLE-MIN-ROWS-FOR-DAY` rows in each day.
    Multiple rows are needed when there are lessons with overlapping start and
    end time."
   []
-  [(create-empty-timetable-row) (create-empty-timetable-row)])
+  (loop [ttDay           []
+         nrRowsRemaining TIMETABLE-MIN-ROWS-FOR-DAY]
+    (if (zero? nrRowsRemaining)
+        ttDay
+        (recur (conj ttDay (create-empty-timetable-row))
+               (dec nrRowsRemaining)))))
 
 (defn timetable-create!
   "Initializes the in-memory representation of the timetable.
@@ -730,7 +740,8 @@
                      (fn [ttDay]
                        (vec (map (fn [rowIdx]
                                    (timetable-get-day-row ttDay rowIdx))
-                                 (cond (>= nrNonEmptyRows 2)
+                                 (cond (>= nrNonEmptyRows
+                                           TIMETABLE-MIN-ROWS-FOR-DAY)
                                        nonEmptyRows
 
                                        (= nrNonEmptyRows 1)
@@ -738,7 +749,8 @@
                                         (first emptyRows)]
 
                                        :else
-                                       (take 2 emptyRows)))))))))
+                                       (take TIMETABLE-MIN-ROWS-FOR-DAY
+                                             emptyRows)))))))))
 
 (defn- timetable-remove-lesson-group!
   "Removes a selected lesson group for a module from the `Timetable`.
@@ -775,29 +787,36 @@
         $thElem        (.find $day "tr > th")
         nrNonEmptyRows (count nonEmptyRows)
 
-        rowsToRemove
-        (cond (>= nrNonEmptyRows 2) emptyRows
-              (=  nrNonEmptyRows 1) (rest emptyRows)
-              :else                 (drop 2 emptyRows))]
+        rowIndicesToPreserve
+        (if (>= nrNonEmptyRows TIMETABLE-MIN-ROWS-FOR-DAY)
+            nonEmptyRows
+            ; Preserve the initial empty rows to make up for the minimum
+            ; number of non-empty rows; remove the remaining empty rows.
+            (concat nonEmptyRows
+                    (take (- TIMETABLE-MIN-ROWS-FOR-DAY nrNonEmptyRows)
+                          emptyRows)))
+
+        orgTotalRows   (+ nrNonEmptyRows (count emptyRows))
+        newNrRows      (max nrNonEmptyRows TIMETABLE-MIN-ROWS-FOR-DAY)
+
+        $rows           (children $day "tr")
+        $rowsToPreserve (map (fn [rowIdx] ($ (nth $rows rowIdx)))
+                             rowIndicesToPreserve)]
+
     ; shift <th> element to the new 0th row
     (if (and (zero? (first emptyRows)) (> nrNonEmptyRows 0))
         (prepend (nth (children $day "tr") (first nonEmptyRows)) $thElem))
 
-    ; remove empty <tr> elements
-    (doseq [[idx rowIdx] (map vector
-                              (range (count rowsToRemove))
-                              rowsToRemove)]
-      (.remove (nth (children $day "tr") (- rowIdx idx))))
+    ; Shift the final <tr> to the beginning of the day
+    (doseq [$row (reverse $rowsToPreserve)]
+      (prepend $day $row))
 
-    (if (and (= nrNonEmptyRows 1)
-             (zero? (first emptyRows)))
-        (let [$trArray (children $day "tr")]
-          (.log js/console "Am gonna swap this shit man")
-          (.log js/console (str "$trArray = " $trArray ", 0th = " (nth $trArray 0) ", 1st = " (nth $trArray 1)))
-          (before (nth $trArray 0) (nth $trArray 1))))
+    ; remove empty <tr> elements
+    (doseq [rowIdx (reverse (range newNrRows orgTotalRows))]
+      (.remove (nth (children $day "tr") rowIdx)))
 
     ; adjust rowspan of <th>
-    (attr $thElem "rowspan" (max nrNonEmptyRows 2))))
+    (attr $thElem "rowspan" newNrRows)))
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
@@ -827,16 +846,16 @@
   (doseq [day (range 5)]
     (let [nrRows   (timetable-day-get-nr-rows day)
           $dayElem (nth HTML-Timetable day)]
-      ; Remove rows >= 2
-      (doseq [rowIdx (reverse (range 2 nrRows))]
+      ; Remove rows >= TIMETABLE-MIN-ROWS-FOR-DAY
+      (doseq [rowIdx (reverse (range TIMETABLE-MIN-ROWS-FOR-DAY nrRows))]
         (.remove (nth (children $dayElem "tr") rowIdx)))
       ; Remove all <td>
       (.remove (.find $dayElem "td"))
       ; Add clean <td>
-      (doseq [rowIdx (range 2)]
+      (doseq [rowIdx (range TIMETABLE-MIN-ROWS-FOR-DAY)]
         (.append (nth (children $dayElem "tr") rowIdx)
                  ($ Timetable-Row-TD-HTML-String)))
-      (attr (.find $dayElem "tr > th") "rowspan" 2))))
+      (attr (.find $dayElem "tr > th") "rowspan" TIMETABLE-MIN-ROWS-FOR-DAY))))
 
 (defn- add-module-lesson!
   "Adds a single lesson of a module the timetable.
