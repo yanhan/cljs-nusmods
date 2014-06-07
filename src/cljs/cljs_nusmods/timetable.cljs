@@ -1559,7 +1559,7 @@
         ; Update Select2 box
         (select2-box-update-modules))))
 
-(defn remove-all-modules
+(defn remove-all-modules!
   "Removes all modules from the timetable"
   []
   (html-timetable-reset!)

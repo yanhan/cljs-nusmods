@@ -199,7 +199,7 @@
               (prevent evt)
               (if (js/confirm
                      "Are you sure you want to clear all selected modules?")
-                  (do (timetable/remove-all-modules)
+                  (do (timetable/remove-all-modules!)
                       (select2/select2-box-reset-val $select2-box)
                       (hide $someSelectedDiv)
                       (show $noneSelectedDiv)))))))
