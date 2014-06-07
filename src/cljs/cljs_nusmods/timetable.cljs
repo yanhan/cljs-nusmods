@@ -800,6 +800,11 @@
         (.addClass $divElem "lesson-droppable-not-hover"))
     $divElem))
 
+(defn- html-timetable-remove-all-lessons!
+  "Removes all lesson <div>s from the HTML timetable."
+  []
+  (.remove ($ ".lesson")))
+
 (defn- add-module-lesson!
   "Adds a single lesson of a module the timetable.
    Returns a `ModulesSelectedLessonInfo` object augmented with the `:divElem`,
@@ -1524,7 +1529,7 @@
 (defn remove-all-modules
   "Removes all modules from the timetable"
   []
-  (.remove ($ ".lesson"))
+  (html-timetable-remove-all-lessons!)
   (doseq [day (range 5)]
     (let [nrRows   (timetable-day-get-nr-rows day)
           $dayElem (nth HTML-Timetable day)]
