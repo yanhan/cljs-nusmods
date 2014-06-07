@@ -820,6 +820,24 @@
   []
   (.remove ($ ".lesson")))
 
+(defn- html-timetable-reset!
+  "Resets the HTML Timetable"
+  []
+  (html-timetable-remove-all-lessons!)
+  (doseq [day (range 5)]
+    (let [nrRows   (timetable-day-get-nr-rows day)
+          $dayElem (nth HTML-Timetable day)]
+      ; Remove rows >= 2
+      (doseq [rowIdx (reverse (range 2 nrRows))]
+        (.remove (nth (children $dayElem "tr") rowIdx)))
+      ; Remove all <td>
+      (.remove (.find $dayElem "td"))
+      ; Add clean <td>
+      (doseq [rowIdx (range 2)]
+        (.append (nth (children $dayElem "tr") rowIdx)
+                 ($ Timetable-Row-TD-HTML-String)))
+      (attr (.find $dayElem "tr > th") "rowspan" 2))))
+
 (defn- add-module-lesson!
   "Adds a single lesson of a module the timetable.
    Returns a `ModulesSelectedLessonInfo` object augmented with the `:divElem`,
@@ -1544,20 +1562,7 @@
 (defn remove-all-modules
   "Removes all modules from the timetable"
   []
-  (html-timetable-remove-all-lessons!)
-  (doseq [day (range 5)]
-    (let [nrRows   (timetable-day-get-nr-rows day)
-          $dayElem (nth HTML-Timetable day)]
-      ; Remove rows >= 2
-      (doseq [rowIdx (reverse (range 2 nrRows))]
-        (.remove (nth (children $dayElem "tr") rowIdx)))
-      ; Remove all <td>
-      (.remove (.find $dayElem "td"))
-      ; Add clean <td>
-      (doseq [rowIdx (range 2)]
-        (.append (nth (children $dayElem "tr") rowIdx)
-                 ($ Timetable-Row-TD-HTML-String)))
-      (attr (.find $dayElem "tr > th") "rowspan" 2)))
+  (html-timetable-reset!)
   (timetable-create!)
   (reset-ModulesSelected!)
   (reset-ModulesSelectedOrder!)
