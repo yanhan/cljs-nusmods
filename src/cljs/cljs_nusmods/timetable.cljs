@@ -284,7 +284,7 @@
   []
   (set! ModulesSelectedOrder []))
 
-(defn- select2-box-update-modules
+(defn- select2-box-update-modules!
   "Update the select2 box with the currently selected modules"
   []
   ; NOTE: Internally, this does a quadratic amount of work but I do not
@@ -1075,7 +1075,7 @@
                     ; Micro optimization for modules added via url hash
                     ; during initialization
                     (if (not addedViaUrlHashInit?)
-                        (select2-box-update-modules))))
+                        (select2-box-update-modules!))))
 
               ; Only lesson types with more than 1 option of lesson group
               ; will be draggable
@@ -1261,7 +1261,7 @@
 
     ; Update Select2 box, since this is not done in `add-module-lesson-group!`.
     ; Repeated work will be done there if we did so
-    (select2-box-update-modules)
+    (select2-box-update-modules!)
     ; Update url hash
     (set-document-location-hash-based-on-modules-order!)))
 
@@ -1557,7 +1557,7 @@
         (remove-from-ModulesSelectedOrder! moduleCode)
         (.log js/console "I hear and obey!")
         ; Update Select2 box
-        (select2-box-update-modules))))
+        (select2-box-update-modules!))))
 
 (defn remove-all-modules!
   "Removes all modules from the timetable"
@@ -1566,5 +1566,5 @@
   (timetable-create!)
   (reset-ModulesSelected!)
   (reset-ModulesSelectedOrder!)
-  (select2-box-update-modules)
+  (select2-box-update-modules!)
   (document-location-hash-reset!))
