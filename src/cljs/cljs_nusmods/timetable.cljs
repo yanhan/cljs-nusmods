@@ -279,6 +279,11 @@
   [moduleCode]
   (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder)))
 
+(defn- reset-ModulesSelectedOrder!
+  "Resets `ModuleSelectedOrder`"
+  []
+  (set! ModulesSelectedOrder []))
+
 (defn- select2-box-update-modules
   "Update the select2 box with the currently selected modules"
   []
@@ -1550,6 +1555,6 @@
       (attr (.find $dayElem "tr > th") "rowspan" 2)))
   (timetable-create!)
   (reset-ModulesSelected!)
-  (set! ModulesSelectedOrder [])
+  (reset-ModulesSelectedOrder!)
   (select2-box-update-modules)
   (set-document-location-hash! ""))
