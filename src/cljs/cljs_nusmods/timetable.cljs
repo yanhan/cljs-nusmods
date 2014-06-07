@@ -269,6 +269,11 @@
   [moduleCode]
   (set! ModulesSelectedOrder (conj ModulesSelectedOrder moduleCode)))
 
+(defn- remove-from-ModulesSelectedOrder!
+  "Removes a module from `ModulesSelectedOrder`"
+  [moduleCode]
+  (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder)))
+
 (defn- select2-box-update-modules
   "Update the select2 box with the currently selected modules"
   []
@@ -1511,8 +1516,7 @@
 
         (remove-module-from-document-location-hash! moduleCode)
 
-        ; Remove from `ModulesSelectedOrder`
-        (set! ModulesSelectedOrder (remove #{moduleCode} ModulesSelectedOrder))
+        (remove-from-ModulesSelectedOrder! moduleCode)
         (.log js/console "I hear and obey!")
         ; Update Select2 box
         (select2-box-update-modules))))
