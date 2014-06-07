@@ -213,6 +213,41 @@
         (assoc-in ModulesSelected [moduleCode lessonType]
                   {:label lessonGroup, :info lessonInfoSeq})))
 
+(declare timetable-enumerate-rows-in-day)
+
+(defn- update-ModulesSelected-for-affected-days!
+  "Given a set of days that may possibly be affected by removal and shifting of
+   lessons, update the individual entries in the `ModulesSelected` global."
+  [affectedDaysSet]
+  (doseq [day affectedDaysSet]
+    (doseq [[rowIdx ttRow] (timetable-enumerate-rows-in-day day)]
+      (doseq [[{:keys [moduleCode lessonType lessonGroup
+                       startTime endTime]} _] ttRow]
+        (set! ModulesSelected
+              (update-in
+                ModulesSelected
+                [moduleCode lessonType :info]
+                (fn [modSelLessonInfoSeq]
+                  (conj (filter (fn [modSelLessonInfo]
+                                  (or (not= (:day modSelLessonInfo) day)
+                                      (not= (:startTime modSelLessonInfo)
+                                            startTime)
+                                      (not= (:endTime modSelLessonInfo)
+                                            endTime)))
+                                modSelLessonInfoSeq)
+                        {:day day,
+                         :rowNum rowIdx,
+                         :startTime startTime,
+                         :endTime endTime}))))))))
+
+(defn- remove-module-from-ModulesSelected!
+  "Removes a module from `ModulesSelected`, and updates all lessons with new
+   row indices for days where lesson removal has occurred and row shifting /
+   removal has occurred."
+  [moduleCode affectedDaysSet]
+  (set! ModulesSelected (dissoc ModulesSelected moduleCode))
+  (update-ModulesSelected-for-affected-days! affectedDaysSet))
+
 (def ^{:doc     "Vector containing module code strings in the order the modules
                  were added."
        :private true}
@@ -743,31 +778,6 @@
 
     ; adjust rowspan of <th>
     (attr $thElem "rowspan" (max nrNonEmptyRows 2))))
-
-(defn- update-ModulesSelected-for-affected-days!
-  "Given a set of days that may possibly be affected by removal and shifting of
-   lessons, update the individual entries in the `ModulesSelected` global."
-  [affectedDaysSet]
-  (doseq [day affectedDaysSet]
-    (doseq [[rowIdx ttRow] (timetable-enumerate-rows-in-day day)]
-      (doseq [[{:keys [moduleCode lessonType lessonGroup
-                       startTime endTime]} _] ttRow]
-        (set! ModulesSelected
-              (update-in
-                ModulesSelected
-                [moduleCode lessonType :info]
-                (fn [modSelLessonInfoSeq]
-                  (conj (filter (fn [modSelLessonInfo]
-                                  (or (not= (:day modSelLessonInfo) day)
-                                      (not= (:startTime modSelLessonInfo)
-                                            startTime)
-                                      (not= (:endTime modSelLessonInfo)
-                                            endTime)))
-                                modSelLessonInfoSeq)
-                        {:day day,
-                         :rowNum rowIdx,
-                         :startTime startTime,
-                         :endTime endTime}))))))))
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
@@ -1487,9 +1497,6 @@
         ; remove the lesson <div>s
         (remove-lesson-group-html augTTLessonInfoSeq)
 
-        ; Remove module from `ModulesSelected`
-        (set! ModulesSelected (dissoc ModulesSelected moduleCode))
-
         (.log js/console "Reached here man")
 
         ; Perform shifting due to removal of lesson <div>s
@@ -1498,8 +1505,7 @@
         (overall-timetable-prune-empty-rows affectedDaysSet)
         (.log js/console "Whats up")
 
-        ; Update `ModulesSelected`
-        (update-ModulesSelected-for-affected-days! affectedDaysSet)
+        (remove-module-from-ModulesSelected! moduleCode affectedDaysSet)
         (.log js/console "Boo ya!")
         (.log js/console (str "ModulesSelected:" (.stringify js/JSON (clj->js ModulesSelected))))
 
