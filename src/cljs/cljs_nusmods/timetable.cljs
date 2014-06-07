@@ -416,6 +416,11 @@
                      (str moduleCode "_" lessonType "=" newLessonGroup))]
     (set-document-location-hash! newUrlHash)))
 
+(defn- document-location-hash-reset!
+  "Resets `document.location.hash` to the empty string"
+  []
+  (set-document-location-hash! ""))
+
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
        :private true
@@ -1557,4 +1562,4 @@
   (reset-ModulesSelected!)
   (reset-ModulesSelectedOrder!)
   (select2-box-update-modules)
-  (set-document-location-hash! ""))
+  (document-location-hash-reset!))
