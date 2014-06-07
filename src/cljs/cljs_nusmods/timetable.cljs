@@ -515,13 +515,20 @@
                    (fn [ttRow]
                      (assoc ttRow ttLessonInfo $lessonDiv)))))
 
+(defn- timetable-get-lesson-div
+  "Retrieves the jQuery object for a lesson <div>"
+  [day rowNum ttLessonInfo]
+  (get-in Timetable [day rowNum ttLessonInfo]))
+
 (defn- timetable-remove-lesson!
   "Removes a lesson from the `Timetable` global, effectively 'marking' the
    time interval occupied by that lesson as free."
   [day rowNum ttLessonInfo]
-  (set! Timetable
-        (update-in Timetable [day rowNum]
-                   (fn [ttRow] (dissoc ttRow ttLessonInfo)))))
+  (let [$lessonDiv (timetable-get-lesson-div day rowNum ttLessonInfo)]
+    (set! Timetable
+          (update-in Timetable [day rowNum]
+                     (fn [ttRow] (dissoc ttRow ttLessonInfo))))
+    $lessonDiv))
 
 (defn- find-free-row-for-lesson
   "Returns the 0-indexed row which can accomodate the given lesson (timeslots
@@ -569,11 +576,6 @@
             :else (update-in result [:rowIndex] inc)))
         {:foundFreeRow false, :rowIndex 0}
         ttDay))))
-
-(defn- timetable-get-lesson-div
-  "Retrieves the jQuery object for a lesson <div>"
-  [day rowNum ttLessonInfo]
-  (get-in Timetable [day rowNum ttLessonInfo]))
 
 (defn- timetable-get-closest-TimetableLessonInfo-before-time
   "Retrieves the `TimetableLessonInfo` which ends before a given time and is
@@ -682,6 +684,32 @@
 
                                        :else
                                        (take 2 emptyRows)))))))))
+
+(defn- timetable-remove-lesson-group!
+  "Removes a selected lesson group for a module from the `Timetable`.
+
+   Returns a sequence of `TimetableLessonInfo` objects, augmented with the
+   `:day`, `:rowNum` and `:divElem` keys. The `divElem` key's value is the
+   jQuery <div> object associated with the `TimetableLessonInfo`."
+  [moduleCode lessonType]
+  (let [lessonGroupDetails (get-in ModulesSelected [moduleCode lessonType])
+        lessonGroup        (:label lessonGroupDetails)
+        lessonInfoSeq      (:info lessonGroupDetails)]
+    (doall
+      (map (fn [{:keys [day rowNum startTime endTime]}]
+             (let [ttLessonInfo {:moduleCode moduleCode,
+                                 :lessonType lessonType,
+                                 :lessonGroup lessonGroup,
+                                 :startTime startTime,
+                                 :endTime endTime}
+                   $lessonDiv   (timetable-remove-lesson! day
+                                                          rowNum
+                                                          ttLessonInfo)]
+               (assoc ttLessonInfo
+                      :day day,
+                      :rowNum rowNum,
+                      :divElem $lessonDiv)))
+           lessonInfoSeq))))
 
 (defn- html-timetable-prune-empty-rows-for-day
   "Removes <tr> elements corresponding to empty rows in `Timetable`.
@@ -883,17 +911,11 @@
 
       ; User has dropped the draggable helper <div> onto a droppable
       (if (not (nil? destLessonGroup))
-          (let [augTTLessonInfoSeq (remove-lesson-group-html moduleCode
-                                                             lessonType)
+          (let [augTTLessonInfoSeq (timetable-remove-lesson-group! moduleCode
+                                                                   lessonType)
                 affectedDaysSet    (get-set-from-seq-of-maps-with-day-key
                                      augTTLessonInfoSeq)]
-            ; remove the current lesson group
-            (doseq [augTTLessonInfo augTTLessonInfoSeq]
-              (let [day          (:day augTTLessonInfo)
-                    rowNum       (:rowNum augTTLessonInfo)
-                    ttLessonInfo (dissoc augTTLessonInfo :day :rowNum)]
-                (timetable-remove-lesson! day rowNum ttLessonInfo)))
-
+            (remove-lesson-group-html augTTLessonInfoSeq)
             (shift-lessons-upwards-to-replace-empty-slots! augTTLessonInfoSeq)
             (overall-timetable-prune-empty-rows affectedDaysSet)
             (update-ModulesSelected-for-affected-days! affectedDaysSet)
@@ -1216,28 +1238,17 @@
           (recur $newTdElem (inc timeIdx))))))
 
 (defn- remove-lesson-group-html
-  "Removes a lesson group for a module from the HTML timetable.
-   This does NOT remove any empty rows / perform module shifting.
+  "Given a sequence of `TimetableLessonInfo` objects, each augmented with the
+   `:divElem` key (whose value is the jQuery <div> object for that lesson),
+   removes the actual <div> elements for these lesson from the HTML timetable.
+   NOTE: This does NOT remove any empty rows / perform module shifting.
 
-   Returns a sequence of `ttLessonInfo` objects which contain
-   additional `:day` and `:rowNum` keys."
-  [moduleCode lessonType]
-  (let [lessonGroupDetails (get-in ModulesSelected [moduleCode lessonType])
-        lessonGroup        (:label lessonGroupDetails)
-        lessonInfoSeq      (:info lessonGroupDetails)]
-    (map (fn [modSelLessonInfo]
-           (let [day          (:day modSelLessonInfo)
-                 rowNum       (:rowNum modSelLessonInfo)
-                 startTime    (:startTime modSelLessonInfo)
-                 endTime      (:endTime modSelLessonInfo)
-                 ttLessonInfo {:moduleCode moduleCode, :lessonType lessonType,
-                               :lessonGroup lessonGroup, :startTime startTime,
-                               :endTime endTime}
-                 $lessonDiv   (timetable-get-lesson-div day rowNum
-                                                        ttLessonInfo)]
-             ($lesson-div-remove $lessonDiv startTime endTime)
-             (assoc ttLessonInfo :day day, :rowNum rowNum)))
-         lessonInfoSeq)))
+   The `augTTLessonInfoSeq` argument should be the return value of the
+   `timetable-remove-lesson-group!` function."
+  [augTTLessonInfoSeq]
+  (doseq [{:keys [startTime endTime divElem] :as augTTLessonInfo}
+          augTTLessonInfoSeq]
+    ($lesson-div-remove divElem startTime endTime)))
 
 (defn- get-largest-consecutive-time-slot-freed-up-by-lesson
   "Given a removed lesson, find the largest interval on the same row which is
@@ -1467,22 +1478,17 @@
             (keys (get ModulesSelected moduleCode))
 
             augTTLessonInfoSeq
-            (flatten (map (fn [lessonType]
-                            (remove-lesson-group-html moduleCode lessonType))
+            (flatten (map #(timetable-remove-lesson-group! moduleCode %1)
                           lessonTypes))
 
             affectedDaysSet
             (get-set-from-seq-of-maps-with-day-key augTTLessonInfoSeq)]
 
+        ; remove the lesson <div>s
+        (remove-lesson-group-html augTTLessonInfoSeq)
+
         ; Remove module from `ModulesSelected`
         (set! ModulesSelected (dissoc ModulesSelected moduleCode))
-
-        ; remove the lesson <div>s
-        (doseq [augTTLessonInfo augTTLessonInfoSeq]
-          (let [day          (:day augTTLessonInfo)
-                rowNum       (:rowNum augTTLessonInfo)
-                ttLessonInfo (dissoc augTTLessonInfo :day :rowNum)]
-          (timetable-remove-lesson! day rowNum ttLessonInfo)))
 
         (.log js/console "Reached here man")
 
