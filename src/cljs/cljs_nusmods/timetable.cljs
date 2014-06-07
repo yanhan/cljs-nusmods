@@ -778,7 +778,7 @@
                       :divElem $lessonDiv)))
            lessonInfoSeq))))
 
-(defn- html-timetable-prune-empty-rows-for-day
+(defn- html-timetable-prune-empty-rows-for-day!
   "Removes <tr> elements corresponding to empty rows in `Timetable`.
    The 2nd argument should be the return value of the
    `timetable-day-get-empty-and-non-empty-rows` function."
@@ -1538,7 +1538,7 @@
                             (.stringify js/JSON (clj->js (:nonEmptyRows rowsPartition)))))
 
       (timetable-prune-empty-rows-for-day! day rowsPartition)
-      (html-timetable-prune-empty-rows-for-day day rowsPartition))))
+      (html-timetable-prune-empty-rows-for-day! day rowsPartition))))
 
 (defn remove-module!
   "Removes a module from the timetable.
