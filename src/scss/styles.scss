@@ -218,6 +218,11 @@ div.exhibit-text-facet > input[type="text"] {
   top: 0.5rem;
 }
 
+.search-modules-container-title-div {
+  @extend .cf;
+  margin-bottom: 2px;
+}
+
 .search-modules-nr-selected {
   float: left;
 }
