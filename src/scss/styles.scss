@@ -166,6 +166,7 @@ table.exhibit-tabularView-body tr > th:not(:last-child) {
 ////////////////////////////////////////////////////////////////////////////////
 div.exhibit-flowingFacet-header {
   float: left;
+  padding: 0;
 }
 
 // Using this child selector from `div.exhibit-flowingFacet-body` is required
