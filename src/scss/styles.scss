@@ -31,6 +31,7 @@
 }
 ////////////////////////////////////////////////////////////////////////////////
 
+$BODY_BGCOLOR: #FFFFFF;
 
 body {
   font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
@@ -58,7 +59,7 @@ dl.nav-tab {
 
   dd {
     box-sizing: content-box;
-    background: #FFFFFF;
+    background: $BODY_BGCOLOR;
     display: inline-block;
     -webkit-margin-start: 0;
     border-bottom: $one_px_solid_gray;
@@ -79,7 +80,7 @@ dl.nav-tab {
     border-left: $one_px_solid_gray;
     border-top: $one_px_solid_gray;
     border-right: $one_px_solid_gray;
-    border-bottom: 1px solid #FFFFFF;
+    border-bottom: 1px solid #{$BODY_BGCOLOR};
   }
 }
 
