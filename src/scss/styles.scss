@@ -185,7 +185,7 @@ div.exhibit-flowingFacet-value-checkbox {
 // Apply clearfix hack so this parent div takes up height of floated children
 div.exhibit-flowingFacet {
   @extend .cf;
-  padding-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 div.exhibit-facet-header {
