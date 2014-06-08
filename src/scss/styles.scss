@@ -35,6 +35,7 @@ $BODY_BGCOLOR: #FFFFFF;
 
 body {
   font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-size: 90%;
 }
 
 dl {
@@ -234,7 +235,7 @@ $one-px-grey-border: 1px solid #ddd;
 
 #timetable {
   width: $half-hour-width * 32;
-  font-size: 70%;
+  font-size: 75%;
 }
 
 tbody.day-container {
