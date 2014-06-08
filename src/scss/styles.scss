@@ -110,6 +110,17 @@ div.exhibit-flowingFacet {
 .select2-search-choice {
   width: 100%;
 }
+
+// adjust height of each module selected
+.select2-container-multi .select2-choices .select2-search-choice {
+  line-height: 1.5rem;
+}
+
+// adjust vertical position of the cross 'button'
+.select2-search-choice-close {
+  top: 0.5rem;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
