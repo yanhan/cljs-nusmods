@@ -1,6 +1,7 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
-  (:use [jayq.core :only [$ attr document-ready hide is one prevent show]])
+  (:use [jayq.core :only [$ attr document-ready hide is one parent prevent
+                          show]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
@@ -347,6 +348,8 @@
             (fn []
               (hide ($ :#timetable-builder))
               (show ($ :#module-finder))
+              (.removeClass (parent ($ :#timetable-builder-tab-link)) "active")
+              (.addClass (parent ($ :#module-finder-tab-link)) "active")
               (aset js/window "ActiveTab" MODULEFINDER-TAB-INDEX)
               (select2/shift-select2-container-to "timetable-builder-controls"
                                                   "module-finder-sidebar")
@@ -355,6 +358,8 @@
     (.click ($ :#timetable-builder-tab-link)
             (fn []
               (hide ($ :#module-finder))
+              (.removeClass (parent ($ :#module-finder-tab-link)) "active")
+              (.addClass (parent ($ :#timetable-builder-tab-link)) "active")
               (show ($ :#timetable-builder))
               (select2/shift-select2-container-to "module-finder-sidebar"
                                                   "timetable-builder-controls")

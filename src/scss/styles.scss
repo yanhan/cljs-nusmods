@@ -41,11 +41,13 @@ body {
 }
 
 .nav-tab {
+  box-sizing: content-box;
   margin-top: 1rem;
   margin-left: 2rem;
   $one_px_solid_gray: 1px solid #D6D6D6;
 
   dd {
+    box-sizing: content-box;
     background: #FFFFFF;
     display: inline-block;
     height: 2rem;
@@ -63,6 +65,7 @@ body {
     border-left: $one_px_solid_gray;
     border-top: $one_px_solid_gray;
     border-right: $one_px_solid_gray;
+    border-bottom: 1px solid #FFFFFF;
   }
 }
 
