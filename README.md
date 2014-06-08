@@ -164,6 +164,8 @@ find)
 #### CSS libraries / tools:
 - [gulp-sass](https://github.com/dlmanning/gulp-sass)
 (Enables us to write SCSS instead of CSS, huge boon)
+- [Font Awesome](http://fortawesome.github.io/Font-Awesome/) - Scalable vector
+icons
 
 #### JavaScript libraries (back end):
 - [gulp.js](http://gulpjs.com/) (Making Grunt obsolete, kind of)

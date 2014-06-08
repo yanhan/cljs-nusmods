@@ -87,6 +87,10 @@ dl.nav-tab {
     text-decoration: none;
   }
 
+  dd > a > i {
+    margin-right: 0.5rem;
+  }
+
   dd.active {
     border-left: $one_px_solid_gray;
     border-top: $one_px_solid_gray;
