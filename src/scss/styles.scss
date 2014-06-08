@@ -82,6 +82,10 @@ dl.nav-tab {
     border-right: $one_px_solid_gray;
     border-bottom: 1px solid #{$BODY_BGCOLOR};
   }
+
+  dd.active > a:hover {
+    background: $BODY_BGCOLOR;
+  }
 }
 
 #timetable-builder {
