@@ -45,6 +45,15 @@ dd {
   margin: 0;
 }
 
+a {
+  outline: 0;
+  color: #5881D8;
+}
+
+a:hover, a:active, a:focus {
+  color: #3D5A96;
+}
+
 .nav-div {
   background: url("../img/d6d6d6_1px_horiz.png") bottom repeat-x;
 }
