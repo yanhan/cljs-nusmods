@@ -48,10 +48,12 @@ dd {
 a {
   outline: 0;
   color: #5881D8;
+  text-decoration: none;
 }
 
 a:hover, a:active, a:focus {
   color: #3D5A96;
+  text-decoration: underline;
 }
 
 .nav-div {
@@ -75,7 +77,6 @@ dl.nav-tab {
   }
 
   dd > a {
-    text-decoration: none;
     display: block;
     padding-left: 1rem;
     padding-right: 1rem;
@@ -83,6 +84,7 @@ dl.nav-tab {
 
   dd > a:hover {
     background: #EEEEEE;
+    text-decoration: none;
   }
 
   dd.active {
