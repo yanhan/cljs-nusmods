@@ -71,6 +71,10 @@ dl.nav-tab {
     padding-right: 1rem;
   }
 
+  dd > a:hover {
+    background: #EEEEEE;
+  }
+
   dd.active {
     border-left: $one_px_solid_gray;
     border-top: $one_px_solid_gray;
