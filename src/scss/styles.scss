@@ -131,17 +131,17 @@ $GRID_PADDING: 2rem;
   .medium-col-3-4 {
     width: 75%;
   }
-}
 
-// NOTE: These 2 sections apply even when the window shrinks to < 768px
-[class*='col-'] {
-  float: left;
-  padding-right: $GRID_PADDING;
-  .grid &:last-of-type {
-    padding-right: 0;
+  [class*='medium-col-'] {
+    float: left;
+    padding-right: $GRID_PADDING;
+    .grid &:last-of-type {
+      padding-right: 0;
+    }
   }
 }
 
+// NOTE: This section applies even when the window shrinks to < 768px
 .grid-pad-sides {
   padding-left: $GRID_PADDING;
   [class*='col-']:last-of-type {
