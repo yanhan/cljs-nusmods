@@ -118,14 +118,17 @@ $GRID_PADDING: 2rem;
   @extend .cf;
 }
 
-.col-1-4 {
-  width: 25%;
+@media screen and (min-width: 768px) {
+  .medium-col-1-4 {
+    width: 25%;
+  }
+
+  .medium-col-3-4 {
+    width: 75%;
+  }
 }
 
-.col-3-4 {
-  width: 75%;
-}
-
+// NOTE: These 2 sections apply even when the window shrinks to < 768px
 [class*='col-'] {
   float: left;
   padding-right: $GRID_PADDING;
@@ -140,6 +143,7 @@ $GRID_PADDING: 2rem;
     padding-right: $GRID_PADDING;
   }
 }
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #timetable-builder {
