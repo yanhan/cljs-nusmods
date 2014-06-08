@@ -5,7 +5,7 @@
                   variable."
       }
   cljs-nusmods.select2
-  (:use [jayq.core :only [$ attr parent]]))
+  (:use [jayq.core :only [$ attr on parent]]))
 
 (def ^{:doc "jQuery object for the Select2 input box"}
   $Select2-Box ($ :#search-modules))
@@ -77,7 +77,13 @@
                                   (get-in ModulesMap [moduleCode "name"]))})
                    (filter (fn [s] (not= s "")) (.split (.val elem) ","))))))
 
-        "query"         select2-query-fn))))
+        "query"         select2-query-fn))
+
+    ; Add `select2-container-active` class to maintain CSS shadows that were
+    ; added when the select2 menu is open
+    (on $jqElem "select2-close"
+        (fn []
+          (.addClass ($ ".select2-container") "select2-container-active")))))
 
 (defn select2-box-set-val
   "Sets the value for a Select2 jQuery object. The supplied value should be a
