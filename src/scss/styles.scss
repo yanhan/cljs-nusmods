@@ -245,6 +245,10 @@ div.exhibit-facet-body {
 
 input[type=text] {
   line-height: 1.5rem;
+  border: 1px solid #ccc;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  border-radius: 3px;
 }
 
 $half-hour-width: 35px;
