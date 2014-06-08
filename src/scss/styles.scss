@@ -108,6 +108,40 @@ dl.nav-tab {
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Simple grid for Module Finder page
+// Based on http://css-tricks.com/dont-overthink-it-grids/
+////////////////////////////////////////////////////////////////////////////////
+$GRID_PADDING: 2rem;
+
+.grid {
+  @extend .cf;
+}
+
+.col-1-4 {
+  width: 25%;
+}
+
+.col-3-4 {
+  width: 75%;
+}
+
+[class*='col-'] {
+  float: left;
+  padding-right: $GRID_PADDING;
+  .grid &:last-of-type {
+    padding-right: 0;
+  }
+}
+
+.grid-pad-sides {
+  padding-left: $GRID_PADDING;
+  [class*='col-']:last-of-type {
+    padding-right: $GRID_PADDING;
+  }
+}
+////////////////////////////////////////////////////////////////////////////////
+
 #timetable-builder {
   margin-left: 1rem;
 }
