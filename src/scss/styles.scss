@@ -139,12 +139,21 @@ $GRID_PADDING: 2rem;
       padding-right: 0;
     }
   }
+
+  .grid-pad-sides {
+    padding-left: $GRID_PADDING;
+    [class*='col-']:last-of-type {
+      padding-right: $GRID_PADDING;
+    }
+  }
 }
 
-// NOTE: This section applies even when the window shrinks to < 768px
-.grid-pad-sides {
-  padding-left: $GRID_PADDING;
-  [class*='col-']:last-of-type {
+// This is a hack to centralize the divs in the Module Finder page when the
+// window shrinks to < 768px
+@media screen and (max-width: 767px) {
+  $GRID_PADDING: 1rem;
+  .grid-pad-sides {
+    padding-left: $GRID_PADDING;
     padding-right: $GRID_PADDING;
   }
 }
