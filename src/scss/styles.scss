@@ -96,8 +96,8 @@ dl.nav-tab {
     border-bottom: 1px solid #{$BODY_BGCOLOR};
   }
 
-  dd.active > a:hover {
-    background: $BODY_BGCOLOR;
+  dd.active > a {
+    pointer-events: none;
   }
 }
 
