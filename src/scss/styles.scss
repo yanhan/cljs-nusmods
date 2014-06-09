@@ -201,7 +201,14 @@ div.exhibit-flowingFacet-value-checkbox {
 // Apply clearfix hack so this parent div takes up height of floated children
 div.exhibit-flowingFacet {
   @extend .cf;
-  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+// Overrides the `margin-top: 0` in `div.exhibit-flowingFacet` above and sets
+// margin to 0.5rem for any div.exhibit-flowingFacet that is not the first of
+// its type among siblings
+div.exhibit-flowingFacet ~ div.exhibit-flowingFacet {
+  margin-top: 0.5rem;
 }
 
 div.exhibit-facet-header {
