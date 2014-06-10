@@ -11,10 +11,14 @@
           box-shadow: $shadows;
 }
 
+@mixin box-sizing($boxSizing) {
+  -webkit-box-sizing: $boxSizing;
+     -moz-box-sizing: $boxSizing;
+          box-sizing: $boxSizing
+}
+
 * {
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
+  @include box-sizing(border-box);
 }
 
 
@@ -69,7 +73,7 @@ a:hover, a:active, a:focus {
 }
 
 dl.nav-tab {
-  box-sizing: content-box;
+  @include box-sizing(content-box);
   margin-top: 0.5rem;
   margin-left: 2rem;
   margin-bottom: 1.2rem;
@@ -77,7 +81,7 @@ dl.nav-tab {
   $one_px_solid_gray: 1px solid #D6D6D6;
 
   dd {
-    box-sizing: content-box;
+    @include box-sizing(content-box);
     background: $BODY_BGCOLOR;
     display: inline-block;
     -webkit-margin-start: 0;
