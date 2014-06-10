@@ -293,13 +293,25 @@ input[type=text]:focus,
   margin-bottom: 0.7rem;
 }
 
-$half-hour-width: 35px;
+$half-hour-width: 28px;
 $one-px-grey-border: 1px solid #ddd;
 
 #timetable {
-  width: $half-hour-width * 32;
-  font-size: 75%;
   table-layout: fixed;
+}
+
+@media screen and (max-width: 960px) {
+  #timetable {
+    width: $half-hour-width * 33;
+    font-size: 70%;
+  }
+}
+
+@media screen and (min-width: 960px) {
+  #timetable {
+    width: 95%;
+    font-size: 80%;
+  }
 }
 
 tbody.day-container {

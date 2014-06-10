@@ -894,15 +894,6 @@
       (doseq [$siblingTd (take (- slotsOcc 1) (.nextAll $td))]
         (.remove $siblingTd))
 
-      ; Setting the <div>'s width to itself may seem ironic. However, we did
-      ; not set the <div>'s width when creating it.
-      ; After adjusting the colspan of its parent <td> element, the <div>'s
-      ; width will be automatically expanded to fit that of its parent <td>.
-      ; We then set its width to the computed width to maintain its shape when
-      ; dragging, otherwise the draggable helper element may be resized up/down
-      ; depending on the contents of the <div>.
-      (width $divElem (width $divElem))
-
       {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
        :moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonGroup,
        :divElem $divElem})))
@@ -935,26 +926,37 @@
    Details of the returned function can be found here:
 
        http://api.jqueryui.com/draggable/#event-start"
-  [moduleCode lessonType selectedLessonGroup bgColorCssClass]
+  [moduleCode lessonType selectedLessonGroup $divElem bgColorCssClass]
   (fn [evt ui]
-    (.addClass (aget ui "helper") "lesson-draggable-helper")
-    (.css (aget ui "helper") "cursor" "grabbing")
-    (let [allLessonGroups
-          (get-all-lesson-group-strings moduleCode lessonType)
+    (let [$uiHelper (aget ui "helper")]
+      (.addClass $uiHelper "lesson-draggable-helper")
+      (.css $uiHelper "cursor" "grabbing")
 
-          notSelectedLessonGroups
-          (remove #{selectedLessonGroup} allLessonGroups)
+      ; Set the width of the ui helper <div> to the width of the original <div>.
+      ; The ui helper <div> is cloned from the original <div> and the original
+      ; <div>'s width was not explicitly set. Hence the original <div> fits the
+      ; width of its parent <td>.
+      ; The ui helper has no such parent and will be resized according to its
+      ; contents, which is not what we want. We want it to have the same width
+      ; as that of the original <div>.
+      (width $uiHelper (width $divElem))
 
-          ; Add all the <div> elements
-          augmentedTTLessonInfoSeq
-          (doall
-            (flatten
-              (map (fn [unselectedLessonGroup]
-                     (add-module-lesson-group! moduleCode lessonType
-                                               unselectedLessonGroup
-                                               bgColorCssClass false))
-                   notSelectedLessonGroups)))]
-      (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq))))
+      (let [allLessonGroups
+            (get-all-lesson-group-strings moduleCode lessonType)
+
+            notSelectedLessonGroups
+            (remove #{selectedLessonGroup} allLessonGroups)
+
+            ; Add all the <div> elements
+            augmentedTTLessonInfoSeq
+            (doall
+              (flatten
+                (map (fn [unselectedLessonGroup]
+                       (add-module-lesson-group! moduleCode lessonType
+                                                 unselectedLessonGroup
+                                                 bgColorCssClass false))
+                     notSelectedLessonGroups)))]
+        (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq)))))
 
 (defn- $lesson-div-remove
   "Removes the <div> object of a lesson module, and replaces the former
@@ -1018,7 +1020,7 @@
                         "helper" "clone"
                         "revert" "invalid"
                         "start"  (lesson-draggable-start-evt-handler-maker
-                                   moduleCode lessonType lessonGroup
+                                   moduleCode lessonType lessonGroup $divElem
                                    bgColorCssClass)
                         "stop"   (lesson-draggable-stop-evt-handler-maker
                                    moduleCode lessonType lessonGroup
