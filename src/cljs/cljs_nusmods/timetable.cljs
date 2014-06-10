@@ -828,7 +828,6 @@
     (.append $divElem (text ($ "<p />") (str moduleCode " " moduleName)))
     (.append $divElem (text ($ "<p />") (str lessonType " [" lessonGroup "]")))
     (.append $divElem (text ($ "<p />") venue))
-    (width $divElem (str (* half-hour-pixels slotsOcc) "px"))
     ; make the <div> less opaque for a lesson added by jQuery UI draggable
     (if (not isActuallySelected?)
         (.addClass $divElem "lesson-droppable-not-hover"))
@@ -894,6 +893,15 @@
       (attr $td "colspan" slotsOcc)
       (doseq [$siblingTd (take (- slotsOcc 1) (.nextAll $td))]
         (.remove $siblingTd))
+
+      ; Setting the <div>'s width to itself may seem ironic. However, we did
+      ; not set the <div>'s width when creating it.
+      ; After adjusting the colspan of its parent <td> element, the <div>'s
+      ; width will be automatically expanded to fit that of its parent <td>.
+      ; We then set its width to the computed width to maintain its shape when
+      ; dragging, otherwise the draggable helper element may be resized up/down
+      ; depending on the contents of the <div>.
+      (width $divElem (width $divElem))
 
       {:day day, :rowNum rowNum, :startTime startTime, :endTime endTime,
        :moduleCode moduleCode, :lessonType lessonType, :lessonGroup lessonGroup,

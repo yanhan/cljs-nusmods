@@ -299,6 +299,7 @@ $one-px-grey-border: 1px solid #ddd;
 #timetable {
   width: $half-hour-width * 32;
   font-size: 75%;
+  table-layout: fixed;
 }
 
 tbody.day-container {
@@ -314,7 +315,6 @@ tbody.day-container {
 }
 
 .day-row > td {
-  width: $half-hour-width;
   height: 40px;
   padding-top: 2px;
 }
