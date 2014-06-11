@@ -17,7 +17,7 @@
 ; {
 ;   :venue     -> String of the lesson venue
 ;   :day       -> 0-indexed integer of the day, where 0 = Monday,
-;                 1 = Tuesday, etc, until 4 = Friday
+;                 1 = Tuesday, etc, until 5 = Saturday
 ;   :startTime -> 0-indexed integer of the time, where 0 = 0800, 1 = 030, and
 ;                 so on.
 ;   :endTime   -> similar to :startTime
@@ -479,14 +479,15 @@
 (defn timetable-create!
   "Initializes the in-memory representation of the timetable.
 
-   The timetable is a vector of 5 rows, with each row representing a day from
-   Monday to Friday."
+   The timetable is a vector of 6 rows, with each row representing a day from
+   Monday to Saturday"
   []
-  (set! Timetable (vec (map (fn [x] (create-day-repr)) (range 0 5)))))
+  (set! Timetable (vec (map (fn [x] (create-day-repr))
+                            (range 0 time-helper/NR-DAYS)))))
 
 (defn- timetable-get-day
   "Retrieves the in-memory representation of the given 0-indexed day in the
-   Timetable, where 0 = Monday, 1 = Tuesday, until 4 = Friday."
+   Timetable, where 0 = Monday, 1 = Tuesday, until 5 = Saturday"
   [day]
   (nth Timetable day))
 
@@ -508,7 +509,7 @@
 (defmulti timetable-day-get-nr-rows number? :default true)
 
 ; Argument argument is a a 0-indexed integer representing the day, where
-; 0 = Monday, 1 = Tuesday, until 4 = Friday
+; 0 = Monday, 1 = Tuesday, until 5 = Saturday
 (defmethod timetable-day-get-nr-rows true
   [day]
   (count (timetable-get-day day)))
@@ -557,7 +558,7 @@
 
 (defn- add-new-row-to-timetable-day!
   "Adds a new row to the 0-indexed day in the Timetable, where 0 = Monday,
-   1 = Tuesday, until 4 = Friday."
+   1 = Tuesday, until 5 = Saturday."
   [day]
   (set! Timetable
         (update-in Timetable [day]
@@ -778,6 +779,18 @@
                       :divElem $lessonDiv)))
            lessonInfoSeq))))
 
+(defn- timetable-has-lessons-for-day?
+  "Returns true if there is some lesson on a given day, false otherwise.
+   NOTE: This includes any fake lessons created temporarily from the user
+         trying to change the timeslot for a lesson."
+  [day]
+  (reduce (fn [hasLesson [rowIdx ttRow]]
+            (cond hasLesson                        hasLesson
+                  (timetable-row-not-empty? ttRow) true
+                  :else                            hasLesson))
+          false
+          (timetable-enumerate-rows-in-day day)))
+
 (defn- html-timetable-prune-empty-rows-for-day!
   "Removes <tr> elements corresponding to empty rows in `Timetable`.
    The 2nd argument should be the return value of the
@@ -818,6 +831,14 @@
     ; adjust rowspan of <th>
     (attr $thElem "rowspan" newNrRows)))
 
+(defn- html-timetable-display-saturday-if-needed!
+  "Displays Saturday for the HTML Timetable if there is some lesson on that
+   day, otherwise hides Saturday."
+  []
+  (if (timetable-has-lessons-for-day? time-helper/SATURDAY)
+      (show (nth HTML-Timetable time-helper/SATURDAY))
+      (hide (nth HTML-Timetable time-helper/SATURDAY))))
+
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
@@ -842,7 +863,7 @@
   "Resets the HTML Timetable"
   []
   (html-timetable-remove-all-lessons!)
-  (doseq [day (range 5)]
+  (doseq [day (range time-helper/NR-DAYS)]
     (let [nrRows   (timetable-day-get-nr-rows day)
           $dayElem (nth HTML-Timetable day)]
       ; Remove rows >= TIMETABLE-MIN-ROWS-FOR-DAY
@@ -956,6 +977,7 @@
                                                  unselectedLessonGroup
                                                  bgColorCssClass false))
                      notSelectedLessonGroups)))]
+        (html-timetable-display-saturday-if-needed!)
         (set! Lessons-Created-By-Draggable augmentedTTLessonInfoSeq)))))
 
 (defn- $lesson-div-remove
@@ -965,7 +987,8 @@
   (let [$parentTd (parent $lessonDiv)]
     (remove-attr $parentTd "colspan")
     (.remove $lessonDiv)
-    (add-missing-td-elements-replacing-lesson $parentTd startTime endTime)))
+    (add-missing-td-elements-replacing-lesson $parentTd startTime endTime)
+    (html-timetable-display-saturday-if-needed!)))
 
 (defn- lesson-draggable-stop-evt-handler-maker
   "Returns a function used as the `stop` event handler for a draggable lesson."
@@ -1005,7 +1028,7 @@
             ; add the newly selected lesson group
             (add-module-lesson-group! moduleCode lessonType destLessonGroup
                                       bgColorCssClass true)
-
+            (html-timetable-display-saturday-if-needed!)
             (update-document-location-hash-with-changed-lesson-group!
               moduleCode lessonType destLessonGroup))))))
 
@@ -1146,6 +1169,8 @@
                                     (:lessonGroup moduleInfo)
                                     bgColorCssClass
                                     true))
+
+        (html-timetable-display-saturday-if-needed!)
 
         ; Update URL hash with newly added module
         (update-document-location-hash-with-new-module!
@@ -1288,6 +1313,7 @@
                                   true
                                   :addedViaUrlHashInit? true)))
 
+    (html-timetable-display-saturday-if-needed!)
     ; Update Select2 box, since this is not done in `add-module-lesson-group!`.
     ; Repeated work will be done there if we did so
     (select2-box-update-modules!)
@@ -1585,6 +1611,7 @@
 
         (remove-from-ModulesSelectedOrder! moduleCode)
         (.log js/console "I hear and obey!")
+        (html-timetable-display-saturday-if-needed!)
         ; Update Select2 box
         (select2-box-update-modules!))))
 
@@ -1593,6 +1620,7 @@
   []
   (html-timetable-reset!)
   (timetable-create!)
+  (html-timetable-display-saturday-if-needed!)
   (reset-ModulesSelected!)
   (reset-ModulesSelectedOrder!)
   (select2-box-update-modules!)

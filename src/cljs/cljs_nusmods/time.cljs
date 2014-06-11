@@ -8,6 +8,13 @@
   ["Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"])
 
 (def
+  ^{:doc "Number of days in the Timetable"}
+  NR-DAYS 6)
+
+(def ^{:doc "Index for Saturday"}
+  SATURDAY 5)
+
+(def
   ^{:doc "Time index for the earliest lesson starting time in the Timetable.
           This represents the time 0800."}
   TIME-INDEX-MIN 0)
