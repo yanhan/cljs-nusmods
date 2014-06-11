@@ -58,20 +58,14 @@ var lesson_time_to_integer_repr = function(time) {
     // computation
     timeInt += 20;
   }
-  if (timeInt < 800) {
-    // 0600 = -4, 0630 = -3, 0700 = -2, 0730 = -1
-    return -(800 - timeInt / 50);
-  } else {
-    // Turn 2359 into 2400 for easier computation
-    if (timeInt === 2359) {
-      timeInt += 1;
-    }
-    // 0800 = 0, 0850 = 1 (represents 0830 in actuality), 0900 = 2,
-    // 0950 = 3 (represents 0930 in actuality), until 2400 (2359 in reality,
-    // converted to 2400 in `if` statement above to help simplify things)
-    return (timeInt - 800) / 50;
+  // Turn 2359 into 2400 for easier computation
+  if (timeInt === 2359) {
+    timeInt += 1;
   }
-  return retVal;
+  // 0800 = 0, 0850 = 1 (represents 0830 in actuality), 0900 = 2,
+  // 0950 = 3 (represents 0930 in actuality), until 2400 (2359 in reality,
+  // converted to 2400 in `if` statement above to help simplify things)
+  return (timeInt - 800) / 50;
 };
 
 // This section details the compacted data representation for a Module object.
@@ -115,13 +109,6 @@ var lesson_time_to_integer_repr = function(time) {
 //       |                      |            | 0 = 0800, 1 = 0830, 2 = 0900,
 //       |                      |            | with increments of 1 per half
 //       |                      |            | hour interval, until 2359
-//       |                      |            | In addition, there are the
-//       |                      |            | following special values:
-//       |                      |            | -4 = 0600, -3 = 0630, -2 = 0700,
-//       |                      |            | -1 = 0730 .
-//       |                      |            | These are for timings that we do
-//       |                      |            | not display in the timetable
-//       |                      |            | builder
 //       |                      |            |
 //   4   | EndTime              | Integer    | Ending time of the lesson.
 //       |                      |            | Same convention as EndTime.
@@ -385,24 +372,32 @@ var compute_StringValuesIndex_for_key_with_array_of_strings_value = function(
       ]);
     }
     if (_.has(orgModule, "Timetable")) {
-      mod.push(_.map(orgModule.Timetable, function(lesson) {
-        // lesson representation
-        var lessonRepr = [];
-        lessonRepr.push(lesson.ClassNo);
-        lessonRepr.push(lessonsKeysStringValuesIndex.LessonType.indexHash[
-          lesson.LessonType
-        ]);
-        lessonRepr.push(DAY_STRING_TO_INTEGER[lesson.DayText]);
-        lessonRepr.push(lesson_time_to_integer_repr(lesson.StartTime));
-        lessonRepr.push(lesson_time_to_integer_repr(lesson.EndTime));
-        lessonRepr.push(lessonsKeysStringValuesIndex.Venue.indexHash[
-          lesson.Venue
-        ]);
-        lessonRepr.push(lessonsKeysStringValuesIndex.WeekText.indexHash[
-          lesson.WeekText
-        ]);
-        return lessonRepr;
-      }));
+      mod.push(
+        _(orgModule.Timetable)
+          .filter(function(lesson) {
+            // remove lessons whose starting time is before 0800
+            return lesson.StartTime >= 800;
+          })
+          .map(function(lesson) {
+            // lesson representation
+            var lessonRepr = [];
+            lessonRepr.push(lesson.ClassNo);
+            lessonRepr.push(lessonsKeysStringValuesIndex.LessonType.indexHash[
+              lesson.LessonType
+            ]);
+            lessonRepr.push(DAY_STRING_TO_INTEGER[lesson.DayText]);
+            lessonRepr.push(lesson_time_to_integer_repr(lesson.StartTime));
+            lessonRepr.push(lesson_time_to_integer_repr(lesson.EndTime));
+            lessonRepr.push(lessonsKeysStringValuesIndex.Venue.indexHash[
+              lesson.Venue
+            ]);
+            lessonRepr.push(lessonsKeysStringValuesIndex.WeekText.indexHash[
+              lesson.WeekText
+            ]);
+            return lessonRepr;
+          })
+          .value()
+        );
     } else {
       mod.push([]);
     }
