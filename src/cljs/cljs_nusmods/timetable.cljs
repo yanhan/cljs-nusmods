@@ -1134,7 +1134,11 @@
                                                             lessonType)
                   (make-added-lessons-draggable $divElemSeq moduleCode
                                                 lessonType lessonGroup
-                                                bgColorCssClass)))
+                                                bgColorCssClass)
+                  ; for lessons with 1 option, we set the cursor style to
+                  ; be `not-allowed` when hovering over it
+                  (doseq [$divElem $divElemSeq]
+                    (.addClass $divElem "lesson-cursor-not-draggable"))))
 
             ; lesson was added due to draggable <div>
             ; Make it droppable

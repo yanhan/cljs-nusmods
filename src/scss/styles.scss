@@ -352,6 +352,10 @@ div.tab-content.hide {
   cursor: -webkit-grab;
 }
 
+.lesson-cursor-not-draggable {
+  cursor: not-allowed;
+}
+
 .lesson-draggable-helper {
   opacity: 0.5;
   cursor: grabbing;
