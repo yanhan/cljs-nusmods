@@ -951,7 +951,6 @@
   (fn [evt ui]
     (let [$uiHelper (aget ui "helper")]
       (.addClass $uiHelper "lesson-draggable-helper")
-      (.css $uiHelper "cursor" "grabbing")
 
       ; Set the width of the ui helper <div> to the width of the original <div>.
       ; The ui helper <div> is cloned from the original <div> and the original
@@ -1037,7 +1036,7 @@
   [$divElemSeq moduleCode lessonType lessonGroup bgColorCssClass]
   ; And Drag event handler
   (doseq [$divElem $divElemSeq]
-    (.css $divElem "cursor" "grab")
+    (.addClass $divElem "lesson-cursor-grab")
     (.draggable $divElem
                 (js-obj "zIndex" 100
                         "helper" "clone"

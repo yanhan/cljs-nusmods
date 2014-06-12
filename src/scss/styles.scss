@@ -346,8 +346,17 @@ div.tab-content.hide {
   word-wrap: break-word;
 }
 
+.lesson-cursor-grab {
+  cursor: grab;
+  cursor: -moz-grab;
+  cursor: -webkit-grab;
+}
+
 .lesson-draggable-helper {
   opacity: 0.5;
+  cursor: grabbing;
+  cursor: -moz-grabbing;
+  cursor: -webkit-grabbing;
 }
 
 .lesson-droppable-not-hover {
