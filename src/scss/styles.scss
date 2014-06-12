@@ -129,6 +129,10 @@ table.exhibit-tabularView-body {
   tr:nth-child(odd) {
     background-color: rgb(249, 249, 249);
   }
+
+  td {
+    vertical-align: top;
+  }
 }
 
 
