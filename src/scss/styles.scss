@@ -130,9 +130,27 @@ table.exhibit-tabularView-body {
     background-color: rgb(249, 249, 249);
   }
 
+  tr > th {
+    padding: 8px;
+  }
+
   td {
     vertical-align: top;
   }
+}
+
+td.module-finder-span-centralize {
+  padding-top: 4px;
+  text-align: center;
+}
+
+td.module-finder-details {
+  padding: 8px
+}
+
+td.module-finder-exam {
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 
