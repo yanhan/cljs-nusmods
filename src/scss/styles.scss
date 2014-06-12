@@ -118,6 +118,14 @@ dl.nav-tab {
   }
 }
 
+// `Module Finder` page <table>
+table.exhibit-tabularView-body {
+  tr:nth-child(odd) {
+    background-color: rgb(249, 249, 249);
+  }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Simple grid for Module Finder page
 // Based on http://css-tricks.com/dont-overthink-it-grids/
