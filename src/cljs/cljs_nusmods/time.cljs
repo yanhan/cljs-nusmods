@@ -30,3 +30,16 @@
    multiples of 50, eg. 1130 -> 1150, 1200 -> 1200"
   [timeIdx]
   (+ 800 (* 50 timeIdx)))
+
+(defn convert-time-index-to-nice-time
+  "Converts the index representation of time in the day to a human friendly
+   24H time string.
+
+   For example, 0 will be converted to the string `0800`, 15 will be converted
+   to the string `1530`."
+  [timeIdx]
+  (let [time50  (convert-time-index-to-mult-of-50-int timeIdx)
+        time502 (if (= 50 (rem time50 100)) (- time50 20) time50)]
+    (if (< time502 1000)
+        (str "0" time502)
+        (str time502))))

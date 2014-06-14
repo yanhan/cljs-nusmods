@@ -21,6 +21,19 @@
   @include box-sizing(border-box);
 }
 
+p {
+  margin: 0;
+}
+
+.qtip div.qtip-content {
+  padding: 4px 8px;
+  font-size: 90%;
+
+  // module code
+  p:first-child {
+    font-weight: bold;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Clearfix hack

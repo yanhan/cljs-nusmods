@@ -333,6 +333,21 @@
    "TUTORIAL TYPE 3"            "T3"
    })
 
+(def ^{:doc     "Converts a long form lesson type to a nicer looking string"
+       :private true}
+  Lesson-Type-Long-To-Nice
+  {"DESIGN LECTURE"             "Design Lecture",
+   "LECTURE"                    "Lecture",
+   "LABORATORY"                 "Laboratory",
+   "PACKAGED LECTURE"           "Packaged Lecture",
+   "PACKAGED TUTORIAL"          "Packaged Tutorial",
+   "RECITATION"                 "Recitation",
+   "SEMINAR-STYLE MODULE CLASS" "Seminar-Style Module Class",
+   "SECTIONAL TEACHING"         "Sectional Teaching",
+   "TUTORIAL"                   "Tutorial",
+   "TUTORIAL TYPE 2"            "Tutorial Type 2",
+   "TUTORIAL TYPE 3"            "Tutorial Type 3"})
+
 (defn- preToUrlHashModule-to-url-hash-string
   "Converts a `PreToUrlHashModule` object to a url hash string."
   [preToUrlHashModule]
@@ -847,8 +862,8 @@
 
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
-  [& {:keys [moduleCode moduleName lessonType lessonGroup venue slotsOcc
-             bgColorCssClass isActuallySelected?]}]
+  [& {:keys [day moduleCode moduleName lessonType lessonGroup startTime endTime
+             venue slotsOcc bgColorCssClass isActuallySelected?]}]
   (let [$divElem  ($ "<div />" (js-obj "class" "lesson"))]
     (.addClass $divElem bgColorCssClass)
     ; add background color css class
@@ -858,6 +873,36 @@
     ; make the <div> less opaque for a lesson added by jQuery UI draggable
     (if (not isActuallySelected?)
         (.addClass $divElem "lesson-droppable-not-hover"))
+
+    ; add qTip
+    (let [$qtipContent ($ "<div />")
+
+          niceStartTime
+          (time-helper/convert-time-index-to-nice-time startTime)
+
+          niceEndTime
+          (time-helper/convert-time-index-to-nice-time endTime)]
+      (.append $qtipContent (text ($ "<p />") moduleCode))
+      (.append $qtipContent (text ($ "<p />") moduleName))
+      (.append $qtipContent
+               (text ($ "<p />")
+                     (str (Lesson-Type-Long-To-Nice lessonType) " Group "
+                          lessonGroup)))
+      (.append $qtipContent
+               (text ($ "<p />")
+                     (str (nth time-helper/DAY_INTEGER_TO_STRING day)
+                          " " niceStartTime " - " niceEndTime)))
+      (.append $qtipContent (text ($ "<p />") (str "@" venue)))
+      (.qtip $divElem
+             (js-obj "content"  (js-obj "text" $qtipContent)
+                     "position" (js-obj "my" "center left"
+                                        "at" "center right")
+
+                     "style"
+                     (js-obj "classes"
+                             (clojure.string/join
+                               " " ["qtip-bootstrap" "qtip-rounded"
+                                    "qtip-shadow"])))))
     $divElem))
 
 (defn- html-timetable-remove-all-lessons!
@@ -894,9 +939,10 @@
         slotsOcc  (- endTime startTime)
 
         $divElem
-        (create-lesson-div :moduleCode moduleCode, :moduleName moduleName,
-                           :lessonType lessonType, :lessonGroup lessonGroup,
-                           :venue venue, :slotsOcc slotsOcc,
+        (create-lesson-div :day day, :moduleCode moduleCode,
+                           :moduleName moduleName, :lessonType lessonType,
+                           :lessonGroup lessonGroup, :startTime startTime,
+                           :endTime endTime, :venue venue, :slotsOcc slotsOcc,
                            :bgColorCssClass bgColorCssClass,
                            :isActuallySelected? isActuallySelected?)]
     ; Create new row if necessary
@@ -991,6 +1037,7 @@
   [$lessonDiv startTime endTime]
   (let [$parentTd (parent $lessonDiv)]
     (remove-attr $parentTd "colspan")
+    (.qtip $lessonDiv "destroy")
     (.remove $lessonDiv)
     (add-missing-td-elements-replacing-lesson $parentTd startTime endTime)
     (html-timetable-display-saturday-if-needed!)))
@@ -1067,12 +1114,14 @@
                 "over"
                 (fn [evt ui]
                   (.removeClass $divElem "lesson-droppable-not-hover")
-                  (.addClass $divElem "lesson-droppable-hover"))
+                  (.addClass $divElem "lesson-droppable-hover")
+                  (.qtip $divElem "show"))
 
                 "out"
                 (fn [evt ui]
                   (.removeClass $divElem "lesson-droppable-hover")
-                  (.addClass $divElem "lesson-droppable-not-hover"))
+                  (.addClass $divElem "lesson-droppable-not-hover")
+                  (.qtip $divElem "hide"))
 
                 "drop"
                 (fn [evt ui]
