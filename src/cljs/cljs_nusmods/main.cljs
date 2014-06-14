@@ -389,9 +389,7 @@
            (this-as this
                     (let [$this        ($ this)
                           moduleCode   (.data $this "module-code")
-                          qtipContent  (if (timetable/add-module! moduleCode)
-                                           "Added!"
-                                           "Already Added!")
+                          qtipContent  (timetable/add-module! moduleCode)
 
                           tooltip
                           (.qtip $this

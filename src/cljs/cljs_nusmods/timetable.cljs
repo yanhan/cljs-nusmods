@@ -85,6 +85,12 @@
   []
   (aget js/window "ModulesMap"))
 
+(defn- is-module-code?
+  "Determines if a module code exists in our list of modules."
+  [moduleCode]
+  (let [modulesMap (get-ModulesMap)]
+    (contains? modulesMap moduleCode)))
+
 (defn- get-module-name-from-module-code
   "Given a module code, returns the name of the module"
   [moduleCode]
@@ -1149,49 +1155,50 @@
   "Adds a module to the timetable.
 
    A random lesson group of each type of lesson (Lecture, Tutorial, etc) will
-   be added.
-
-   Returns true if this function adds the module, returns false otherwise."
+   be added."
   [moduleCode]
-  (if (not (is-module-selected? moduleCode))
-      (let [lessonTypes     (get-all-lesson-types-for-module moduleCode)
-            bgColorCssClass (get-next-lesson-bg-color-css-class)
+  (cond
+    (not (is-module-code? moduleCode))
+    (str "Non-existent module &quot;" moduleCode "&quot;")
 
-            newModInfoSeq
-            (reduce (fn [moduleInfoSeq lessonType]
-                      (conj moduleInfoSeq
-                            {:moduleCode  moduleCode,
-                             :lessonType  lessonType,
-                             :lessonGroup
-                             (get-first-lesson-group-for-module-lesson-type
-                               moduleCode lessonType)}))
-                    []
-                    lessonTypes)]
+    (not (is-module-selected? moduleCode))
+    (let [lessonTypes     (get-all-lesson-types-for-module moduleCode)
+          bgColorCssClass (get-next-lesson-bg-color-css-class)
 
-        (doseq [moduleInfo newModInfoSeq]
-          (add-module-lesson-group! (:moduleCode moduleInfo)
-                                    (:lessonType moduleInfo)
-                                    (:lessonGroup moduleInfo)
-                                    bgColorCssClass
-                                    true))
+          newModInfoSeq
+          (reduce (fn [moduleInfoSeq lessonType]
+                    (conj moduleInfoSeq
+                          {:moduleCode  moduleCode,
+                           :lessonType  lessonType,
+                           :lessonGroup
+                           (get-first-lesson-group-for-module-lesson-type
+                             moduleCode lessonType)}))
+                  []
+                  lessonTypes)]
 
-        (html-timetable-display-saturday-if-needed!)
+      (doseq [moduleInfo newModInfoSeq]
+        (add-module-lesson-group! (:moduleCode moduleInfo)
+                                  (:lessonType moduleInfo)
+                                  (:lessonGroup moduleInfo)
+                                  bgColorCssClass
+                                  true))
 
-        ; Update URL hash with newly added module
-        (update-document-location-hash-with-new-module!
-          {:moduleCode moduleCode,
+      (html-timetable-display-saturday-if-needed!)
 
-           :preToUrlHashLessonGroupSeqSorted
-           (sort-PreToUrlHashLessonGroup-seq
-             (map #(dissoc
-                     (assoc %1 :lessonType
-                            (Lesson-Type-Long-To-Short-Form (:lessonType %1)))
-                     :moduleCode)
-                  newModInfoSeq))})
-        true)
+      ; Update URL hash with newly added module
+      (update-document-location-hash-with-new-module!
+        {:moduleCode moduleCode,
 
-      ; module added
-      false))
+         :preToUrlHashLessonGroupSeqSorted
+         (sort-PreToUrlHashLessonGroup-seq
+           (map #(dissoc
+                   (assoc %1 :lessonType
+                          (Lesson-Type-Long-To-Short-Form (:lessonType %1)))
+                   :moduleCode)
+                newModInfoSeq))})
+      "Added!")
+
+      :else "Already Added!"))
 
 (defn- get-module-info-from-url-hash-module-info
   "Computes the final module info sequence for modules added via the url hash
