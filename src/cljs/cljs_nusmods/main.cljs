@@ -327,6 +327,7 @@
 (defn ^:export init []
   ; Globals
   (let [$document     ($ js/document)
+        $window       ($ js/window)
         AUXMODULES    (aget js/window "AUXMODULES")
         MODULES       (aget js/window "MODULES")]
 
@@ -378,6 +379,40 @@
          (fn []
            (aset js/window "Exhibit3_Loaded" true)
            (initialize-exhibit3 MODULES AUXMODULES)))
+
+    ; Add click event handler for `Add` module buttons on Module Finder page
+    (.on ($ "body")
+         "click"
+         ".add-module-btn"
+         (fn [evt]
+           (prevent evt)
+           (this-as this
+                    (let [$this        ($ this)
+                          moduleCode   (.data $this "module-code")
+                          qtipContent  (if (timetable/add-module! moduleCode)
+                                           "Added!"
+                                           "Already Added!")
+
+                          tooltip
+                          (.qtip $this
+                                 (js-obj "content"   qtipContent
+                                         "overwrite" true
+
+                                         ; show qtip immediately
+                                         "show"      (js-obj "ready" true)
+
+                                         ; dont hide the qtip
+                                         "hide"      (js-obj "event" false)
+
+                                         "position"
+                                         (js-obj "my" "bottom center"
+                                                 "at" "top center"
+                                                 "viewport" $window)))
+
+                          api          (.qtip tooltip "api")]
+                      ; destroy qTip after 2s.
+                      ; For some reason this works even if we set a new qTip
+                      (js/setTimeout (fn [] (.destroy api)) 2000)))))
 
     ; Retrieve Exhibit 3.0 Library
     (getScript "js/vendor/exhibit3-all.min.js" (fn []))))

@@ -160,6 +160,7 @@ on fire, but it's not long anyway)
 find)
 - [Select 2](http://ivaynberg.github.io/select2/)
 (For the `Select Modules for Timetable` input box)
+- [qTip2](http://qtip2.com/) (Tooltips)
 
 #### CSS libraries / tools:
 - [gulp-sass](https://github.com/dlmanning/gulp-sass)

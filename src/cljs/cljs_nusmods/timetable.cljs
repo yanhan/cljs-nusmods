@@ -1149,7 +1149,9 @@
   "Adds a module to the timetable.
 
    A random lesson group of each type of lesson (Lecture, Tutorial, etc) will
-   be added."
+   be added.
+
+   Returns true if this function adds the module, returns false otherwise."
   [moduleCode]
   (if (not (is-module-selected? moduleCode))
       (let [lessonTypes     (get-all-lesson-types-for-module moduleCode)
@@ -1185,7 +1187,11 @@
                      (assoc %1 :lessonType
                             (Lesson-Type-Long-To-Short-Form (:lessonType %1)))
                      :moduleCode)
-                  newModInfoSeq))}))))
+                  newModInfoSeq))})
+        true)
+
+      ; module added
+      false))
 
 (defn- get-module-info-from-url-hash-module-info
   "Computes the final module info sequence for modules added via the url hash
