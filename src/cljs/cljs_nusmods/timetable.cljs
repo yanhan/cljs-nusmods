@@ -860,10 +860,25 @@
       (show (nth HTML-Timetable time-helper/SATURDAY))
       (hide (nth HTML-Timetable time-helper/SATURDAY))))
 
+(def ^{:doc     "`Modules.WeekText` of the JavaScript global; set this using
+                   the `set-WEEK-TEXT-ARRAY!` function"
+       :private true}
+  WEEK-TEXT-ARRAY nil)
+
+(defn set-WEEK-TEXT-ARRAY!
+  "Sets `WEEK-TEXT-ARRAY` to the `Modules.WeekText` JavaScript global"
+  [weekTextArray]
+  (set! WEEK-TEXT-ARRAY weekTextArray))
+
+(defn- week-text-index-to-string
+  "Retrieves the string at the given index to `WEEK-TEXT-ARRAY`"
+  [weekTextIdx]
+  (nth WEEK-TEXT-ARRAY weekTextIdx))
+
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [day moduleCode moduleName lessonType lessonGroup startTime endTime
-             venue slotsOcc bgColorCssClass isActuallySelected?]}]
+             venue weekTextIdx slotsOcc bgColorCssClass isActuallySelected?]}]
   (let [$divElem  ($ "<div />" (js-obj "class" "lesson"))]
     (.addClass $divElem bgColorCssClass)
     ; add background color css class
@@ -892,7 +907,9 @@
                (text ($ "<p />")
                      (str (nth time-helper/DAY_INTEGER_TO_STRING day)
                           " " niceStartTime " - " niceEndTime)))
-      (.append $qtipContent (text ($ "<p />") (str "@" venue)))
+      (.append $qtipContent (text ($ "<p />")
+                                  (str (week-text-index-to-string weekTextIdx)
+                                       " @ " venue)))
       (.qtip $divElem
              (js-obj "content"  (js-obj "text" $qtipContent)
                      "position" (js-obj "my" "center left"
@@ -933,7 +950,7 @@
    Returns a `ModulesSelectedLessonInfo` object augmented with the `:divElem`,
    `:moduleCode`, `:lessonType` and `:lessonGroup` keys."
   [& {:keys [moduleCode moduleName lessonType lessonGroup
-             day startTime endTime venue
+             day startTime endTime venue weekTextIdx
              bgColorCssClass isActuallySelected?]}]
   (let [rowNum    (find-free-row-for-lesson day startTime endTime)
         slotsOcc  (- endTime startTime)
@@ -942,7 +959,8 @@
         (create-lesson-div :day day, :moduleCode moduleCode,
                            :moduleName moduleName, :lessonType lessonType,
                            :lessonGroup lessonGroup, :startTime startTime,
-                           :endTime endTime, :venue venue, :slotsOcc slotsOcc,
+                           :endTime endTime, :venue venue,
+                           :weekTextIdx weekTextIdx, :slotsOcc slotsOcc,
                            :bgColorCssClass bgColorCssClass,
                            :isActuallySelected? isActuallySelected?)]
     ; Create new row if necessary
@@ -1158,10 +1176,11 @@
                      (add-module-lesson!
                        :moduleCode moduleCode, :moduleName moduleName,
                        :lessonType lessonType, :lessonGroup lessonGroup,
-                       :day        (:day modulesMapLesson),
-                       :startTime  (:startTime modulesMapLesson),
-                       :endTime    (:endTime modulesMapLesson),
-                       :venue      (:venue modulesMapLesson),
+                       :day         (:day modulesMapLesson),
+                       :startTime   (:startTime modulesMapLesson),
+                       :endTime     (:endTime modulesMapLesson),
+                       :venue       (:venue modulesMapLesson),
+                       :weekTextIdx (:weekTextIdx modulesMapLesson),
                        :bgColorCssClass bgColorCssClass,
                        :isActuallySelected? isActuallySelected?))
                    modulesMapLessonSeq))

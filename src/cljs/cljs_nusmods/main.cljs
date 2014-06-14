@@ -266,6 +266,7 @@
        :startTime    0-indexed Integer of the time, where 0 = 0800, 1 = 0830,
                        and so on.
        :endTime      0-indexed Integer, similar meaning as :startTime
+       :weekTextIdx  0-indexed Integer into an Array of WeekText strings
    "
   [moduleTimetable lessonTypesStringsArray venuesStringsArray
    weekTextStringsArray]
@@ -281,8 +282,11 @@
                                 lessonArrayRepr)
                   endTime     (lesson-array-repr/get-lesson-end-time
                                 lessonArrayRepr)
+                  weekTextIdx (lesson-array-repr/get-lesson-weektext
+                                lessonArrayRepr)
                   lessonRepr  {:venue lessonVenue, :day lessonDay,
-                               :startTime startTime, :endTime endTime}]
+                               :startTime startTime, :endTime endTime
+                               :weekTextIdx weekTextIdx}]
               (update-in lessonsMap [lessonType lessonLabel]
                          (fn [lessonsVec]
                            (if (empty? lessonsVec)
@@ -335,6 +339,9 @@
     (aset js/window "Exhibit3_Loaded" false)
     (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
     (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
+
+    ; initialize `WEEK-TEXT-ARRAY`
+    (timetable/set-WEEK-TEXT-ARRAY! (aget MODULES "weekText"))
 
     ; Initialize timetable
     (timetable/timetable-create!)

@@ -76,12 +76,50 @@ var ARRAY_OF_STRINGS_KEYS = [
     // normalize WeekText in Lessons
     if (_.has(mod, "Timetable")) {
       mod.Timetable = _.map(mod.Timetable, function(lesson) {
+        var weeksArr;
+        var reduceResult;
         if (lesson.WeekText === "EVEN&nbsp;WEEK") {
-          lesson.WeekText = "EVEN WEEK";
-        } else if (lesson.WeekText === "EVERY&nbsp;WEEK") {
-          lesson.WeekText = "EVERY WEEK";
+          lesson.WeekText = "Even Weeks";
+        } else if (lesson.WeekText === "EVERY&nbsp;WEEK" ||
+            lesson.WeekText === "EVERY WEEK") {
+          lesson.WeekText = "Every Week";
         } else if (lesson.WeekText === "ODD&nbsp;WEEK") {
-          lesson.WeekText = "ODD WEEK";
+          lesson.WeekText = "Odd Weeks";
+        } else {
+          weeksArr = _(lesson.WeekText.split(","))
+            .map(function(x) {
+              return parseInt(x, 10);
+            })
+            .value()
+            .sort(function(a, b) { return a - b; });
+          reduceResult = _.reduce(weeksArr.slice(1),
+            function(result, weekNum) {
+              if (result.rangeEnd + 1 === weekNum) {
+                return _.assign(result, { rangeEnd: weekNum });
+              } else {
+                result.weekPairArr.push([result.rangeStart, result.rangeEnd]);
+                return _.assign(result,
+                  { rangeStart: weekNum, rangeEnd: weekNum });
+              }
+            },
+            {
+              rangeStart: weeksArr[0],
+              rangeEnd: weeksArr[0],
+              weekPairArr: []
+            });
+          reduceResult.weekPairArr.push([reduceResult.rangeStart,
+            reduceResult.rangeEnd]);
+          lesson.WeekText = "Weeks " +
+            _.map(reduceResult.weekPairArr, function(weekPair) {
+              var start = weekPair[0];
+              var end = weekPair[1];
+              if (start === end) {
+                return start;
+              } else {
+                return start + "-" + end;
+              }
+            })
+            .join(", ");
         }
         return lesson;
       });

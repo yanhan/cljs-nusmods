@@ -45,6 +45,12 @@
   [lessonArrayRepr venuesStringsArray]
   (nth venuesStringsArray (get-lesson-venue lessonArrayRepr)))
 
+(defn get-lesson-weektext
+  "Retrieves the (index to an Array of WeekText Strings) of a Lesson from its
+   array representation"
+  [lessonArrayRepr]
+  (nth lessonArrayRepr 6))
+
 (defn get-lesson-start-time-string-for-exhibit-filter
   "Given the array representation of a lesson, returns a string of its
    start time suitable for the `Lecture Timings` / `Tutorial Timings`
