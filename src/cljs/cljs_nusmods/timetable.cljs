@@ -76,6 +76,10 @@
 ;                                          `:lessonType`
 ;   }
 
+(def ^{:doc     "jQuery window selector"
+       :private true}
+  $window ($ js/window))
+
 (def ^{:doc     "Minimum number of rows for a day in the Timetable"
        :private true}
   TIMETABLE-MIN-ROWS-FOR-DAY 2)
@@ -941,8 +945,9 @@
                                        " @ " venue)))
       (.qtip $divElem
              (js-obj "content"  (js-obj "text" $qtipContent)
-                     "position" (js-obj "my" "center left"
-                                        "at" "center right")
+                     "position" (js-obj "my"       "center left"
+                                        "at"       "center right"
+                                        "viewport" $window)
 
                      "style"
                      (js-obj "classes"
