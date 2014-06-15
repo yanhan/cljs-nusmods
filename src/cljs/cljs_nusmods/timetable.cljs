@@ -1053,9 +1053,10 @@
   "Removes the <div> object of a lesson module, and replaces the former
    columns occupied by its parent <td> with new <td> elements."
   [$lessonDiv startTime endTime]
-  (let [$parentTd (parent $lessonDiv)]
+  (let [$parentTd (parent $lessonDiv)
+        qtipApi   (.qtip $lessonDiv "api")]
     (remove-attr $parentTd "colspan")
-    (.qtip $lessonDiv "destroy")
+    (.destroy qtipApi true)
     (.remove $lessonDiv)
     (add-missing-td-elements-replacing-lesson $parentTd startTime endTime)
     (html-timetable-display-saturday-if-needed!)))
