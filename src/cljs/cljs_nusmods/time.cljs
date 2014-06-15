@@ -44,6 +44,9 @@
         (str "0" time502)
         (str time502))))
 
+(def ^{:doc "String for No Exam"}
+  NO-EXAM "No Exam")
+
 (def ^{:doc     "Regex for extracting info from Exam Date strings"
        :private true}
   EXAM-DATE-REGEX #"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})")
@@ -57,7 +60,7 @@
   "Converts an exam date to a more friendly format.
    Time is assumed to be Singapore Time."
   [examDateString]
-  (if (= "No Exam" examDateString)
+  (if (= NO-EXAM examDateString)
       examDateString
       (let [matchArray (.match examDateString EXAM-DATE-REGEX)
             year       (nth matchArray 1)
