@@ -1,7 +1,7 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
-  (:use [jayq.core :only [$ $deferred $when attr document-ready hide is one
-                          parent prevent show]])
+  (:use [jayq.core :only [$ $deferred $when attr document-ready done hide is one
+                          parent prevent resolve show]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
@@ -400,14 +400,14 @@
               (if (not MODULE-FINDER-SCRIPTS-STARTED-DL?)
                   (do
                     (set! MODULE-FINDER-SCRIPTS-STARTED-DL? true)
-                    (.done ($when (getScript "js/auxmodinfo.js")
+                    (done ($when (getScript "js/auxmodinfo.js")
                                   (getScript "js/vendor/exhibit3-all.min.js")
                                   ($deferred (fn [deferred]
-                                               ($ (.resolve deferred)))))
-                           (fn []
-                             (set! MODULE-FINDER-SCRIPTS-DLED? true)
-                             (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
-                                   (js/setInterval check-and-initialize-exhibit3 1000))))))
+                                               ($ (resolve deferred nil)))))
+                          (fn []
+                            (set! MODULE-FINDER-SCRIPTS-DLED? true)
+                            (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
+                                  (js/setInterval check-and-initialize-exhibit3 1000))))))
               (hide ($ :#timetable-builder))
               (show ($ :#module-finder))
               (.removeClass (parent ($ :#timetable-builder-tab-link)) "active")
