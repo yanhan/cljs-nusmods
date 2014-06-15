@@ -2,6 +2,8 @@
 
 ClojureScript implementation of [NUSMods](http://nusmods.com)
 
+**Working demo:** [http://cljs-nusmods.pangyanhan.com](http://cljs-nusmods.pangyanhan.com)
+
 **NOTE:** Currently this project does something useful, but a lot of useful
 features are still missing and there's a lot more to come. Stay tuned!
 
