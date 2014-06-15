@@ -394,95 +394,97 @@
 ; Main entry point of the program
 (defn ^:export init []
   ; Globals
-  (let [$document     ($ js/document)
-        $window       ($ js/window)
-        MODULES       (aget js/window "MODULES")]
+  (document-ready
+    (fn []
+      (let [$document     ($ js/document)
+            $window       ($ js/window)
+            MODULES       (aget js/window "MODULES")]
 
-    (aset js/window "Exhibit3_Initialized" false)
-    (aset js/window "Exhibit3_Loaded" false)
-    (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
-    (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
+        (aset js/window "Exhibit3_Initialized" false)
+        (aset js/window "Exhibit3_Loaded" false)
+        (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
+        (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
 
-    ; initialize `WEEK-TEXT-ARRAY`
-    (timetable/set-WEEK-TEXT-ARRAY! (aget MODULES "weekText"))
-    ; initialize `EXAM-DATE-ARRAY`
-    (timetable/set-EXAM-DATE-ARRAY! (aget MODULES "examDates"))
+        ; initialize `WEEK-TEXT-ARRAY`
+        (timetable/set-WEEK-TEXT-ARRAY! (aget MODULES "weekText"))
+        ; initialize `EXAM-DATE-ARRAY`
+        (timetable/set-EXAM-DATE-ARRAY! (aget MODULES "examDates"))
 
-    ; Initialize timetable
-    (timetable/timetable-create!)
+        ; Initialize timetable
+        (timetable/timetable-create!)
 
-    ; Iniialize Select2
-    (select2/init-select2-element select2/$Select2-Box)
-    (init-dom-clear-modules select2/$Select2-Box)
+        ; Iniialize Select2
+        (select2/init-select2-element select2/$Select2-Box)
+        (init-dom-clear-modules select2/$Select2-Box)
 
-    (one $document "scriptsLoaded.exhibit"
-         (fn []
-           (aset js/window "Exhibit3_Loaded" true)))
+        (one $document "scriptsLoaded.exhibit"
+             (fn []
+               (aset js/window "Exhibit3_Loaded" true)))
 
-    ; Code for tabs
-    (hide ($ :#module-finder))
-    (.click ($ :#module-finder-tab-link)
-            (fn []
-              (if (not MODULE-FINDER-SCRIPTS-STARTED-DL?)
-                  (do
-                    (set! MODULE-FINDER-SCRIPTS-STARTED-DL? true)
-                    (done ($when (getScript "js/auxmodinfo.js")
-                                  (getScript "js/vendor/exhibit3-all.min.js")
-                                  ($deferred (fn [deferred]
-                                               ($ (resolve deferred nil)))))
-                          (fn []
-                            (set! MODULE-FINDER-SCRIPTS-DLED? true)))))
-              (if (and (not (aget js/window "Exhibit3_Initialized"))
-                       (nil? INITIALIZE-EXHIBIT3-INTERVAL-VAL))
-                (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
-                      (js/setInterval check-and-initialize-exhibit3 1000)))
-              (hide ($ :#timetable-builder))
-              (show ($ :#module-finder))
-              (.removeClass (parent ($ :#timetable-builder-tab-link)) "active")
-              (.addClass (parent ($ :#module-finder-tab-link)) "active")
-              (aset js/window "ActiveTab" MODULEFINDER-TAB-INDEX)
-              (select2/shift-select2-container-to "timetable-builder-controls"
-                                                  "module-finder-sidebar")))
+        ; Code for tabs
+        (hide ($ :#module-finder))
+        (.click ($ :#module-finder-tab-link)
+                (fn []
+                  (if (not MODULE-FINDER-SCRIPTS-STARTED-DL?)
+                      (do
+                        (set! MODULE-FINDER-SCRIPTS-STARTED-DL? true)
+                        (done ($when (getScript "js/auxmodinfo.js")
+                                      (getScript "js/vendor/exhibit3-all.min.js")
+                                      ($deferred (fn [deferred]
+                                                   ($ (resolve deferred nil)))))
+                              (fn []
+                                (set! MODULE-FINDER-SCRIPTS-DLED? true)))))
+                  (if (and (not (aget js/window "Exhibit3_Initialized"))
+                           (nil? INITIALIZE-EXHIBIT3-INTERVAL-VAL))
+                    (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
+                          (js/setInterval check-and-initialize-exhibit3 1000)))
+                  (hide ($ :#timetable-builder))
+                  (show ($ :#module-finder))
+                  (.removeClass (parent ($ :#timetable-builder-tab-link)) "active")
+                  (.addClass (parent ($ :#module-finder-tab-link)) "active")
+                  (aset js/window "ActiveTab" MODULEFINDER-TAB-INDEX)
+                  (select2/shift-select2-container-to "timetable-builder-controls"
+                                                      "module-finder-sidebar")))
 
-    (.click ($ :#timetable-builder-tab-link)
-            timetable-builder-tab-click-handler)
+        (.click ($ :#timetable-builder-tab-link)
+                timetable-builder-tab-click-handler)
 
-    ; Add module lesson groups from the hash of the url
-    (let [urlHash (aget (aget js/document "location") "hash")]
-      (if (and (not (empty? urlHash))
-               (= (first urlHash) "#")
-               (> (.-length urlHash) 1))
-          (timetable/add-module-lesson-groups-from-url-hash!
-            (.substring urlHash 1))))
+        ; Add module lesson groups from the hash of the url
+        (let [urlHash (aget (aget js/document "location") "hash")]
+          (if (and (not (empty? urlHash))
+                   (= (first urlHash) "#")
+                   (> (.-length urlHash) 1))
+              (timetable/add-module-lesson-groups-from-url-hash!
+                (.substring urlHash 1))))
 
-    ; Add click event handler for `Add` module buttons on Module Finder page
-    (.on ($ "body")
-         "click"
-         ".add-module-btn"
-         (fn [evt]
-           (prevent evt)
-           (this-as this
-                    (let [$this        ($ this)
-                          moduleCode   (.data $this "module-code")
-                          qtipContent  (timetable/add-module! moduleCode)
+        ; Add click event handler for `Add` module buttons on Module Finder page
+        (.on ($ "body")
+             "click"
+             ".add-module-btn"
+             (fn [evt]
+               (prevent evt)
+               (this-as this
+                        (let [$this        ($ this)
+                              moduleCode   (.data $this "module-code")
+                              qtipContent  (timetable/add-module! moduleCode)
 
-                          tooltip
-                          (.qtip $this
-                                 (js-obj "content"   qtipContent
-                                         "overwrite" true
+                              tooltip
+                              (.qtip $this
+                                     (js-obj "content"   qtipContent
+                                             "overwrite" true
 
-                                         ; show qtip immediately
-                                         "show"      (js-obj "ready" true)
+                                             ; show qtip immediately
+                                             "show"      (js-obj "ready" true)
 
-                                         ; dont hide the qtip
-                                         "hide"      (js-obj "event" false)
+                                             ; dont hide the qtip
+                                             "hide"      (js-obj "event" false)
 
-                                         "position"
-                                         (js-obj "my" "bottom center"
-                                                 "at" "top center"
-                                                 "viewport" $window)))
+                                             "position"
+                                             (js-obj "my" "bottom center"
+                                                     "at" "top center"
+                                                     "viewport" $window)))
 
-                          api          (.qtip tooltip "api")]
-                      ; destroy qTip after 2s.
-                      ; For some reason this works even if we set a new qTip
-                      (js/setTimeout (fn [] (.destroy api)) 2000)))))))
+                              api          (.qtip tooltip "api")]
+                          ; destroy qTip after 2s.
+                          ; For some reason this works even if we set a new qTip
+                          (js/setTimeout (fn [] (.destroy api)) 2000)))))))))
