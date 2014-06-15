@@ -1,7 +1,7 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
   (:use [jayq.core :only [$ $deferred $when attr document-ready done hide is one
-                          parent prevent resolve show]])
+                          parent prevent resolve show unbind]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
@@ -223,13 +223,28 @@
        :private true}
   MODULE-FINDER-SCRIPTS-DLED? false)
 
+(defn- timetable-builder-tab-click-handler
+  "Click event handler for the `Timetable Builder` tab"
+  []
+  (hide ($ :#module-finder))
+  (.removeClass (parent ($ :#module-finder-tab-link)) "active")
+  (.addClass (parent ($ :#timetable-builder-tab-link)) "active")
+  (show ($ :#timetable-builder))
+  (select2/shift-select2-container-to "module-finder-sidebar"
+                                      "timetable-builder-controls")
+  (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX))
+
 (defn- initialize-exhibit3 [MODULES AUXMODULES]
   "Initialize Exhibit3 database and UI for Module Finder page"
   (if (and (not (aget js/window "Exhibit3_Initialized"))
            (aget js/window "Exhibit3_Loaded")
            MODULE-FINDER-SCRIPTS-DLED?
            (= (aget js/window "ActiveTab") MODULEFINDER-TAB-INDEX))
-    (do
+    (let [$timetable-builder-tab-link ($ :#timetable-builder-tab-link)]
+      ; Unbind the click event handler for `Timetable Builder` tab link so
+      ; the user cannot switch tabs when we are initializing Exhibit3 here and
+      ; screw things up
+      (unbind $timetable-builder-tab-link "click")
       (aux-module-array-repr/init!)
       (let [modulesArray (build-modules-array MODULES AUXMODULES)
             itemsArray   (add-aux-info-to-exhibit-items
@@ -249,7 +264,12 @@
                                  "moduleType" (js-obj "valueType" "item"))
                   "items"      itemsArray))
         (.configureFromDOM myExhibit)
-        (aset js/window "Exhibit3_Initialized" true)))))
+        (aset js/window "Exhibit3_Initialized" true)
+        ; rebind click event handler for `Timetable Builder` tab link
+        (js/setTimeout (fn []
+                         (.click $timetable-builder-tab-link
+                                 timetable-builder-tab-click-handler))
+                       3000)))))
 
 (defn- build-lessons-map-from-module-timetable
   "Builds a Clojure Map representation of a module's lessons used internally
@@ -417,14 +437,7 @@
                                                   "module-finder-sidebar")))
 
     (.click ($ :#timetable-builder-tab-link)
-            (fn []
-              (hide ($ :#module-finder))
-              (.removeClass (parent ($ :#module-finder-tab-link)) "active")
-              (.addClass (parent ($ :#timetable-builder-tab-link)) "active")
-              (show ($ :#timetable-builder))
-              (select2/shift-select2-container-to "module-finder-sidebar"
-                                                  "timetable-builder-controls")
-              (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)))
+            timetable-builder-tab-click-handler)
 
     ; Add module lesson groups from the hash of the url
     (let [urlHash (aget (aget js/document "location") "hash")]
