@@ -72,7 +72,7 @@ ClojureScript compilation with advanced optimizations.
 Check out the "**Some individual build tasks explained**" section below for
 finer grained builds.
 
-## Running the web server
+## Running the web server (for development)
 
     lein ring server-headless
 
