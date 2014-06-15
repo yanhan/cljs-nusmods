@@ -38,6 +38,12 @@ Install the necessary nodejs libraries:
 
     npm install
 
+### Install gulp
+
+Gulp needs to be installed globally to be run as an executable:
+
+    sudo npm install -g gulp@3.6.2
+
 ### Files from http://api.nusmods.com
 
 Execute the following commands to download some required files from
