@@ -31,10 +31,17 @@
   [moduleArrayRepr]
   (nth moduleArrayRepr 2))
 
+(defn get-module-exam-date
+  "Retrieves the (index to an array of ExamDate strings) of a module from its
+   array representation"
+  [moduleArrayRepr]
+  (nth moduleArrayRepr 3))
+
 (defn get-module-exam-date-string
   "Retrieves the exam date string of a module from its array representation"
   [examDateStringsArray moduleArrayRepr]
-  (let [examDateString (nth examDateStringsArray (nth moduleArrayRepr 3))]
+  (let [examDateString
+        (nth examDateStringsArray (get-module-exam-date moduleArrayRepr))]
     (time-helper/exam-date-to-human-friendly-format examDateString)))
 
 (defn- get-module-timetable

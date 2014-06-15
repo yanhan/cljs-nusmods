@@ -14,6 +14,10 @@
 (deftest test-get-module-mc
   (is (= 4 (module-array-repr/get-module-mc (array 0 0 4)))))
 
+(deftest test-get-module-exam-date
+  (is (= 4 (module-array-repr/get-module-exam-date
+             (array 0 0 0 4)))))
+
 (deftest test-get-module-exam-date-string
   (is (= "5 May 2014 5:00 PM"
          (module-array-repr/get-module-exam-date-string
