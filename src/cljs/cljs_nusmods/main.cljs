@@ -300,10 +300,11 @@
 
    The map is of the following structure:
 
-       modCode -> 'name'    -> module name
-               -> 'lessons' -> lessons built by
-                               `build-lessons-map-from-module-timetable`
-                               function"
+       modCode -> 'name'     -> module name
+               -> 'examDate' -> index to an array of Exam Date strings
+               -> 'lessons'  -> lessons built by
+                                `build-lessons-map-from-module-timetable`
+                                function"
   [MODULES]
   (let [modulesArray            (aget MODULES "modules")
         lessonTypesStringsArray (aget MODULES "lessonTypesStringsArray")
@@ -317,6 +318,8 @@
                                    moduleArrayRepr)
                 moduleName       (module-array-repr/get-module-name
                                    moduleArrayRepr)
+                examDateIdx      (module-array-repr/get-module-exam-date
+                                   moduleArrayRepr)
                 moduleTimetable  (module-array-repr/get-module-timetable
                                    moduleArrayRepr)
                 lessonsMap       (build-lessons-map-from-module-timetable
@@ -324,7 +327,8 @@
                                    lessonTypesStringsArray
                                    venuesStringsArray
                                    weekTextStringsArray)]
-               [moduleCode {"name" moduleName, "lessons" lessonsMap}]))
+               [moduleCode {"name" moduleName, "lessons" lessonsMap,
+                            "examDateIdx" examDateIdx}]))
            modulesArray))))
 
 ; Main entry point of the program
@@ -342,6 +346,8 @@
 
     ; initialize `WEEK-TEXT-ARRAY`
     (timetable/set-WEEK-TEXT-ARRAY! (aget MODULES "weekText"))
+    ; initialize `EXAM-DATE-ARRAY`
+    (timetable/set-EXAM-DATE-ARRAY! (aget MODULES "examDates"))
 
     ; Initialize timetable
     (timetable/timetable-create!)

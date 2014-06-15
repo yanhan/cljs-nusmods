@@ -432,11 +432,65 @@ input[type=text]:focus,
   margin-bottom: 0.7rem;
 }
 
+#exam-timetable-container {
+  float: left;
+  width: 40em;
+  margin-right: 2em;
+}
+
+#exam-timetable {
+  @include border-radius(4px);
+  border: 1px solid #555;
+  font-weight: bold;
+  border-collapse: separate;
+  width: 100%;
+
+  th {
+    border: 1px solid #555;
+    background-color: #EEE;
+    padding-top: 4px;
+    padding-bottom: 4px;
+
+    &:first-child {
+      width: 20%;
+    }
+
+    &:nth-child(2) {
+      width: 50%;
+    }
+  }
+
+  tr {
+    td {
+      border: 1px solid #555;
+      padding: 4px 5px;
+
+      &:first-child {
+        text-align: right;
+      }
+
+      &:nth-child(2) {
+        text-align: left;
+      }
+
+      &:nth-child(3) {
+        text-align: center;
+      }
+    }
+  }
+}
+
+#timetable-builder-controls {
+  float: left;
+  width: 30em;
+}
+
 $half-hour-width: 28px;
 $one-px-grey-border: 1px solid #ddd;
 
 #timetable {
   table-layout: fixed;
+  margin-bottom: 1em;
 
   -webkit-touch-callout: none;
   -webkit-user-select: none;

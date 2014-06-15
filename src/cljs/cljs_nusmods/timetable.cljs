@@ -80,6 +80,21 @@
        :private true}
   TIMETABLE-MIN-ROWS-FOR-DAY 2)
 
+(def ^{:doc     "`Modules.examDates` of the JavaScript global; set this using
+                 the `set-EXAM-DATE-ARRAY!` function"
+       :private true}
+  EXAM-DATE-ARRAY nil)
+
+(defn set-EXAM-DATE-ARRAY!
+  "Sets `EXAM-DATE-ARRAY` to the `Modules.examDates` JavaScript global"
+  [examDateArray]
+  (set! EXAM-DATE-ARRAY examDateArray))
+
+(defn- get-exam-date-string-at-index
+  "Retrieves the Exam Date string given an index to `EXAM-DATE-ARRAY`"
+  [examDateIdx]
+  (nth EXAM-DATE-ARRAY examDateIdx))
+
 (defn- get-ModulesMap
   "Retrieves the `ModulesMap` JavaScript global variable"
   []
@@ -91,11 +106,25 @@
   (let [modulesMap (get-ModulesMap)]
     (contains? modulesMap moduleCode)))
 
+(defn- is-module-examinable?
+  "Determines if there are exams for a module."
+  [moduleCode]
+  (let [modulesMap  (get-ModulesMap)
+        examDateIdx (get-in modulesMap [moduleCode "examDateIdx"])]
+    (not= time-helper/NO-EXAM (get-exam-date-string-at-index examDateIdx))))
+
 (defn- get-module-name-from-module-code
   "Given a module code, returns the name of the module"
   [moduleCode]
   (let [modulesMap (get-ModulesMap)]
     (get-in modulesMap [moduleCode "name"])))
+
+(defn- get-exam-date-string-from-module-code
+  "Given a module code, returns its exam date string in EXAM-DATE-ARRAY"
+  [moduleCode]
+  (let [modulesMap (get-ModulesMap)]
+    (get-exam-date-string-at-index
+      (get-in modulesMap [moduleCode "examDateIdx"]))))
 
 (defn- get-module-lesson-groups-map
   "Retrieves the map of lesson group strings to vector of lessons"
@@ -945,6 +974,92 @@
                  ($ Timetable-Row-TD-HTML-String)))
       (attr (.find $dayElem "tr > th") "rowspan" TIMETABLE-MIN-ROWS-FOR-DAY))))
 
+(def ^{:doc     "In-memory representation of Exam Timetable"
+       :private true}
+  EXAM-TIMETABLE {:examinable [], :non-examinable []})
+
+(defn- get-index-in-vector-p
+  "Retrieves the first index of an item in a vector that satsifies a predicate,
+   returns nil if no item in the vector satisfies the predicate."
+  [vecItems pred]
+  (let [seqWithIndices (map vector (range (count vecItems)) vecItems)
+        remSeq         (drop-while (fn [[_ v]] (not (pred v))) seqWithIndices)]
+    (if (empty? remSeq)
+        nil
+        (first (first remSeq)))))
+
+(defn- add-module-to-mem-exam-timetable!
+  "Adds a module to `EXAM-TIMETABLE` and returns the index to the HTML
+   Exam Timetable where it should be inserted."
+  [moduleCode]
+  (let [isExaminable?    (is-module-examinable? moduleCode)
+        examDate         (get-exam-date-string-from-module-code moduleCode)
+        [sortFn hashKey] (if isExaminable?
+                             [#(< (:examDate %1) (:examDate %2)), :examinable]
+                             [#(< (:moduleCode %1) (:moduleCode %2)),
+                              :non-examinable])]
+    (set! EXAM-TIMETABLE
+          (update-in EXAM-TIMETABLE [hashKey]
+                     (fn [tupleVec]
+                       (sort sortFn (conj tupleVec {:moduleCode moduleCode,
+                                                    :examDate   examDate})))))
+    ; We store examinable modules before non examinable modules in the HTML
+    ; Exam Timetable. For a new non examinable module, we need to add an offset
+    ; in the number of examinable modules.
+    (+ (if isExaminable? 0 (count (:examinable EXAM-TIMETABLE)))
+       (get-index-in-vector-p (hashKey EXAM-TIMETABLE)
+                              #(= (:moduleCode %1) moduleCode)))))
+
+(defn- add-module-to-exam-timetable!
+  "Adds a module to the Exam Timetable"
+  [moduleCode bgColorCssClass]
+  (let [idxToInsert    (add-module-to-mem-exam-timetable! moduleCode)
+        $tr            ($ "<tr />" (js-obj "class" bgColorCssClass))
+        examDateString (get-exam-date-string-from-module-code moduleCode)
+
+        examDateStringFriendly
+        (time-helper/exam-date-to-human-friendly-format examDateString)]
+     (.append $tr ($ (str "<td>" moduleCode "</td>")))
+     (.append $tr ($ (str "<td>" (get-module-name-from-module-code moduleCode)
+                          "</td>")))
+     (.append $tr ($ (str "<td>" examDateStringFriendly "</td>")))
+     (if (zero? idxToInsert)
+         ; first element in table
+         (.prepend ($ "#exam-timetable tbody") $tr)
+         ; insert it at the correct index. nth-child is 1-indexed
+         (.after ($ (str "#exam-timetable tbody > tr:nth-child("
+                         idxToInsert ")"))
+                 $tr))))
+
+(defn- remove-module-from-mem-exam-timetable!
+  "Removes a module from `EXAM-TIMETABLE` and returns its index in the HTML
+   Exam Timetable"
+  [moduleCode]
+  (let [isExaminable? (is-module-examinable? moduleCode)
+        vecKey        (if isExaminable? :examinable :non-examinable)
+        idx           (get-index-in-vector-p (vecKey EXAM-TIMETABLE)
+                                             #(= (:moduleCode %1) moduleCode))]
+    (set! EXAM-TIMETABLE
+          (update-in EXAM-TIMETABLE [vecKey]
+                     (fn [tupleVec]
+                       (vec (concat (take idx tupleVec)
+                                    (drop (inc idx) tupleVec))))))
+    (if isExaminable?
+        idx
+        (+ (count (:examinable EXAM-TIMETABLE)) idx))))
+
+(defn- remove-module-from-exam-timetable!
+  "Removes a module from the Exam Timetable"
+  [moduleCode]
+  (let [idx (remove-module-from-mem-exam-timetable! moduleCode)]
+    (.remove ($ (str "#exam-timetable tbody > tr:nth-child(" (inc idx) ")")))))
+
+(defn- reset-exam-timetable!
+  "Resets the exam timetable"
+  []
+  (set! EXAM-TIMETABLE {:examinable [], :non-examinable []})
+  (.remove ($ "#exam-timetable tbody > tr")))
+
 (defn- add-module-lesson!
   "Adds a single lesson of a module the timetable.
    Returns a `ModulesSelectedLessonInfo` object augmented with the `:divElem`,
@@ -1198,6 +1313,7 @@
               (if (module-not-in-ModulesSelectedOrder? moduleCode)
                   (do
                     (add-to-ModulesSelectedOrder! moduleCode)
+                    (add-module-to-exam-timetable! moduleCode bgColorCssClass)
                     ; Micro optimization for modules added via url hash
                     ; during initialization
                     (if (not addedViaUrlHashInit?)
@@ -1697,6 +1813,7 @@
         (remove-from-ModulesSelectedOrder! moduleCode)
         (.log js/console "I hear and obey!")
         (html-timetable-display-saturday-if-needed!)
+        (remove-module-from-exam-timetable! moduleCode)
         ; Update Select2 box
         (select2-box-update-modules!))))
 
@@ -1708,5 +1825,6 @@
   (html-timetable-display-saturday-if-needed!)
   (reset-ModulesSelected!)
   (reset-ModulesSelectedOrder!)
+  (reset-exam-timetable!)
   (select2-box-update-modules!)
   (document-location-hash-reset!))
