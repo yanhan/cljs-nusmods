@@ -120,7 +120,9 @@ var lesson_time_to_integer_repr = function(time) {
 //       |                      |            | Strings
 //
 // An array of Module objects, along with the following:
-// - an array of ExamDate strings
+// - an array of ExamDate strings.
+//   Each string is either `No Exam`, or a string in `YYYY-MM-DD:THH:MM+0800`.
+//   A concrete example of such a string is `2014-04-27T13:00+0800`
 // - an array of LessonType strings
 // - an array of Venue strings
 // - an array of WeekText strings

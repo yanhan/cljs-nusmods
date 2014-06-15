@@ -43,3 +43,29 @@
     (if (< time502 1000)
         (str "0" time502)
         (str time502))))
+
+(def ^{:doc     "Regex for extracting info from Exam Date strings"
+       :private true}
+  EXAM-DATE-REGEX #"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})")
+
+(def ^{:doc     "3 character strings for months of the year"
+       :private true}
+  MONTH-3CHAR-STRINGS
+  ["" "Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"])
+
+(defn exam-date-to-human-friendly-format
+  "Converts an exam date to a more friendly format.
+   Time is assumed to be Singapore Time."
+  [examDateString]
+  (if (= "No Exam" examDateString)
+      examDateString
+      (let [matchArray (.match examDateString EXAM-DATE-REGEX)
+            year       (nth matchArray 1)
+            month      (js/parseInt (nth matchArray 2) 10)
+            day        (js/parseInt (nth matchArray 3) 10)
+            hour       (js/parseInt (nth matchArray 4) 10)
+            hourP      (if (<= hour 12) hour (- hour 12))
+            minute     (nth matchArray 5)
+            amPm       (if (>= hour 12) "PM" "AM")]
+        (str day " " (nth MONTH-3CHAR-STRINGS month) " " year " "
+             hourP ":" minute " " amPm))))

@@ -17,7 +17,7 @@ var ARRAY_OF_STRINGS_KEYS = [
 ];
 
 (function() {
-  var examDateRegex = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/;
+  var examDateRegex = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})\+0800$/;
   var monthArray = [
     null, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
     "Nov", "Dec"
@@ -39,28 +39,17 @@ var ARRAY_OF_STRINGS_KEYS = [
         mod[aosKey] = _.map(mod[aosKey], function(s) { return s.trim(); });
       }
     });
-    // convert `ExamDate` to
-    // `<day> <3 character month> <4 digit year> <hour>:<minutes> <AM/PM>`
-    // representation
     if (_.has(mod, "ExamDate")) {
       examDate = mod.ExamDate;
       if (examDate === SharedGlobals.ORIGINAL_NO_EXAM_DATE_STRING) {
+        // used processed no exam string for no exams
         mod.ExamDate = SharedGlobals.PROCESSED_NO_EXAM_DATE_STRING ;
-      } else {
-        examDateMatchArray = examDate.match(examDateRegex);
-        if (examDateMatchArray !== null) {
-          mod.ExamDate = _.parseInt(examDateMatchArray[3], 10) + " " +
-            monthArray[_.parseInt(examDateMatchArray[2])] + " " +
-            examDateMatchArray[1] + " ";
-          hour = _.parseInt(examDateMatchArray[4], 10);
-          if (hour > 12) {
-            mod.ExamDate += (hour - 12);
-          } else {
-            mod.ExamDate += hour;
-          }
-          mod.ExamDate += ":" + examDateMatchArray[5] +
-            (hour >= 12 ? "PM" : "AM");
-        }
+      } else if (examDate.match(examDateRegex) === null) {
+        throw {
+          message: "Exam Date string \"" + examDate +
+            "\" is not of the desired format",
+          name: "ExamDateFormatException"
+        };
       }
     }
     // normalize department string

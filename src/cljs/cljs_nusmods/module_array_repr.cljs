@@ -1,6 +1,7 @@
 (ns ^{:doc "Helper functions for array representation of Module object"}
   cljs-nusmods.module-array-repr
-  (:require [cljs-nusmods.lesson-array-repr :as lesson-array-repr]))
+  (:require [cljs-nusmods.lesson-array-repr :as lesson-array-repr]
+            [cljs-nusmods.time              :as time-helper]))
 
 (def MODULE_CODE_REGEX #"^\D+(\d{4})\D*$")
 
@@ -33,7 +34,8 @@
 (defn get-module-exam-date
   "Retrieves the exam date string of a module from its array representation"
   [examDateStringsArray moduleArrayRepr]
-  (nth examDateStringsArray (nth moduleArrayRepr 3)))
+  (let [examDateString (nth examDateStringsArray (nth moduleArrayRepr 3))]
+    (time-helper/exam-date-to-human-friendly-format examDateString)))
 
 (defn- get-module-timetable
   "Retrieves the timetable of a module from its array representation"
