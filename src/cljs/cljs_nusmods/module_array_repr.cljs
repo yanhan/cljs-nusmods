@@ -31,7 +31,7 @@
   [moduleArrayRepr]
   (nth moduleArrayRepr 2))
 
-(defn get-module-exam-date
+(defn get-module-exam-date-string
   "Retrieves the exam date string of a module from its array representation"
   [examDateStringsArray moduleArrayRepr]
   (let [examDateString (nth examDateStringsArray (nth moduleArrayRepr 3))]

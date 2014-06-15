@@ -42,7 +42,7 @@
                                 moduleArrayRepr)
             moduleTypeArray   (aux-module-array-repr/get-module-types
                                auxModuleArrayRepr)
-            moduleExamDate    (module-array-repr/get-module-exam-date
+            moduleExamDate    (module-array-repr/get-module-exam-date-string
                                 examDateStringsArray moduleArrayRepr)
             lectureTimings    (module-array-repr/get-module-lecture-timings
                                 lessonTypesHash lessonTypesStringsArray

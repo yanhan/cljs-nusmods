@@ -14,11 +14,11 @@
 (deftest test-get-module-mc
   (is (= 4 (module-array-repr/get-module-mc (array 0 0 4)))))
 
-(deftest test-get-module-exam-date
-  (is (= "5 May 2014 17:00"
-         (module-array-repr/get-module-exam-date
-           (array "29 Apr 2014 13:00" "8 May 2014 09:00" "5 May 2014 17:00"
-                  "30 Apr 2014 17:00")
+(deftest test-get-module-exam-date-string
+  (is (= "5 May 2014 5:00 PM"
+         (module-array-repr/get-module-exam-date-string
+           (array "2014-04-29T13:00+0800" "2014-05-08T09:00+0800"
+                  "2014-05-05T17:00+0800" "2014-04-30T17:00+0800")
            (array 0 0 0 2)))))
 
 (deftest test-get-module-lecture-timings
