@@ -2,7 +2,8 @@
 
 ClojureScript implementation of [NUSMods](http://nusmods.com)
 
-**NOTE:** Currently this project does nothing. But soon it will do something.
+**NOTE:** Currently this project does something useful, but a lot of useful
+features are still missing and there's a lot more to come. Stay tuned!
 
 **NOTE:** This is purely a personal project done for the sake of challenging
 myself, since it's something I have wanted to do for quite some time.
