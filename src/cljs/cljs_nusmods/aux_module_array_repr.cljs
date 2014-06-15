@@ -5,36 +5,46 @@
 (def
   ^{:doc "Module Type information represented as bitmasks. Retrieved from
           JavaScript globals."}
-  MODULE_TYPE (aget js/window "MODULE_TYPE"))
+  MODULE_TYPE nil)
 
 (def
   ^{:doc "Faculty module (bitmask representation)"}
-  MODULE_TYPE_FACULTY (aget MODULE_TYPE "Faculty"))
+  MODULE_TYPE_FACULTY nil)
 
 (def
   ^{:doc "Breadth / UE module (bitmask representation)"}
-  MODULE_TYPE_UE (aget MODULE_TYPE "UE"))
+  MODULE_TYPE_UE nil)
 
 (def
   ^{:doc "Singapore Studies module (bitmask representation)"}
-  MODULE_TYPE_SS (aget MODULE_TYPE "SS"))
+  MODULE_TYPE_SS nil)
 
 (def
   ^{:doc "GEM module (bitmask representation)"}
-  MODULE_TYPE_GEM (aget MODULE_TYPE "GEM"))
+  MODULE_TYPE_GEM nil)
 
 (def
   ^{:doc "Vector of all Module types bitmasks"}
-  MODULE_TYPES_VEC
-  [MODULE_TYPE_FACULTY MODULE_TYPE_UE MODULE_TYPE_SS MODULE_TYPE_GEM])
+  MODULE_TYPES_VEC nil)
 
 (def
   ^{:doc "Map of Module type bitmask -> String"}
-  MODULE_TYPES_MAP
-  {MODULE_TYPE_FACULTY "Faculty"
-   MODULE_TYPE_UE      "Breadth / UE"
-   MODULE_TYPE_SS      "Singapore Studies"
-   MODULE_TYPE_GEM     "GEM"})
+  MODULE_TYPES_MAP nil)
+
+(defn init!
+  "Initializes the globals in this module"
+  []
+  (set! MODULE_TYPE (aget js/window "MODULE_TYPE"))
+  (set! MODULE_TYPE_FACULTY (aget MODULE_TYPE "Faculty"))
+  (set! MODULE_TYPE_UE (aget MODULE_TYPE "UE"))
+  (set! MODULE_TYPE_SS (aget MODULE_TYPE "SS"))
+  (set! MODULE_TYPE_GEM (aget MODULE_TYPE "GEM"))
+  (set! MODULE_TYPES_VEC
+        [MODULE_TYPE_FACULTY MODULE_TYPE_UE MODULE_TYPE_SS MODULE_TYPE_GEM])
+  (set!  MODULE_TYPES_MAP { MODULE_TYPE_FACULTY "Faculty"
+                            MODULE_TYPE_UE      "Breadth / UE"
+                            MODULE_TYPE_SS      "Singapore Studies"
+                            MODULE_TYPE_GEM     "GEM" }))
 
 (def
   ^{:doc "A module not of the above types"}

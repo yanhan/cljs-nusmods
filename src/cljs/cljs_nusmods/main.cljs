@@ -1,7 +1,7 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
-  (:use [jayq.core :only [$ attr document-ready hide is one parent prevent
-                          show]])
+  (:use [jayq.core :only [$ $deferred $when attr document-ready hide is one
+                          parent prevent show]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
@@ -9,10 +9,10 @@
             [cljs-nusmods.time                  :as time-helper]
             [cljs-nusmods.timetable             :as timetable]))
 
-(defn ^{:doc "Wrapper for $.getScript"
-        :private true}
-  getScript [scriptUrl cb]
-  (.getScript js/jQuery scriptUrl cb))
+(defn- getScript
+  "Wrapper for $.getScript"
+  [scriptUrl]
+  (.getScript js/jQuery scriptUrl))
 
 (defn ^{:doc "Builds a JavaScript Array of Modules for the Exhibit 3.0 library"
         :private true}
@@ -213,30 +213,43 @@
        :private true}
   TIMETABLE-TAB-INDEX 1)
 
+(def ^{:doc     "Whether we started downloading JavaScript files for
+                 Module Finder page"
+       :private true}
+  MODULE-FINDER-SCRIPTS-STARTED-DL? false)
+
+(def ^{:doc     "Whether downloading of JavaScript files for Module Finder page
+                 is done"
+       :private true}
+  MODULE-FINDER-SCRIPTS-DLED? false)
+
 (defn- initialize-exhibit3 [MODULES AUXMODULES]
   "Initialize Exhibit3 database and UI for Module Finder page"
   (if (and (not (aget js/window "Exhibit3_Initialized"))
            (aget js/window "Exhibit3_Loaded")
+           MODULE-FINDER-SCRIPTS-DLED?
            (= (aget js/window "ActiveTab") MODULEFINDER-TAB-INDEX))
-    (let [modulesArray (build-modules-array MODULES AUXMODULES)
-          itemsArray   (add-aux-info-to-exhibit-items
-                         AUXMODULES
-                         (.concat modulesArray (array)))
-          Exhibit      (aget js/window "Exhibit")
-          database     (aset js/window "database"
-                             (.create (.-Database Exhibit)))
-          myExhibit    (aset js/window "exhibit" (.create Exhibit))]
-      (.loadData
-        database
-        (js-obj "types"      (js-obj
-                               "Module" (js-obj "pluralLabel" "Modules"))
-                "properties" (js-obj
-                               "mc"         (js-obj "valueType" "number")
-                               "level"      (js-obj "valueType" "number")
-                               "moduleType" (js-obj "valueType" "item"))
-                "items"      itemsArray))
-      (.configureFromDOM myExhibit)
-      (aset js/window "Exhibit3_Initialized" true))))
+    (do
+      (aux-module-array-repr/init!)
+      (let [modulesArray (build-modules-array MODULES AUXMODULES)
+            itemsArray   (add-aux-info-to-exhibit-items
+                           AUXMODULES
+                           (.concat modulesArray (array)))
+            Exhibit      (aget js/window "Exhibit")
+            database     (aset js/window "database"
+                               (.create (.-Database Exhibit)))
+            myExhibit    (aset js/window "exhibit" (.create Exhibit))]
+        (.loadData
+          database
+          (js-obj "types"      (js-obj
+                                 "Module" (js-obj "pluralLabel" "Modules"))
+                  "properties" (js-obj
+                                 "mc"         (js-obj "valueType" "number")
+                                 "level"      (js-obj "valueType" "number")
+                                 "moduleType" (js-obj "valueType" "item"))
+                  "items"      itemsArray))
+        (.configureFromDOM myExhibit)
+        (aset js/window "Exhibit3_Initialized" true)))))
 
 (defn- build-lessons-map-from-module-timetable
   "Builds a Clojure Map representation of a module's lessons used internally
@@ -331,12 +344,32 @@
                             "examDateIdx" examDateIdx}]))
            modulesArray))))
 
+(def ^{:doc     "Return value of js/setInterval on `check-initialize-exhibit3`"
+       :private true}
+  INITIALIZE-EXHIBIT3-INTERVAL-VAL nil)
+
+(defn- check-and-initialize-exhibit3
+  "Used by `js/setInterval` to repeatedly check for initialization of
+   the module finder page"
+  []
+  (.log js/console "In `check-and-initialize-exhibit3`")
+  (.log js/console (str "INITIALIZE-EXHIBIT3-INTERVAL-VAL = "
+                        INITIALIZE-EXHIBIT3-INTERVAL-VAL))
+  (if (aget js/window "Exhibit3_Initialized")
+      (do
+        (.log js/console "Exhibit3 initialized, clearing interval")
+        (js/clearInterval INITIALIZE-EXHIBIT3-INTERVAL-VAL)
+        (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL nil))
+      (do
+        (.log js/console "Going to initialize Exhibit3")
+        (initialize-exhibit3 (aget js/window "MODULES")
+                             (aget js/window "AUXMODULES")))))
+
 ; Main entry point of the program
 (defn ^:export init []
   ; Globals
   (let [$document     ($ js/document)
         $window       ($ js/window)
-        AUXMODULES    (aget js/window "AUXMODULES")
         MODULES       (aget js/window "MODULES")]
 
     (aset js/window "Exhibit3_Initialized" false)
@@ -356,18 +389,32 @@
     (select2/init-select2-element select2/$Select2-Box)
     (init-dom-clear-modules select2/$Select2-Box)
 
+    (one $document "scriptsLoaded.exhibit"
+         (fn []
+           (aset js/window "Exhibit3_Loaded" true)))
+
     ; Code for tabs
     (hide ($ :#module-finder))
     (.click ($ :#module-finder-tab-link)
             (fn []
+              (if (not MODULE-FINDER-SCRIPTS-STARTED-DL?)
+                  (do
+                    (set! MODULE-FINDER-SCRIPTS-STARTED-DL? true)
+                    (.done ($when (getScript "js/auxmodinfo.js")
+                                  (getScript "js/vendor/exhibit3-all.min.js")
+                                  ($deferred (fn [deferred]
+                                               ($ (.resolve deferred)))))
+                           (fn []
+                             (set! MODULE-FINDER-SCRIPTS-DLED? true)
+                             (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
+                                   (js/setInterval check-and-initialize-exhibit3 1000))))))
               (hide ($ :#timetable-builder))
               (show ($ :#module-finder))
               (.removeClass (parent ($ :#timetable-builder-tab-link)) "active")
               (.addClass (parent ($ :#module-finder-tab-link)) "active")
               (aset js/window "ActiveTab" MODULEFINDER-TAB-INDEX)
               (select2/shift-select2-container-to "timetable-builder-controls"
-                                                  "module-finder-sidebar")
-              (initialize-exhibit3 MODULES AUXMODULES)))
+                                                  "module-finder-sidebar")))
 
     (.click ($ :#timetable-builder-tab-link)
             (fn []
@@ -386,12 +433,6 @@
                (> (.-length urlHash) 1))
           (timetable/add-module-lesson-groups-from-url-hash!
             (.substring urlHash 1))))
-
-    ; Create modules
-    (one $document "scriptsLoaded.exhibit"
-         (fn []
-           (aset js/window "Exhibit3_Loaded" true)
-           (initialize-exhibit3 MODULES AUXMODULES)))
 
     ; Add click event handler for `Add` module buttons on Module Finder page
     (.on ($ "body")
@@ -423,7 +464,4 @@
                           api          (.qtip tooltip "api")]
                       ; destroy qTip after 2s.
                       ; For some reason this works even if we set a new qTip
-                      (js/setTimeout (fn [] (.destroy api)) 2000)))))
-
-    ; Retrieve Exhibit 3.0 Library
-    (getScript "js/vendor/exhibit3-all.min.js" (fn []))))
+                      (js/setTimeout (fn [] (.destroy api)) 2000)))))))
