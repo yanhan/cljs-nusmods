@@ -241,6 +241,7 @@
            MODULE-FINDER-SCRIPTS-DLED?
            (= (aget js/window "ActiveTab") MODULEFINDER-TAB-INDEX))
     (let [$timetable-builder-tab-link ($ :#timetable-builder-tab-link)]
+      (aset js/window "Exhibit3_Initialized" true)
       ; Unbind the click event handler for `Timetable Builder` tab link so
       ; the user cannot switch tabs when we are initializing Exhibit3 here and
       ; screw things up
@@ -264,7 +265,6 @@
                                  "moduleType" (js-obj "valueType" "item"))
                   "items"      itemsArray))
         (.configureFromDOM myExhibit)
-        (aset js/window "Exhibit3_Initialized" true)
         ; rebind click event handler for `Timetable Builder` tab link
         (js/setTimeout (fn []
                          (.click $timetable-builder-tab-link
