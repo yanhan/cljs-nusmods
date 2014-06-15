@@ -1,7 +1,7 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
-  (:use [jayq.core :only [$ $deferred $when attr document-ready done hide is one
-                          parent prevent resolve show unbind]])
+  (:use [jayq.core :only [$ $deferred $when attr document-ready done fade-out
+                          hide is one parent prevent resolve show unbind]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
@@ -399,6 +399,10 @@
       (let [$document     ($ js/document)
             $window       ($ js/window)
             MODULES       (aget js/window "MODULES")]
+
+        ; hides the overlay once the `Timetable Builder` page is done loading
+        (.on js/Pace "done" (fn []
+                              (fade-out ($ ".overlay"))))
 
         (aset js/window "Exhibit3_Initialized" false)
         (aset js/window "Exhibit3_Loaded" false)
