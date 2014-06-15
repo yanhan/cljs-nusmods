@@ -223,9 +223,19 @@
        :private true}
   MODULE-FINDER-SCRIPTS-DLED? false)
 
+(def ^{:doc     "Return value of js/setInterval on `check-initialize-exhibit3`"
+       :private true}
+  INITIALIZE-EXHIBIT3-INTERVAL-VAL nil)
+
 (defn- timetable-builder-tab-click-handler
   "Click event handler for the `Timetable Builder` tab"
   []
+  ; Clear the interval when user switches to `Timetable Builder` page
+  (if (and (not (aget js/window "Exhibit3_Initialized"))
+           (not (nil? INITIALIZE-EXHIBIT3-INTERVAL-VAL)))
+      (do
+        (js/clearInterval INITIALIZE-EXHIBIT3-INTERVAL-VAL)
+        (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL nil)))
   (hide ($ :#module-finder))
   (.removeClass (parent ($ :#module-finder-tab-link)) "active")
   (.addClass (parent ($ :#timetable-builder-tab-link)) "active")
@@ -364,10 +374,6 @@
                             "examDateIdx" examDateIdx}]))
            modulesArray))))
 
-(def ^{:doc     "Return value of js/setInterval on `check-initialize-exhibit3`"
-       :private true}
-  INITIALIZE-EXHIBIT3-INTERVAL-VAL nil)
-
 (defn- check-and-initialize-exhibit3
   "Used by `js/setInterval` to repeatedly check for initialization of
    the module finder page"
@@ -425,9 +431,11 @@
                                   ($deferred (fn [deferred]
                                                ($ (resolve deferred nil)))))
                           (fn []
-                            (set! MODULE-FINDER-SCRIPTS-DLED? true)
-                            (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
-                                  (js/setInterval check-and-initialize-exhibit3 1000))))))
+                            (set! MODULE-FINDER-SCRIPTS-DLED? true)))))
+              (if (and (not (aget js/window "Exhibit3_Initialized"))
+                       (nil? INITIALIZE-EXHIBIT3-INTERVAL-VAL))
+                (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
+                      (js/setInterval check-and-initialize-exhibit3 1000)))
               (hide ($ :#timetable-builder))
               (show ($ :#module-finder))
               (.removeClass (parent ($ :#timetable-builder-tab-link)) "active")
