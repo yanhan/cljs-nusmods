@@ -161,6 +161,8 @@ find)
 - [Select 2](http://ivaynberg.github.io/select2/)
 (For the `Select Modules for Timetable` input box)
 - [qTip2](http://qtip2.com/) (Tooltips)
+- [pace](http://github.hubspot.com/pace/docs/welcome/)
+(Automatic page load progress bar)
 
 #### CSS libraries / tools:
 - [gulp-sass](https://github.com/dlmanning/gulp-sass)
