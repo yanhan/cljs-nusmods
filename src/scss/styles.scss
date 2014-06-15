@@ -662,3 +662,20 @@ div.tab-content.hide {
 .lesson-bg-23 {
   background: #BEF202;
 }
+
+footer {
+  @extend .cf;
+  margin: 1em;
+  border-top: 1px solid #DDD;
+  padding-top: 1em;
+
+  .footer-left {
+    float: left;
+    width: 28em;
+  }
+
+  .footer-right {
+    float: right;
+    max-width: 25em;
+  }
+}
