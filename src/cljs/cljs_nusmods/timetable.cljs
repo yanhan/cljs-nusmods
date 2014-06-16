@@ -424,6 +424,13 @@
        :private true}
   LOCALSTORAGE-DOC-LOCATION-HASH-KEY "cljs-nusmods:url-hash")
 
+(defn- remove-leading-sharp-from-url-hash
+  "Removes the leading '#' character from a url hash"
+  [urlHash]
+  (if (= "#" (first urlHash))
+      (subs urlHash 1)
+      urlHash))
+
 (defn- get-document-location-hash
   "Retrieves the current value of `document.location.hash`"
   []
@@ -433,11 +440,13 @@
   "Sets `document.location.hash` to a given string and updates the url hash in
    LocalStorage"
   [newDocLocationHash]
-  (aset (aget js/document "location") "hash" newDocLocationHash)
-  (if LOCALSTORAGE
-      (.setItem LOCALSTORAGE
-                LOCALSTORAGE-DOC-LOCATION-HASH-KEY
-                newDocLocationHash)))
+  (let [finalDocLocationHash (remove-leading-sharp-from-url-hash
+                               newDocLocationHash)]
+    (aset (aget js/document "location") "hash" finalDocLocationHash)
+    (if LOCALSTORAGE
+        (.setItem LOCALSTORAGE
+                  LOCALSTORAGE-DOC-LOCATION-HASH-KEY
+                  finalDocLocationHash))))
 
 (defn- set-document-location-hash-based-on-modules-order!
   "Sets document.location.hash based on the `ModulesSelectedOrder` global."
