@@ -1477,7 +1477,7 @@
                   (get moduleLessonGroupsMapFinal moduleCode)))
            moduleCodesSeq))))
 
-(defn add-module-lesson-groups-from-url-hash!
+(defn- real-add-module-lesson-groups-from-url-hash!
   "Adds the module lesson groups available in the url hash. Erroneous lesson
    groups are ignored. If there are missing lesson groups for any module after
    going through the url hash, a random lesson group is chosen.
@@ -1539,6 +1539,15 @@
     (select2-box-update-modules!)
     ; Update url hash
     (set-document-location-hash-based-on-modules-order!)))
+
+(defn add-module-lesson-groups-from-url-hash!
+  "Adds modules from `document.location.hash` if it is not empty"
+  []
+  (let [urlHash (aget (aget js/document "location") "hash")]
+    (if (and (not (empty? urlHash))
+             (= (first urlHash) "#")
+             (> (.-length urlHash) 1))
+        (real-add-module-lesson-groups-from-url-hash! (.substring urlHash 1)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

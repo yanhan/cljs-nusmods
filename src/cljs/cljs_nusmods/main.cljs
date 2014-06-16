@@ -453,13 +453,7 @@
         (.click ($ :#timetable-builder-tab-link)
                 timetable-builder-tab-click-handler)
 
-        ; Add module lesson groups from the hash of the url
-        (let [urlHash (aget (aget js/document "location") "hash")]
-          (if (and (not (empty? urlHash))
-                   (= (first urlHash) "#")
-                   (> (.-length urlHash) 1))
-              (timetable/add-module-lesson-groups-from-url-hash!
-                (.substring urlHash 1))))
+        (timetable/add-module-lesson-groups-from-url-hash!)
 
         ; Add click event handler for `Add` module buttons on Module Finder page
         (.on ($ "body")
