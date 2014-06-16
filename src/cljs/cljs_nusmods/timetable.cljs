@@ -415,15 +415,29 @@
    (sort-PreToUrlHashLessonGroup-seq
      (get-PreToUrlHashLessonGroup-seq-for-selected-module moduleCode))})
 
+(def ^{:doc     "HTML localStorage object"
+       :private true}
+  LOCALSTORAGE (aget js/window "localStorage"))
+
+(def ^{:doc     "Key for storing the `document.location.hash` indicating
+                 modules and lessons selected by the user"
+       :private true}
+  LOCALSTORAGE-DOC-LOCATION-HASH-KEY "cljs-nusmods:url-hash")
+
 (defn- get-document-location-hash
   "Retrieves the current value of `document.location.hash`"
   []
   (aget (aget js/document "location") "hash"))
 
 (defn- set-document-location-hash!
-  "Sets `document.location.hash` to a given string"
+  "Sets `document.location.hash` to a given string and updates the url hash in
+   LocalStorage"
   [newDocLocationHash]
-  (aset (aget js/document "location") "hash" newDocLocationHash))
+  (aset (aget js/document "location") "hash" newDocLocationHash)
+  (if LOCALSTORAGE
+      (.setItem LOCALSTORAGE
+                LOCALSTORAGE-DOC-LOCATION-HASH-KEY
+                newDocLocationHash)))
 
 (defn- set-document-location-hash-based-on-modules-order!
   "Sets document.location.hash based on the `ModulesSelectedOrder` global."
