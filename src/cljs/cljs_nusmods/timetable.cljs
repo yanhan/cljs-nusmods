@@ -1486,7 +1486,7 @@
                   (get moduleLessonGroupsMapFinal moduleCode)))
            moduleCodesSeq))))
 
-(defn- real-add-module-lesson-groups-from-url-hash!
+(defn- add-module-lesson-groups-from-url-hash!
   "Adds the module lesson groups available in the url hash. Erroneous lesson
    groups are ignored. If there are missing lesson groups for any module after
    going through the url hash, a random lesson group is chosen.
@@ -1549,14 +1549,32 @@
     ; Update url hash
     (set-document-location-hash-based-on-modules-order!)))
 
-(defn add-module-lesson-groups-from-url-hash!
-  "Adds modules from `document.location.hash` if it is not empty"
+(defn- choose-url-hash-to-use
+  "Choose between `document.location.hash` and the value of the
+   `LOCALSTORAGE-DOC-LOCATION-HASH-KEY` in localStorage for using to add
+   modules, preferring the latter if it is not empty.
+
+   Returns the url hash if it's non empty, nil otherwise."
   []
-  (let [urlHash (aget (aget js/document "location") "hash")]
-    (if (and (not (empty? urlHash))
-             (= (first urlHash) "#")
-             (> (.-length urlHash) 1))
-        (real-add-module-lesson-groups-from-url-hash! (.substring urlHash 1)))))
+  (let [docLocHash       (remove-leading-sharp-from-url-hash
+                           (aget (aget js/document "location") "hash"))
+        localStorageHash (if LOCALSTORAGE
+                             (remove-leading-sharp-from-url-hash
+                               (.getItem LOCALSTORAGE
+                                         LOCALSTORAGE-DOC-LOCATION-HASH-KEY))
+                             "")]
+    (cond (not (empty? docLocHash))       docLocHash
+          (not (empty? localStorageHash)) localStorageHash
+          :else                           nil)))
+
+(defn add-module-lesson-groups-from-url-hash-or-local-storage!
+  "Adds modules from `document.location.hash`, using the value stored in the
+   `LOCALSTORAGE-DOC-LOCATION-HASH-KEY` key of the localStorage as a fallback
+   if the former is empty. If the latter is empty, no modules will be added."
+  []
+  (let [urlHash (choose-url-hash-to-use)]
+    (if (not (nil? urlHash))
+        (add-module-lesson-groups-from-url-hash! urlHash))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -453,7 +453,7 @@
         (.click ($ :#timetable-builder-tab-link)
                 timetable-builder-tab-click-handler)
 
-        (timetable/add-module-lesson-groups-from-url-hash!)
+        (timetable/add-module-lesson-groups-from-url-hash-or-local-storage!)
 
         ; Add click event handler for `Add` module buttons on Module Finder page
         (.on ($ "body")
