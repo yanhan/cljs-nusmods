@@ -1338,14 +1338,6 @@
               (update-ModulesSelected-with-lesson-group! moduleCode lessonType
                                                          lessonGroup
                                                          lessonInfoSeq)
-              (if (module-not-in-ModulesSelectedOrder? moduleCode)
-                  (do
-                    (add-to-ModulesSelectedOrder! moduleCode)
-                    (add-module-to-exam-timetable! moduleCode bgColorCssClass)
-                    ; Micro optimization for modules added via url hash
-                    ; during initialization
-                    (if (not addedViaUrlHashInit?)
-                        (select2-box-update-modules!))))
 
               ; Only lesson types with more than 1 option of lesson group
               ; will be draggable
@@ -1388,6 +1380,10 @@
                              moduleCode lessonType)}))
                   []
                   lessonTypes)]
+
+      (add-to-ModulesSelectedOrder! moduleCode)
+      (add-module-to-exam-timetable! moduleCode bgColorCssClass)
+      (select2-box-update-modules!)
 
       (doseq [moduleInfo newModInfoSeq]
         (add-module-lesson-group! (:moduleCode moduleInfo)
@@ -1527,10 +1523,19 @@
                          moduleInfoExistent)))
 
         moduleInfoFinal
-        (get-module-info-from-url-hash-module-info moduleInfoExistent)]
+        (get-module-info-from-url-hash-module-info moduleInfoExistent)
+
+        moduleCodes
+        (distinct (map #(:moduleCode %1) moduleInfoFinal))]
 
     (.log js/console (str "moduleInfoExistent = " (.stringify js/JSON (clj->js moduleInfoExistent))))
     (.log js/console (str "moduleInfoFinal = " (.stringify js/JSON (clj->js moduleInfoFinal))))
+
+    (doseq [moduleCode moduleCodes]
+      (add-to-ModulesSelectedOrder! moduleCode)
+      (add-module-to-exam-timetable! moduleCode
+                                     (get moduleToColorsMap moduleCode)))
+
     ; Add the module lesson groups
     (doseq [modInfo moduleInfoFinal]
       (let [moduleCode      (:moduleCode modInfo)
