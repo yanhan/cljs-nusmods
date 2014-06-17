@@ -1491,17 +1491,18 @@
   [urlHash]
   (let [moduleUrlHashArray                (.split urlHash "&")
 
-        modUrlHashRegex
+        ; for modules with lessons
+        modWithLessonRegex
         #"^([A-Z]+\d{4}[A-Z]*)_(DL|L|LAB|PL|PT|R|SEM|ST|T|T2|T3)=([A-Z0-9]+)$"
 
         ; Sequence of non-nil match arrays
-        matchArraySeq
+        modWithLessonMatchArray
         (filter (fn [matchArray] (not (nil? matchArray)))
-                (map (fn [modUrlHash] (.exec modUrlHashRegex modUrlHash))
+                (map (fn [modUrlHash] (.exec modWithLessonRegex modUrlHash))
                      moduleUrlHashArray))
 
         ; Sequence of existing lesson groups
-        moduleInfoExistent
+        modWithLessonExistent
         (filter
           #(module-has-lesson-group? (:moduleCode %1) (:lessonType %1)
                                      (:lessonGroup %1))
@@ -1511,7 +1512,7 @@
                   :lessonType  (Lesson-Type-Short-To-Long-Form
                                  (nth matchArray 2))
                   :lessonGroup (nth matchArray 3)})
-               matchArraySeq))
+               modWithLessonMatchArray))
 
         ; Module code to CSS class for lesson div background color
         moduleToColorsMap
@@ -1520,15 +1521,15 @@
             (assoc m2cMap moduleCode (get-next-lesson-bg-color-css-class)))
           {}
           (distinct (map (fn [modInfo] (:moduleCode modInfo))
-                         moduleInfoExistent)))
+                         modWithLessonExistent)))
 
         moduleInfoFinal
-        (get-module-info-from-url-hash-module-info moduleInfoExistent)
+        (get-module-info-from-url-hash-module-info modWithLessonExistent)
 
         moduleCodes
         (distinct (map #(:moduleCode %1) moduleInfoFinal))]
 
-    (.log js/console (str "moduleInfoExistent = " (.stringify js/JSON (clj->js moduleInfoExistent))))
+    (.log js/console (str "modWithLessonExistent = " (.stringify js/JSON (clj->js modWithLessonExistent))))
     (.log js/console (str "moduleInfoFinal = " (.stringify js/JSON (clj->js moduleInfoFinal))))
 
     (doseq [moduleCode moduleCodes]
