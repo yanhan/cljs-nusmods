@@ -1489,7 +1489,7 @@
 
    NOTE: This function should only be called once."
   [urlHash]
-  (let [moduleUrlHashArray                (.split urlHash "&")
+  (let [moduleUrlHashArray (.split urlHash "&")
 
         ; for modules with lessons
         modWithLessonRegex
@@ -1526,8 +1526,7 @@
         moduleInfoFinal
         (get-module-info-from-url-hash-module-info modWithLessonExistent)
 
-        moduleCodes
-        (distinct (map #(:moduleCode %1) moduleInfoFinal))]
+        moduleCodes        (distinct (map #(:moduleCode %1) moduleInfoFinal))]
 
     (.log js/console (str "modWithLessonExistent = " (.stringify js/JSON (clj->js modWithLessonExistent))))
     (.log js/console (str "moduleInfoFinal = " (.stringify js/JSON (clj->js moduleInfoFinal))))
