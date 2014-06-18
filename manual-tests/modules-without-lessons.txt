@@ -1,0 +1,26 @@
+Tests adding of modules without lessons.
+
+http://127.0.0.1:3000/index.html#MUA3264&EE2012_L=ALL&EE2012_T=T3&EG3601&CS2100_LAB=11&CS2100_L=1&CS2100_T=12&NUR5301&FMD1201_L=1&PP5143&GE2202_L=1&GE2202_T=E5
+
+Modules without lessons and no Exams:
+
+MUA3264
+EG3601
+
+Modules without lessons but has Exams:
+
+NUR5501
+PP5143
+
+Conventional modules:
+EE2012
+CS2100
+GE2202
+
+
+Ensure that:
+1. All Modules show up in Select2 box.
+2. All Modules show up in Exam Timetable and has unique colors.
+3. Module code for modules without lessons show up in `document.location.hash`
+4. Removing a module without lesson removes it from the Exam timetable and
+`document.location.hash`

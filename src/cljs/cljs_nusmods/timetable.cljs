@@ -255,6 +255,11 @@
   []
   (count ModulesSelected))
 
+(defn- add-module-without-lessons-to-ModulesSelected!
+  "Adds a module without lessons to `ModulesSelected`"
+  [moduleCode]
+  (set! ModulesSelected (assoc ModulesSelected moduleCode {})))
+
 (defn- update-ModulesSelected-with-lesson-group!
   [moduleCode lessonType lessonGroup lessonInfoSeq]
   (set! ModulesSelected
@@ -389,11 +394,18 @@
 (defn- preToUrlHashModule-to-url-hash-string
   "Converts a `PreToUrlHashModule` object to a url hash string."
   [preToUrlHashModule]
-  (let [moduleCode (:moduleCode preToUrlHashModule)]
-    (clojure.string/join
-      "&"
-      (map #(str moduleCode "_" (:lessonType %1) "=" (:lessonGroup %1))
-           (:preToUrlHashLessonGroupSeqSorted preToUrlHashModule)))))
+  (let [moduleCode (:moduleCode preToUrlHashModule)
+
+        preToUrlHashLessonGroupSeqSorted
+        (:preToUrlHashLessonGroupSeqSorted preToUrlHashModule)]
+      (if (empty? preToUrlHashLessonGroupSeqSorted)
+          ; for modules without lessons, return the module code
+          moduleCode
+          ; else return a '&' separated string with the selected lesson groups
+          (clojure.string/join
+            "&"
+            (map #(str moduleCode "_" (:lessonType %1) "=" (:lessonGroup %1))
+                 preToUrlHashLessonGroupSeqSorted)))))
 
 (defn- sort-PreToUrlHashLessonGroup-seq
   "Sorts a sequence of `PreToUrlHashLessonGroup` objects lexicographically by
@@ -484,9 +496,13 @@
   (let [orgUrlHash (get-document-location-hash)
 
         urlHashWithoutModule
-        (clojure.string/replace
-          orgUrlHash
-          (re-pattern (str moduleCode "_[A-Z]{1,3}=[^&]+&?")) "")]
+        (if (module-has-lessons? moduleCode)
+            (clojure.string/replace
+              orgUrlHash
+              (re-pattern (str moduleCode "_[A-Z]{1,3}=[^&]+&?")) "")
+            ; for modules without lessons, replace the module code itself
+            (clojure.string/replace orgUrlHash
+                                    (re-pattern (str moduleCode "&?")) ""))]
     (set-document-location-hash!
       (clojure.string/replace urlHashWithoutModule #"&$" ""))))
 
@@ -1386,6 +1402,8 @@
                   []
                   lessonTypes)]
 
+      (if (not (module-has-lessons? moduleCode))
+          (add-module-without-lessons-to-ModulesSelected! moduleCode))
       (add-to-ModulesSelectedOrder! moduleCode)
       (add-module-to-exam-timetable! moduleCode bgColorCssClass)
       (select2-box-update-modules!)
@@ -1500,11 +1518,44 @@
         modWithLessonRegex
         #"^([A-Z]+\d{4}[A-Z]*)_(DL|L|LAB|PL|PT|R|SEM|ST|T|T2|T3)=([A-Z0-9]+)$"
 
-        ; Sequence of non-nil match arrays
+        modNoLessonRegex   #"^([A-Z]+\d{4}[A-Z]*)$"
+
+        matchArrayHashSeq
+        (map (fn [modUrlHash]
+               (let [matchArray (.exec modWithLessonRegex modUrlHash)]
+                 (if (not (nil? matchArray))
+                     {:matchArray matchArray,
+                      :hasLesson  true}
+                     {:matchArray (.exec modNoLessonRegex modUrlHash)
+                      :hasLesson  false})))
+             moduleUrlHashArray)
+
+        matchArrayNotNilHashSeq
+        (filter #(not (nil? (:matchArray %1)))
+                matchArrayHashSeq)
+
+        ; read this from the inside out
+        moduleCodes
+        (distinct
+          ; extract their module codes
+          (map #(:moduleCode %1)
+            ; only accept module codes that are honest about whether they have
+            ; lessons
+            (filter #(let [moduleCode (:moduleCode %1)]
+                      (or (and (:hasLesson %1)
+                               (module-has-lessons? moduleCode))
+                          (and (not (:hasLesson %1))
+                               (not (module-has-lessons? moduleCode)))))
+                    ; extract the module code into the seq of hashes
+                    (map (fn [h]
+                           (dissoc (assoc h :moduleCode (nth (:matchArray h) 1))
+                                   :matchArray))
+                         matchArrayNotNilHashSeq))))
+
+        ; Sequence of match arrays with lesson groups
         modWithLessonMatchArray
-        (filter (fn [matchArray] (not (nil? matchArray)))
-                (map (fn [modUrlHash] (.exec modWithLessonRegex modUrlHash))
-                     moduleUrlHashArray))
+        (map #(:matchArray %1)
+             (filter #(:hasLesson %1) matchArrayNotNilHashSeq))
 
         ; Sequence of existing lesson groups
         modWithLessonExistent
@@ -1525,19 +1576,17 @@
           (fn [m2cMap moduleCode]
             (assoc m2cMap moduleCode (get-next-lesson-bg-color-css-class)))
           {}
-          (distinct (map (fn [modInfo] (:moduleCode modInfo))
-                         modWithLessonExistent)))
+          moduleCodes)
 
         moduleInfoFinal
-        (get-module-info-from-url-hash-module-info modWithLessonExistent)
-
-        moduleCodesWithLesson
-        (distinct (map #(:moduleCode %1) moduleInfoFinal))]
+        (get-module-info-from-url-hash-module-info modWithLessonExistent)]
 
     (.log js/console (str "modWithLessonExistent = " (.stringify js/JSON (clj->js modWithLessonExistent))))
     (.log js/console (str "moduleInfoFinal = " (.stringify js/JSON (clj->js moduleInfoFinal))))
 
-    (doseq [moduleCode moduleCodesWithLesson]
+    (doseq [moduleCode moduleCodes]
+      (if (not (module-has-lessons? moduleCode))
+          (add-module-without-lessons-to-ModulesSelected! moduleCode))
       (add-to-ModulesSelectedOrder! moduleCode)
       (add-module-to-exam-timetable! moduleCode
                                      (get moduleToColorsMap moduleCode)))
