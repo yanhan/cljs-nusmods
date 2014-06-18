@@ -106,3 +106,12 @@ Checks if all the `.ClassNo` attribute of Lesson objects match a given regex.
 To run it:
 
     node inspect_scripts/classno_format.js
+
+### no_lessons_maybe_exam.js
+
+Retrieves a list of modules without lessons, then splits them into 2 lists, one
+with exams and one without exams, and dumps the module codes to stdout.
+
+To run it:
+
+    node inspect_scripts/no_lessons_maybe_exams.js
