@@ -117,6 +117,11 @@
         examDateIdx (get-in modulesMap [moduleCode "examDateIdx"])]
     (not= time-helper/NO-EXAM (get-exam-date-string-at-index examDateIdx))))
 
+(defn- module-has-lessons?
+  "Returns true if a module has at least one lesson, returns false otherwise."
+  [moduleCode]
+  (not (empty? (get-in (get-ModulesMap) [moduleCode "lessons"]))))
+
 (defn- get-module-name-from-module-code
   "Given a module code, returns the name of the module"
   [moduleCode]
