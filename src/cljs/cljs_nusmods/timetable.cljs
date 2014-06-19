@@ -959,7 +959,12 @@
   (let [$divElem  ($ "<div />" (js-obj "class" "lesson"))]
     (.addClass $divElem bgColorCssClass)
     ; add background color css class
-    (.append $divElem (text ($ "<p />") (str moduleCode " " moduleName)))
+    (.append $divElem
+             (.append ($ "<div />")
+                      (text ($ "<span />" (js-obj "class" "module-code"))
+                            (str moduleCode " "))
+                      (text ($ "<span />" (js-obj "class" "module-name"))
+                            moduleName)))
     (.append $divElem (text ($ "<p />") (str lessonType " [" lessonGroup "]")))
     (.append $divElem (text ($ "<p />") venue))
     ; make the <div> less opaque for a lesson added by jQuery UI draggable
