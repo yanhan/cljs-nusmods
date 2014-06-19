@@ -398,7 +398,8 @@
     (fn []
       (let [$document     ($ js/document)
             $window       ($ js/window)
-            MODULES       (aget js/window "MODULES")]
+            MODULES       (aget js/window "MODULES")
+            $timetable    ($ :#timetable)]
 
         ; hides the overlay once the `Timetable Builder` page is done loading
         (.on js/Pace "done" (fn []
@@ -424,13 +425,16 @@
         ; Button group for Show / Hide controls
         ; Toggles the addition/removal of the 'active' class on the buttons on
         ; click
-        (.each ($ ".btn-group > .btn")
-               (fn []
-                 (this-as this
-                          (let [$this ($ this)]
-                            (.click $this (fn [evt]
-                                            (prevent evt)
-                                            (.toggleClass $this "active")))))))
+        (doseq [[btn cssClass]
+                (map vector ($ ".btn-group > .btn")
+                     ["hide-module-code" "hide-lesson-group" "hide-venue"
+                      "hide-module-name" "hide-frequency"])]
+          (let [$btn ($ btn)]
+            (.click ($ btn)
+                    (fn [evt]
+                      (prevent evt)
+                      (.toggleClass $btn "active")
+                      (.toggleClass $timetable cssClass)))))
 
         (one $document "scriptsLoaded.exhibit"
              (fn []

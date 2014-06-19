@@ -1,0 +1,15 @@
+Initially, the following buttons of the Show / Hide controls should be
+depressed (active):
+
+- Code
+- Group
+- Venue
+- Week
+
+Some modules with lessons that dont occur every week:
+- BFS1001
+- EE2022
+- NUR3115
+
+Try toggling the various controls and observe the toggling of visibility of
+the corresponding part of the lesson <div>s.

@@ -689,6 +689,33 @@ div.tab-content.hide {
   opacity: 1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Used to toggle visibility of information in lesson <div>s
+//
+// When the #timetable <table> has some hide-* class, it will cause the
+// display:none to be applied to the appropriate descendent elements and hence
+// hide them.
+#timetable.hide-module-code .lesson .module-code {
+  display: none;
+}
+
+#timetable.hide-lesson-group .lesson .lesson-group {
+  display: none;
+}
+
+#timetable.hide-venue .lesson .venue {
+  display: none;
+}
+
+#timetable.hide-module-name .lesson .module-name {
+  display: none;
+}
+
+#timetable.hide-frequency .lesson .frequency {
+  display: none;
+}
+////////////////////////////////////////////////////////////////////////////////
+
 .lesson > p {
   margin: 0;
 }
