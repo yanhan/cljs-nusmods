@@ -970,7 +970,7 @@
              (text ($ "<span />" (js-obj "class" "lesson-group"))
                    (str " [" lessonGroup "]")))
     (.append $divElem $lessonTypePara)
-    (.append $divElem (text ($ "<p />") venue))
+    (.append $divElem (text ($ "<p />" (js-obj "class" "venue")) venue))
     ; make the <div> less opaque for a lesson added by jQuery UI draggable
     (if (not isActuallySelected?)
         (.addClass $divElem "lesson-droppable-not-hover"))
