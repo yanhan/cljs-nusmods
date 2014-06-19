@@ -956,7 +956,8 @@
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [day moduleCode moduleName lessonType lessonGroup startTime endTime
              venue weekTextIdx slotsOcc bgColorCssClass isActuallySelected?]}]
-  (let [$divElem  ($ "<div />" (js-obj "class" "lesson"))]
+  (let [$divElem        ($ "<div />" (js-obj "class" "lesson"))
+        $lessonTypePara (text ($ "<p />") lessonType)]
     (.addClass $divElem bgColorCssClass)
     ; add background color css class
     (.append $divElem
@@ -965,7 +966,10 @@
                             (str moduleCode " "))
                       (text ($ "<span />" (js-obj "class" "module-name"))
                             moduleName)))
-    (.append $divElem (text ($ "<p />") (str lessonType " [" lessonGroup "]")))
+    (.append $lessonTypePara
+             (text ($ "<span />" (js-obj "class" "lesson-group"))
+                   (str " [" lessonGroup "]")))
+    (.append $divElem $lessonTypePara)
     (.append $divElem (text ($ "<p />") venue))
     ; make the <div> less opaque for a lesson added by jQuery UI draggable
     (if (not isActuallySelected?)
