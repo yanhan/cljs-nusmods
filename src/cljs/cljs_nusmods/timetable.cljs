@@ -952,12 +952,17 @@
   [weekTextIdx]
   (nth WEEK-TEXT-ARRAY weekTextIdx))
 
+(def ^{:doc     "The string representing weekly frequency for a lesson"
+       :private true}
+  EVERY-WEEK "Every Week")
+
 (defn- create-lesson-div
   "Creates a <div> element for a new lesson using jQuery"
   [& {:keys [day moduleCode moduleName lessonType lessonGroup startTime endTime
              venue weekTextIdx slotsOcc bgColorCssClass isActuallySelected?]}]
   (let [$divElem        ($ "<div />" (js-obj "class" "lesson"))
-        $lessonTypePara (text ($ "<p />") lessonType)]
+        $lessonTypePara (text ($ "<p />") lessonType)
+        weekText        (week-text-index-to-string weekTextIdx)]
     (.addClass $divElem bgColorCssClass)
     ; add background color css class
     (.append $divElem
@@ -971,6 +976,10 @@
                    (str " [" lessonGroup "]")))
     (.append $divElem $lessonTypePara)
     (.append $divElem (text ($ "<p />" (js-obj "class" "venue")) venue))
+    (if (not= weekText EVERY-WEEK)
+        (.append $divElem
+                 (text ($ "<p />" (js-obj "class" "frequency")) weekText)))
+
     ; make the <div> less opaque for a lesson added by jQuery UI draggable
     (if (not isActuallySelected?)
         (.addClass $divElem "lesson-droppable-not-hover"))
@@ -994,8 +1003,7 @@
                      (str (nth time-helper/DAY_INTEGER_TO_STRING day)
                           " " niceStartTime " - " niceEndTime)))
       (.append $qtipContent (text ($ "<p />")
-                                  (str (week-text-index-to-string weekTextIdx)
-                                       " @ " venue)))
+                                  (str weekText " @ " venue)))
       (.qtip $divElem
              (js-obj "content"  (js-obj "text" $qtipContent)
                      "position" (js-obj "my"       "center left"
