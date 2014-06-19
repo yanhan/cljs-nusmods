@@ -499,6 +499,109 @@ input[type=text]:focus,
   }
 }
 
+.btn {
+  @include border-radius(4px);
+  @include box-shadow(inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 1px 2px rgba(0, 0, 0, 0.05));
+  display: inline-block;
+  margin-bottom: 0;
+  line-height: 20px;
+  text-align: center;
+  vertical-align: middle;
+  color: #333;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+  background-color: #F5F5F5;
+  background-image: -moz-linear-gradient(top, #FFF, #E6E6E6);
+  background-image: -webkit-gradient(linear, 0, 0, 0 100%, from(#FFF),
+    to(#E6E6E6));
+  background-image: -webkit-linear-gradient(top, #FFF, #E6E6E6);
+  background-image: linear-gradient(to bottom, #FFF, #E6E6E6);
+  background-repeat: repeat-x;
+  border-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.25);
+  border: 1px solid #BBB;
+  border-bottom-color: #A2A2A2;
+
+  &:hover, &:active {
+    color: #333;
+    background-color: #E6E6E6;
+  }
+
+  &:hover {
+    text-decoration: none;
+    background-position: 0 -15px;
+    -webkit-transition: background-position 0.1s linear;
+    -moz-transition: background-position 0.1s linear;
+    transition: background-position 0.1s linear;
+  }
+
+  &:active {
+    background-image: none;
+    outline: 0;
+    @include box-shadow(inset 0 2px 4px rgba(0, 0, 0, 0.15),
+      0 1px 2px rgba(0, 0, 0, 0.05));
+  }
+}
+
+.btn.active {
+  background-color: #E6E6E6;
+  background-image: none;
+  outline: 0;
+  @include box-shadow(inset 0 2px 4px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.btn-group {
+  white-space: nowrap;
+  vertical-align: middle;
+
+  .btn {
+    @include border-radius(0);
+  }
+
+  .btn:first-child {
+    margin-left: 0;
+    -webkit-border-top-left-radius: 4px;
+    -moz-border-radius-topleft: 4px;
+    border-top-left-radius: 4px;
+    -webkit-border-bottom-left-radius: 4px;
+    -moz-border-radius-bottomleft: 4px;
+    border-bottom-left-radius: 4px;
+  }
+
+  .btn:last-child {
+    -webkit-border-top-right-radius: 4px;
+    -moz-border-radius-topright: 4px;
+    border-top-right-radius: 4px;
+    -webkit-border-bottom-right-radius: 4px;
+    -moz-border-radius-bottomright: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  .btn+.btn {
+    margin-left: -4px;
+  }
+}
+
+#show-hide-controls {
+  @extend .cf;
+  margin-bottom: 1em;
+
+  label {
+    float: left;
+    font-weight: bold;
+    margin-top: 0.3em;
+  }
+
+  .btn-group {
+    float: left;
+    margin-left: 1em;
+  }
+
+  .btn {
+    padding: 4px 10px;
+  }
+}
+
 #timetable-builder-controls {
   float: left;
   width: 30em;

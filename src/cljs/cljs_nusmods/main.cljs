@@ -421,6 +421,17 @@
         (select2/init-select2-element select2/$Select2-Box)
         (init-dom-clear-modules select2/$Select2-Box)
 
+        ; Button group for Show / Hide controls
+        ; Toggles the addition/removal of the 'active' class on the buttons on
+        ; click
+        (.each ($ ".btn-group > .btn")
+               (fn []
+                 (this-as this
+                          (let [$this ($ this)]
+                            (.click $this (fn [evt]
+                                            (prevent evt)
+                                            (.toggleClass $this "active")))))))
+
         (one $document "scriptsLoaded.exhibit"
              (fn []
                (aset js/window "Exhibit3_Loaded" true)))
