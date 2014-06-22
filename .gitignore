@@ -13,7 +13,6 @@ pom.xml.asc
 *.swp
 /.lein-*
 /.nrepl-port
-/api-nusmods-stuff/*.json
 /build-temp/*.js
 /build-temp/*.json
 /resources/public/js/auxmodinfo.js
@@ -24,3 +23,9 @@ pom.xml.asc
 /resources/public/css/exhibit3-styles.min.css
 /resources/public/exhibit3
 /test/js/globals.js
+
+# Anything under api-nusmods-stuff
+/api-nusmods-stuff/*
+
+# virtualenv
+/venv

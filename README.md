@@ -21,6 +21,8 @@ It is less buggy and contains a lot more features.
 
 - Leiningen
 - node
+- Python 2.7 (for running `helpers/dl-api-nusmods-stuff.py`)
+- virtualenv (for running `helpers/dl-api-nusmods-stuff.py`)
 
 ## Setup
 
@@ -48,21 +50,30 @@ Gulp needs to be installed globally to be run as an executable:
 
     sudo npm install -g gulp@3.6.2
 
+### virtualenv
+
+To install virtualenv on an Ubuntu based system:
+
+    sudo apt-get install python-virtualenv
+
+Next, create a virtualenv folder named `venv` at the root of the repository
+and install the Python libraries:
+
+    virtualenv venv
+    . venv/bin/activate
+    pip install -r requirements.txt
+    deactivate # exit the virtualenv
+
 ### Files from http://api.nusmods.com
 
-Execute the following commands to download some required files from
-http://api.nusmods.com to the `api-nusmods-stuff` folder:
+Some files from [NUSMods API](http://api.nusmods.com) are required for
+cljs-nusmods.
 
-    helpers/dl-api-nusmods-stuff.sh
+To download them:
 
-The required files are the following:
-
-- `modules.json`. A concrete example of such a file is
-http://api.nusmods.com/2013-2014/2/modules.json
-- `facultyDepartments.json`. A concrete example of such a file is
-http://api.nusmods.com/2013-2014/2/facultyDepartments.json
-- `lessonTypes.json`. A concrete example of such a file is
-http://api.nusmods.com/2013-2014/2/lessonTypes.json
+    . venv/bin/activate
+    python helpers/dl-api-nusmods-stuff.py
+    deactivate # exit the virtualenv
 
 ## Building everything
 
