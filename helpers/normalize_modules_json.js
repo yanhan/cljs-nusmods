@@ -2,9 +2,16 @@
 
 var fs = require("fs");
 var _ = require("lodash");
+var argv = require("minimist")(process.argv.slice(2));
+// TODO: Centralize this information somewhere
+var ACAD_YEAR = argv["acad-year"] || "2013-2014";
+var SEM = argv.sem || 2;
+var API_NUSMODS_FOLDER = __dirname +
+  "/../api-nusmods-stuff/" + ACAD_YEAR + "/sem" + SEM;
+
 var SharedGlobals = require("./shared_globals.js");
 var NormalizeDepartment = require("./normalize_department.js");
-var MODULES_ARRAY = require(__dirname + "/../api-nusmods-stuff/modules.json");
+var MODULES_ARRAY = require(API_NUSMODS_FOLDER + "/modules.json");
 
 var STRING_KEYS = [
   "ModuleCode", "ModuleTitle", "Department", "ModuleDescription",
@@ -115,8 +122,8 @@ var ARRAY_OF_STRINGS_KEYS = [
     }
     return mod;
   });
-  // write to `build-temp` directory
-  fs.writeFileSync("build-temp/processed_modules.json",
+
+  fs.writeFileSync(API_NUSMODS_FOLDER + "/processed_modules.json",
     // 4 space indentation
     JSON.stringify(processedModulesArray, null, "    "),
     { flag: "w" }

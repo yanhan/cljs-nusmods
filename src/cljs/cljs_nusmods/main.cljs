@@ -392,7 +392,7 @@
                              (aget js/window "AUXMODULES")))))
 
 ; Main entry point of the program
-(defn ^:export init []
+(defn ^:export init [acad-year sem]
   ; Globals
   (document-ready
     (fn []
@@ -447,7 +447,8 @@
                   (if (not MODULE-FINDER-SCRIPTS-STARTED-DL?)
                       (do
                         (set! MODULE-FINDER-SCRIPTS-STARTED-DL? true)
-                        (done ($when (getScript "/js/auxmodinfo.js")
+                        (done ($when (getScript (str "/js/mods/" acad-year "/"
+                                                     sem "/auxmodinfo.js"))
                                      (getScript "/js/vendor/exhibit3-all.min.js")
                                      ($deferred (fn [deferred]
                                                   ($ (resolve deferred nil)))))

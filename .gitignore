@@ -13,10 +13,7 @@ pom.xml.asc
 *.swp
 /.lein-*
 /.nrepl-port
-/build-temp/*.js
-/build-temp/*.json
-/resources/public/js/auxmodinfo.js
-/resources/public/js/modinfo.js
+/resources/public/js/mods
 /resources/public/js/main.js
 /resources/public/js/vendor/exhibit3-all.min.js
 /resources/public/css/styles.css

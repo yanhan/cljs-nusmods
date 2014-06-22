@@ -666,14 +666,14 @@
         <p>Module Data obtained from Beng's <a href="http://api.nusmods.com/" target="_blank">NUSMods API</a></p>
       </div>
     </footer>
-    <script src="/js/modinfo.js"></script>
+    <script src="/js/mods/{{ acad-year }}/{{ sem }}/modinfo.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/select2/3.4.6/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/qtip2/2.2.0/jquery.qtip.min.js"></script>
     <script src="/js/main.js"></script>
     <script>
-      cljs_nusmods.main.init();
+      cljs_nusmods.main.init("{{ acad-year }}", "{{ sem }}");
     </script>
   </body>
 </html>

@@ -204,3 +204,4 @@ icons
 you may very well not see any `for` loops in your JavaScript for a start)
 - [Moment.js](http://momentjs.com/)
 - [minimist](https://github.com/substack/minimist)
+- [node-mkdirp](https://github.com/substack/node-mkdirp)
