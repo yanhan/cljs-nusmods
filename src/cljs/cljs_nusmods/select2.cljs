@@ -101,4 +101,6 @@
   [fromParentId toParentId]
   (let [currentParentId (attr (parent $Select2-Container) "id")]
     (if (= fromParentId currentParentId)
-        (.prepend ($ (str "#" toParentId)) $Select2-Container))))
+        (if (= toParentId "timetable-builder-controls")
+          (.append ($ (str "#" toParentId)) $Select2-Container)
+          (.prepend ($ (str "#" toParentId)) $Select2-Container)))))
