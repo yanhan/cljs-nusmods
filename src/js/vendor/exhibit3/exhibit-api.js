@@ -46,8 +46,16 @@ var Exhibit = {
      */
     //urlPrefix: undefined,
 
-    // This is the path where the images and locale are served from
-    urlPrefix: "exhibit3/",
+    // This is the path where the images and locale are served from.
+    // We prefix the `exhibit3` folder with a `../../` because the first part
+    // of the route is the academic year in 'YYYY-YYYY' format and the second
+    // part of the route is the semester in 'semX' format, like
+    // '2013-2014/sem2/'.
+    //
+    // Using a `../../` prefix allows us to ignore the `acad-year/sem/` prefix
+    // and go back up to the `resources/public` folder, then look for the
+    // `exhibit3` folder.
+    urlPrefix: "../../exhibit3/",
 
     /**
      * Where to find Babel, if at all.

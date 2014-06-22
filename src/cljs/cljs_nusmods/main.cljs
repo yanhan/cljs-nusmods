@@ -447,10 +447,10 @@
                   (if (not MODULE-FINDER-SCRIPTS-STARTED-DL?)
                       (do
                         (set! MODULE-FINDER-SCRIPTS-STARTED-DL? true)
-                        (done ($when (getScript "js/auxmodinfo.js")
-                                      (getScript "js/vendor/exhibit3-all.min.js")
-                                      ($deferred (fn [deferred]
-                                                   ($ (resolve deferred nil)))))
+                        (done ($when (getScript "/js/auxmodinfo.js")
+                                     (getScript "/js/vendor/exhibit3-all.min.js")
+                                     ($deferred (fn [deferred]
+                                                  ($ (resolve deferred nil)))))
                               (fn []
                                 (set! MODULE-FINDER-SCRIPTS-DLED? true)))))
                   (if (and (not (aget js/window "Exhibit3_Initialized"))
