@@ -173,6 +173,8 @@ documentation may not be so awesome for some of them):
 on fire, but it's not long anyway)
 - [lein-cljsbuild](https://github.com/emezeske/lein-cljsbuild)
 - [jayq](https://github.com/ibdknox/jayq) (jQuery wrapper for ClojureScript)
+- [Compojure](https://github.com/weavejester/compojure) (backend web framework)
+- [Selmer](https://github.com/yogthos/Selmer) (Jinja2 like templating)
 
 #### JavaScript libraries (front end):
 - [jQuery](http://jquery.com/)
