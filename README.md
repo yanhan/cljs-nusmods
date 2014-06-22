@@ -93,6 +93,14 @@ finer grained builds.
 
 And go to http://127.0.0.1:3000/index.html
 
+### Running in production
+
+The following commands build an executable jar:
+
+    gulp # Builds everything. very important!
+    lein ring uberjar
+    java -jar target/cljs-nusmods-0.1.0-SNAPSHOT-standalone.jar
+
 ## Development
 
 Run the following:
