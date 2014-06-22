@@ -6,6 +6,7 @@
   :source-paths ["src/clj" "src/cljs"]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.6"]
+                 [selmer "0.6.7"]
                  [org.clojure/clojurescript "0.0-2202"]
                  [jayq "2.5.0"]]
   :plugins [[lein-cljsbuild "1.0.3"]
