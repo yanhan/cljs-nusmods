@@ -9,6 +9,15 @@
             [cljs-nusmods.time                  :as time-helper]
             [cljs-nusmods.timetable             :as timetable]))
 
+(def ^{:doc     "Whether the Exhibit3 library has been downloaded"
+       :private true}
+  EXHIBIT3-LOADED? false)
+
+(def ^{:doc     "Whether the Exhibit3 stuff on the Module Finder page has been
+                 initialized"
+       :private true}
+  EXHIBIT3-INITIALIZED? false)
+
 (defn- getScript
   "Wrapper for $.getScript"
   [scriptUrl]
@@ -231,7 +240,7 @@
   "Click event handler for the `Timetable Builder` tab"
   []
   ; Clear the interval when user switches to `Timetable Builder` page
-  (if (and (not (aget js/window "Exhibit3_Initialized"))
+  (if (and (not EXHIBIT3-INITIALIZED?)
            (not (nil? INITIALIZE-EXHIBIT3-INTERVAL-VAL)))
       (do
         (js/clearInterval INITIALIZE-EXHIBIT3-INTERVAL-VAL)
@@ -246,12 +255,12 @@
 
 (defn- initialize-exhibit3 [MODULES AUXMODULES]
   "Initialize Exhibit3 database and UI for Module Finder page"
-  (if (and (not (aget js/window "Exhibit3_Initialized"))
-           (aget js/window "Exhibit3_Loaded")
+  (if (and (not EXHIBIT3-INITIALIZED?)
+           EXHIBIT3-LOADED?
            MODULE-FINDER-SCRIPTS-DLED?
            (= (aget js/window "ActiveTab") MODULEFINDER-TAB-INDEX))
     (let [$timetable-builder-tab-link ($ :#timetable-builder-tab-link)]
-      (aset js/window "Exhibit3_Initialized" true)
+      (set! EXHIBIT3-INITIALIZED? true)
       ; Unbind the click event handler for `Timetable Builder` tab link so
       ; the user cannot switch tabs when we are initializing Exhibit3 here and
       ; screw things up
@@ -381,7 +390,7 @@
   (.log js/console "In `check-and-initialize-exhibit3`")
   (.log js/console (str "INITIALIZE-EXHIBIT3-INTERVAL-VAL = "
                         INITIALIZE-EXHIBIT3-INTERVAL-VAL))
-  (if (aget js/window "Exhibit3_Initialized")
+  (if EXHIBIT3-INITIALIZED?
       (do
         (.log js/console "Exhibit3 initialized, clearing interval")
         (js/clearInterval INITIALIZE-EXHIBIT3-INTERVAL-VAL)
@@ -405,8 +414,6 @@
         (.on js/Pace "done" (fn []
                               (fade-out ($ ".overlay"))))
 
-        (aset js/window "Exhibit3_Initialized" false)
-        (aset js/window "Exhibit3_Loaded" false)
         (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
         (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
 
@@ -437,8 +444,7 @@
                       (.toggleClass $timetable cssClass)))))
 
         (one $document "scriptsLoaded.exhibit"
-             (fn []
-               (aset js/window "Exhibit3_Loaded" true)))
+             #(set! EXHIBIT3-LOADED? true))
 
         ; Code for tabs
         (hide ($ :#module-finder))
@@ -454,7 +460,7 @@
                                                   ($ (resolve deferred nil)))))
                               (fn []
                                 (set! MODULE-FINDER-SCRIPTS-DLED? true)))))
-                  (if (and (not (aget js/window "Exhibit3_Initialized"))
+                  (if (and (not EXHIBIT3-INITIALIZED?)
                            (nil? INITIALIZE-EXHIBIT3-INTERVAL-VAL))
                     (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
                           (js/setInterval check-and-initialize-exhibit3 1000)))
