@@ -611,6 +611,10 @@
           </tbody>
         </table>
         <div id="exam-timetable-container">
+          <div>
+            <button class="btn" data-clipboard-text="bee sting" id="copy-to-clipboard"><i class="fa fa-clipboard"></i></button>
+            <input id="url-shortener" type="url" readonly="readonly" placeholder="Click to get short url" />
+          </div>
           <table id="exam-timetable">
             <caption>Exam Timetable</caption>
             <thead>
@@ -671,6 +675,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/select2/3.4.6/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/qtip2/2.2.0/jquery.qtip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.1.1/ZeroClipboard.min.js"></script>
     <script src="/js/main.js"></script>
     <script>
       cljs_nusmods.main.init("{{ acad-year }}", "{{ sem }}");

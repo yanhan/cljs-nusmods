@@ -195,6 +195,8 @@ find)
 - [qTip2](http://qtip2.com/) (Tooltips)
 - [pace](http://github.hubspot.com/pace/docs/welcome/)
 (Automatic page load progress bar)
+- [ZeroClipboard](https://github.com/zeroclipboard/zeroclipboard)
+(Copy to clipboard using Flash)
 
 #### CSS libraries / tools:
 - [gulp-sass](https://github.com/dlmanning/gulp-sass)

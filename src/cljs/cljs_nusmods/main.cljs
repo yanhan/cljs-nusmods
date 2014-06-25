@@ -408,7 +408,8 @@
       (let [$document     ($ js/document)
             $window       ($ js/window)
             MODULES       (aget js/window "MODULES")
-            $timetable    ($ :#timetable)]
+            $timetable    ($ :#timetable)
+            ZeroClipboard (aget js/window "ZeroClipboard")]
 
         ; hides the overlay once the `Timetable Builder` page is done loading
         (.on js/Pace "done" (fn []
@@ -507,4 +508,11 @@
                               api          (.qtip tooltip "api")]
                           ; destroy qTip after 2s.
                           ; For some reason this works even if we set a new qTip
-                          (js/setTimeout (fn [] (.destroy api)) 2000)))))))))
+                          (js/setTimeout (fn [] (.destroy api)) 2000)))))
+
+       ; Copy short url button
+       (.config ZeroClipboard
+                (js-obj "swfPath"
+                        (str "http://cdnjs.cloudflare.com/ajax/libs"
+                             "/zeroclipboard/2.1.1/ZeroClipboard.swf")))
+       (let [zcbClient (ZeroClipboard. ($ :#copy-to-clipboard))])))))

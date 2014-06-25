@@ -24,7 +24,8 @@
                   "externs/select2.js"
                   "externs/jquery-ui.js"
                   "externs/qtip.js"
-                  "externs/pace.js"]}
+                  "externs/pace.js"
+                  "externs/zeroclipboard.js"]}
     } {
       :source-paths ["src/cljs" "test/cljs"]
       :compiler {
