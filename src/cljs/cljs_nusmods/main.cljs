@@ -405,8 +405,21 @@
   "Setup url shortening"
   []
   (let [ZeroClipboard      (aget js/window "ZeroClipboard")
+
+        ; NOTE: This `ZeroClipboard.config` must be performed before we create
+        ;       a new instance of ZeroClipboard.
+        ;       We do not care about the return value of this call, hence we
+        ;       use an underscore as the name of the binding.
+        _
+        (.config ZeroClipboard
+                 (js-obj "swfPath"
+                         (str "http://cdnjs.cloudflare.com/ajax/libs"
+                              "/zeroclipboard/2.1.1/ZeroClipboard.swf")))
+
+        $copy-to-clipboard ($ :#copy-to-clipboard)
+        ; setup the `copy shorturl` button
         localStorage       (aget js/window "localStorage")
-        zcbClient          (ZeroClipboard. ($ :#copy-to-clipboard))
+        zcbClient          (ZeroClipboard. $copy-to-clipboard)
         $urlShortenerInput ($ :#url-shortener)]
     (.click $urlShortenerInput
             (fn []
@@ -445,8 +458,7 @@
       (let [$document     ($ js/document)
             $window       ($ js/window)
             MODULES       (aget js/window "MODULES")
-            $timetable    ($ :#timetable)
-            ZeroClipboard (aget js/window "ZeroClipboard")]
+            $timetable    ($ :#timetable)]
 
         ; hides the overlay once the `Timetable Builder` page is done loading
         (.on js/Pace "done" (fn []
@@ -547,9 +559,4 @@
                           ; For some reason this works even if we set a new qTip
                           (js/setTimeout (fn [] (.destroy api)) 2000)))))
 
-       ; Copy short url button
-       (.config ZeroClipboard
-                (js-obj "swfPath"
-                        (str "http://cdnjs.cloudflare.com/ajax/libs"
-                             "/zeroclipboard/2.1.1/ZeroClipboard.swf")))
        (short-url-setup)))))
