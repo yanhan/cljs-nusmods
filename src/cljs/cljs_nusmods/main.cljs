@@ -454,7 +454,7 @@
 (defn- short-url-setup
   "Setup url shortening"
   []
-  (let [ZeroClipboard      (aget js/window "ZeroClipboard")
+  (let [ZeroClipboard       (aget js/window "ZeroClipboard")
 
         ; NOTE: This `ZeroClipboard.config` must be performed before we create
         ;       a new instance of ZeroClipboard.
@@ -466,14 +466,33 @@
                          (str "http://cdnjs.cloudflare.com/ajax/libs"
                               "/zeroclipboard/2.1.1/ZeroClipboard.swf")))
 
-        $copy-to-clipboard ($ :#copy-to-clipboard)
+        $copy-to-clipboard  ($ :#copy-to-clipboard)
         ; setup the `copy shorturl` button
-        localStorage       (aget js/window "localStorage")
-        zcbClient          (ZeroClipboard. $copy-to-clipboard)
-        $urlShortenerInput ($ :#url-shortener)]
-    (.click $urlShortenerInput
-            (get-short-url-jq-evt-handler-maker $urlShortenerInput
-                                                localStorage))))
+        localStorage        (aget js/window "localStorage")
+        zcbClient           (ZeroClipboard. $copy-to-clipboard)
+        $urlShortenerInput  ($ :#url-shortener)
+        get-url-evt-handler (get-short-url-jq-evt-handler-maker
+                              $urlShortenerInput localStorage)
+        qtipOrgCopyText     "Copy to Clipboard"
+
+        qtipApi
+        (-> $copy-to-clipboard
+            (.qtip (js-obj "content"  qtipOrgCopyText
+                           "position" (js-obj "my" "bottom center"
+                                              "at" "top center")
+
+                           ; we reset the content of the qtip when the user's
+                           ; mouse leaves the copy-to-clipboard <button>,
+                           ; because clicking on the <button> changes the text
+                           "events"   (js-obj "hidden"
+                                              (fn [evt api]
+                                                (.set api "content.text"
+                                                      qtipOrgCopyText)))))
+            (.qtip "api"))]
+    (.click $urlShortenerInput get-url-evt-handler)
+    (.mouseenter $copy-to-clipboard get-url-evt-handler)
+    ; Change text of qtip when user clicks the copy-to-clipboard <button>
+    (.on zcbClient "copy" (fn [] (.set qtipApi "content.text" "Copied!")))))
 
 ; Main entry point of the program
 (defn ^:export init [acad-year sem]

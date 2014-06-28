@@ -3,5 +3,6 @@
 jQuery.prototype.qtip = function(o) {};
 $.prototype.qtip = function(o) {};
 
-// a hack to trick ClojureScript to let us use qTip2 API destroy
+// a hack to trick ClojureScript to let us use qTip2 API methods
 $.prototype.destroy = function() {};
+$.prototype.set = function() {};
