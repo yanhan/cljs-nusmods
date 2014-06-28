@@ -401,13 +401,11 @@
         (initialize-exhibit3 (aget js/window "MODULES")
                              (aget js/window "AUXMODULES")))))
 
-(defn- get-short-url
-  "Tries to obtain a short url and sets the result in the #url-shortener
-   <input>"
-  [$urlShortenerInput localStorage]
+(defn- make-request-to-get-short-url
+  "Makes the ajax request to the server to obtain a short url"
+  [currentUrl $urlShortenerInput localStorage localStorageKey]
   (ajax "/shorten"
-        {:data     {:url (js/encodeURI
-                           (aget js/document "URL"))}
+        {:data     {:url (js/encodeURI currentUrl)}
          :dataType "json"
 
          :success
@@ -423,6 +421,22 @@
          :error    (fn [jqXHR textStatus errorThrown]
                      (.val $urlShortenerInput
                            "an error occurred"))}))
+
+(defn- get-short-url-jq-evt-handler-maker
+  "Returns a function suitable for a jQuery event handler; the returned function
+   tries to obtain a short url and sets the result in the #url-shortener
+   <input>"
+  [$urlShortenerInput localStorage]
+  (fn []
+    (let [currentUrl (aget js/document "URL")
+          localStorageKey (str "shortUrl-" currentUrl)
+
+          mbShortUrl (and localStorage
+                          (.getItem localStorage localStorageKey))]
+      (if mbShortUrl
+          (.val $urlShortenerInput mbShortUrl)
+          (make-request-to-get-short-url currentUrl $urlShortenerInput
+                                         localStorage localStorageKey)))))
 
 (defn- short-url-setup
   "Setup url shortening"
@@ -445,16 +459,8 @@
         zcbClient          (ZeroClipboard. $copy-to-clipboard)
         $urlShortenerInput ($ :#url-shortener)]
     (.click $urlShortenerInput
-            (fn []
-              (let [currentUrl      (aget js/document "URL")
-                    localStorageKey (str "shortUrl-" currentUrl)
-
-                    mbShortUrl
-                    (and localStorage
-                         (.getItem localStorage localStorageKey))]
-                (if mbShortUrl
-                    (.val $urlShortenerInput mbShortUrl)
-                    (get-short-url $urlShortenerInput localStorage)))))))
+            (get-short-url-jq-evt-handler-maker $urlShortenerInput
+                                                localStorage))))
 
 ; Main entry point of the program
 (defn ^:export init [acad-year sem]
