@@ -401,9 +401,16 @@
         (initialize-exhibit3 (aget js/window "MODULES")
                              (aget js/window "AUXMODULES")))))
 
+(def ^{:doc     "The set of urls that have been sent for shortening, but whose
+                 ajax requests have not yet completed"
+       :private true}
+  SHORTENING-IN-PROGRESS #{})
+
 (defn- make-request-to-get-short-url
   "Makes the ajax request to the server to obtain a short url"
   [currentUrl $urlShortenerInput localStorage localStorageKey]
+  (set! SHORTENING-IN-PROGRESS
+        (conj SHORTENING-IN-PROGRESS currentUrl))
   (ajax "/shorten"
         {:data     {:url (js/encodeURI currentUrl)}
          :dataType "json"
@@ -420,7 +427,11 @@
 
          :error    (fn [jqXHR textStatus errorThrown]
                      (.val $urlShortenerInput
-                           "an error occurred"))}))
+                           "an error occurred"))
+
+         :complete (fn []
+                     (set! SHORTENING-IN-PROGRESS
+                           (disj SHORTENING-IN-PROGRESS currentUrl)))}))
 
 (defn- get-short-url-jq-evt-handler-maker
   "Returns a function suitable for a jQuery event handler; the returned function
@@ -433,10 +444,12 @@
 
           mbShortUrl (and localStorage
                           (.getItem localStorage localStorageKey))]
-      (if mbShortUrl
-          (.val $urlShortenerInput mbShortUrl)
-          (make-request-to-get-short-url currentUrl $urlShortenerInput
-                                         localStorage localStorageKey)))))
+      (cond mbShortUrl
+            (.val $urlShortenerInput mbShortUrl)
+
+            (not (contains? SHORTENING-IN-PROGRESS currentUrl))
+            (make-request-to-get-short-url currentUrl $urlShortenerInput
+                                           localStorage localStorageKey)))))
 
 (defn- short-url-setup
   "Setup url shortening"
