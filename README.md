@@ -87,19 +87,90 @@ ClojureScript compilation with advanced optimizations.
 Check out the "**Some individual build tasks explained**" section below for
 finer grained builds.
 
-## Running the web server (for development)
+## Running cljs-nusmods
+
+### Configuration
+
+This project makes use of the [environ](https://github.com/weavejester/environ/)
+library by James Reeves for configuration.
+
+Currently, all "environment variables" (in quotes because you can supply the
+values in other ways) are used for enabling url shortening using
+[YOURLS](http://yourls.org/).
+
+There are some steps we take to check a url submitted for shortening so that
+the url shortening service is only used to shorten urls for cljs-nusmods.
+However, these checks are pretty much futile if someone really wants to abuse
+the url shortening service.
+
+The following environment variables are used within the web server code:
+
+- HOST_URL
+
+The location where your cljs-nusmods is hosted, **ending with a `/` character**.
+For my production site, this is `http://cljs-nusmods.pangyanhan.com/`.
+
+This is used for checking the any url submitted for shortening so at the very
+least, we know that it is used for shortening cljs-nusmods urls.
+Please follow the format described, otherwise you will face issues shortening
+urls.
+
+- YOURLS_URL
+
+Your own [YOURLS API url](http://yourls.org/#API), or a YOURLS API url which
+someone has granted you permission to use.
+
+- YOURLS_SIG
+
+For [passwordless YOURLS API access](https://github.com/YOURLS/YOURLS/wiki/PasswordlessAPI).
+**Keep this secret!**
+
+- ACAD_YEAR_MIN
+
+The minimum academic year enabled. If the minimum academic year you support is
+`AY2011/2012`, this value should be set to `2011`.
+
+This is used for checking the url format for url shortening so we only shorten
+urls for supported academic years.
+
+- ACAD_YEAR_MAX
+
+The maximum academic year enabled, similar use case as per `ACAD_YEAR_MIN`.
+If the max academic year you support is `AY2016/2017`, this value should be set
+to `2016`.
+
+Read the sections below to find out how to supply these "environment variables".
+
+### Running in development
+
+For running in development, I personally use a `.lein-env` file at the top level
+of the repository to hold the "environment variables" in the following format:
+
+    { :host-url       "value here"
+      :yourls-url     "value here"
+      :yourls-sig     "value here"
+      :acad-year-min  valueHere
+      :acad-year-max  valueHere }
+
+To run the web server:
 
     lein ring server-headless
 
-And go to http://127.0.0.1:3000/index.html
+Access the application via http://127.0.0.1:3000
 
-## Running in production
+### Running in production
 
-The following commands build an executable jar:
+For production, I run an uberjar and supply environment variables:
 
     gulp # Builds everything. very important!
     lein ring uberjar
-    java -jar target/cljs-nusmods-0.1.0-SNAPSHOT-standalone.jar
+
+    HOST_URL='insert your host url' \
+      YOURLS_URL='insert your YOURLS url' \
+      YOURLS_SIG='insert your YOURLS sig' \
+      ACAD_YEAR_MIN=minAcadYear \
+      ACAD_YEAR_MIN=maxAcadYear \
+      java -jar target/cljs-nusmods-0.1.0-SNAPSHOT-standalone.jar
 
 ## Development
 

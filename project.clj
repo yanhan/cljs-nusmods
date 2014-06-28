@@ -5,7 +5,10 @@
             :url "http://opensource.org/licenses/MIT"}
   :source-paths ["src/clj" "src/cljs"]
   :dependencies [[org.clojure/clojure "1.5.1"]
+                 [clj-http "0.9.2"]
                  [compojure "1.1.6"]
+                 [environ "0.5.0"]
+                 [ring/ring-json "0.3.1"]
                  [selmer "0.6.7"]
                  [org.clojure/clojurescript "0.0-2202"]
                  [jayq "2.5.0"]]

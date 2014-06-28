@@ -1,7 +1,8 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
-  (:use [jayq.core :only [$ $deferred $when attr document-ready done fade-out
-                          hide is one parent prevent resolve show unbind]])
+  (:use [jayq.core :only [$ $deferred $when ajax attr document-ready done
+                          fade-out hide is one parent prevent resolve show
+                          unbind]])
   (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
@@ -400,6 +401,42 @@
         (initialize-exhibit3 (aget js/window "MODULES")
                              (aget js/window "AUXMODULES")))))
 
+(defn- short-url-setup
+  "Setup url shortening"
+  []
+  (let [ZeroClipboard      (aget js/window "ZeroClipboard")
+        localStorage       (aget js/window "localStorage")
+        zcbClient          (ZeroClipboard. ($ :#copy-to-clipboard))
+        $urlShortenerInput ($ :#url-shortener)]
+    (.click $urlShortenerInput
+            (fn []
+              (let [currentUrl      (aget js/document "URL")
+                    localStorageKey (str "shortUrl-" currentUrl)
+
+                    mbShortUrl
+                    (and localStorage
+                         (.getItem localStorage localStorageKey))]
+                (if mbShortUrl
+                    (.val $urlShortenerInput mbShortUrl)
+                    (ajax "/shorten"
+                          {:data     {:url (js/encodeURI
+                                             (aget js/document "URL"))}
+                           :dataType "json"
+
+                           :success
+                           (fn [data]
+                             (if (= (aget data "status") 200)
+                                 (let [shortUrl (aget data "shortUrl")]
+                                   (.val $urlShortenerInput shortUrl)
+                                   (.setItem localStorage localStorageKey
+                                             shortUrl))
+                                 (.val $urlShortenerInput
+                                       (aget data "message"))))
+
+                           :error    (fn [jqXHR textStatus errorThrown]
+                                       (.val $urlShortenerInput
+                                             "an error occurred"))})))))))
+
 ; Main entry point of the program
 (defn ^:export init [acad-year sem]
   ; Globals
@@ -515,4 +552,4 @@
                 (js-obj "swfPath"
                         (str "http://cdnjs.cloudflare.com/ajax/libs"
                              "/zeroclipboard/2.1.1/ZeroClipboard.swf")))
-       (let [zcbClient (ZeroClipboard. ($ :#copy-to-clipboard))])))))
+       (short-url-setup)))))

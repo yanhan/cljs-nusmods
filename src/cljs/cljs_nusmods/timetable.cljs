@@ -523,6 +523,11 @@
   []
   (set-document-location-hash! ""))
 
+(defn- short-url-box-reset!
+  "Sets the placeholder text of the url shortener <input>"
+  []
+  (.val ($ :#url-shortener) ""))
+
 (def ^{:doc "Vector of <tBody> objects representing the days of the timetable
              in the Timetable Builder page"
        :private true
@@ -1282,7 +1287,8 @@
                                       bgColorCssClass true)
             (html-timetable-display-saturday-if-needed!)
             (update-document-location-hash-with-changed-lesson-group!
-              moduleCode lessonType destLessonGroup))))))
+              moduleCode lessonType destLessonGroup)
+            (short-url-box-reset!))))))
 
 (defn- make-added-lessons-draggable
   "Makes the <div> elements of selected lessons draggable."
@@ -1445,6 +1451,7 @@
                           (Lesson-Type-Long-To-Short-Form (:lessonType %1)))
                    :moduleCode)
                 newModInfoSeq))})
+      (short-url-box-reset!)
       "Added!")
 
       :else "Already Added!"))
@@ -1947,7 +1954,8 @@
         (html-timetable-display-saturday-if-needed!)
         (remove-module-from-exam-timetable! moduleCode)
         ; Update Select2 box
-        (select2-box-update-modules!))))
+        (select2-box-update-modules!)
+        (short-url-box-reset!))))
 
 (defn remove-all-modules!
   "Removes all modules from the timetable"
@@ -1959,4 +1967,5 @@
   (reset-ModulesSelectedOrder!)
   (reset-exam-timetable!)
   (select2-box-update-modules!)
-  (document-location-hash-reset!))
+  (document-location-hash-reset!)
+  (short-url-box-reset!))
