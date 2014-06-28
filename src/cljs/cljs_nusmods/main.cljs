@@ -401,6 +401,29 @@
         (initialize-exhibit3 (aget js/window "MODULES")
                              (aget js/window "AUXMODULES")))))
 
+(defn- get-short-url
+  "Tries to obtain a short url and sets the result in the #url-shortener
+   <input>"
+  [$urlShortenerInput localStorage]
+  (ajax "/shorten"
+        {:data     {:url (js/encodeURI
+                           (aget js/document "URL"))}
+         :dataType "json"
+
+         :success
+         (fn [data]
+           (if (= (aget data "status") 200)
+               (let [shortUrl (aget data "shortUrl")]
+                 (.val $urlShortenerInput shortUrl)
+                 (.setItem localStorage localStorageKey
+                           shortUrl))
+               (.val $urlShortenerInput
+                     (aget data "message"))))
+
+         :error    (fn [jqXHR textStatus errorThrown]
+                     (.val $urlShortenerInput
+                           "an error occurred"))}))
+
 (defn- short-url-setup
   "Setup url shortening"
   []
@@ -431,24 +454,7 @@
                          (.getItem localStorage localStorageKey))]
                 (if mbShortUrl
                     (.val $urlShortenerInput mbShortUrl)
-                    (ajax "/shorten"
-                          {:data     {:url (js/encodeURI
-                                             (aget js/document "URL"))}
-                           :dataType "json"
-
-                           :success
-                           (fn [data]
-                             (if (= (aget data "status") 200)
-                                 (let [shortUrl (aget data "shortUrl")]
-                                   (.val $urlShortenerInput shortUrl)
-                                   (.setItem localStorage localStorageKey
-                                             shortUrl))
-                                 (.val $urlShortenerInput
-                                       (aget data "message"))))
-
-                           :error    (fn [jqXHR textStatus errorThrown]
-                                       (.val $urlShortenerInput
-                                             "an error occurred"))})))))))
+                    (get-short-url $urlShortenerInput localStorage)))))))
 
 ; Main entry point of the program
 (defn ^:export init [acad-year sem]
