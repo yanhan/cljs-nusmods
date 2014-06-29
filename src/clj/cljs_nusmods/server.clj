@@ -127,7 +127,8 @@
 (defroutes app-routes
   (GET acad-year-sem-route [acad-year sem]
        (selmer.parser/render-file "public/index.html"
-                                  {:acad-year acad-year :sem sem}))
+                                  {:acad-year acad-year :sem sem
+                                   :host-url  HOST-URL}))
   (GET "/" [] (resp/redirect "2013-2014/sem2/"))
   (GET "/shorten" [url]
        (if (url-to-shorten-right-format? url)
