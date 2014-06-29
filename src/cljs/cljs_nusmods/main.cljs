@@ -431,7 +431,9 @@
                        (str "mailto:?"
                             "subject=My%20cljs-nusmods%20timetable&body="
                             "&body=" (js/encodeURI shortUrl)))
-        :twitter nil
+        :twitter (.open js/window
+                        (str "https://twitter.com/intent/tweet?url="
+                             (js/encodeURI shortUrl)))
         nil      nil))
 
 (defn- make-request-to-get-short-url
@@ -531,6 +533,7 @@
         zcbClient           (ZeroClipboard. $copy-to-clipboard)
         $urlShortenerInput  ($ :#url-shortener)
         $share-by-email     ($ :#share-by-email)
+        $share-on-twitter   ($ :#share-on-twitter)
         get-url-evt-handler (get-short-url-jq-evt-handler-maker
                               $urlShortenerInput localStorage)
         qtipOrgCopyText     "Copy to Clipboard"
@@ -558,7 +561,11 @@
     (.click $share-by-email
             (get-short-url-jq-evt-handler-maker $urlShortenerInput
                                                 localStorage
-                                                :email))))
+                                                :email))
+    (.click $share-on-twitter
+            (get-short-url-jq-evt-handler-maker $urlShortenerInput
+                                                localStorage
+                                                :twitter))))
 
 ; Main entry point of the program
 (defn ^:export init [acad-year sem]
