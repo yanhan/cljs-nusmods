@@ -402,16 +402,41 @@
         (initialize-exhibit3 (aget js/window "MODULES")
                              (aget js/window "AUXMODULES")))))
 
-(def ^{:doc     "The set of urls that have been sent for shortening, but whose
-                 ajax requests have not yet completed"
+(def ^{:doc     "A map of urls that have been sent for shortening, but whose
+                 ajax requests have not yet completed.
+
+                 Values are a set of actions to be performed after the url
+                 shortening has been done; refer to the
+                 `action-after-url-shortening` function for more details on the
+                 actions."
        :private true}
-  SHORTENING-IN-PROGRESS #{})
+  SHORTENING-IN-PROGRESS {})
+
+(defn- add-url-and-action-to-shortening-in-progress
+  "Adds a url and its associated action to `SHORTENING-IN-PROGRESS`"
+  [url action]
+  (set! SHORTENING-IN-PROGRESS
+        (update-in SHORTENING-IN-PROGRESS [url]
+                   (fn [actionSet]
+                     (if (nil? actionSet)
+                         #{action}
+                         (conj actionSet action))))))
+
+(defn- do-action-after-url-shortening
+  "Performs an action after url shortening"
+  [shortUrl action]
+  (case action
+        :email   (aset js/window
+                       "location"
+                       (str "mailto:?"
+                            "subject=My%20cljs-nusmods%20timetable&body="
+                            "&body=" (js/encodeURI shortUrl)))
+        :twitter nil
+        nil      nil))
 
 (defn- make-request-to-get-short-url
   "Makes the ajax request to the server to obtain a short url"
-  [currentUrl $urlShortenerInput localStorage localStorageKey]
-  (set! SHORTENING-IN-PROGRESS
-        (conj SHORTENING-IN-PROGRESS currentUrl))
+  [currentUrl actionAfterDone $urlShortenerInput localStorage localStorageKey]
   (ajax "/shorten"
         {:data     {:url (js/encodeURI currentUrl)}
          :dataType "json"
@@ -421,8 +446,13 @@
            (if (= (aget data "status") 200)
                (let [shortUrl (aget data "shortUrl")]
                  (.val $urlShortenerInput shortUrl)
+                 ; perform actions before setting in localStorage
+                 (doseq [action (get SHORTENING-IN-PROGRESS currentUrl)]
+                   (do-action-after-url-shortening shortUrl action))
                  (.setItem localStorage localStorageKey
                            shortUrl))
+
+               ; else status != 200
                (.val $urlShortenerInput
                      (aget data "message"))))
 
@@ -432,13 +462,13 @@
 
          :complete (fn []
                      (set! SHORTENING-IN-PROGRESS
-                           (disj SHORTENING-IN-PROGRESS currentUrl)))}))
+                           (dissoc SHORTENING-IN-PROGRESS currentUrl)))}))
 
 (defn- get-short-url-jq-evt-handler-maker
   "Returns a function suitable for a jQuery event handler; the returned function
    tries to obtain a short url and sets the result in the #url-shortener
    <input>"
-  [$urlShortenerInput localStorage]
+  [$urlShortenerInput localStorage & [actionAfterDone]]
   (fn []
     (let [currentUrl (aget js/document "URL")
           localStorageKey (str "shortUrl-" currentUrl)
@@ -446,11 +476,27 @@
           mbShortUrl (and localStorage
                           (.getItem localStorage localStorageKey))]
       (cond mbShortUrl
-            (.val $urlShortenerInput mbShortUrl)
+            ; the set! on `SHORTENING-IN-PROGRESS` is carried out to clear away
+            ; any actions that may have been added by the :else part of this
+            ; `cond` after the url has been shortened
+            (do (set! SHORTENING-IN-PROGRESS
+                      (dissoc SHORTENING-IN-PROGRESS currentUrl))
+                (.val $urlShortenerInput mbShortUrl)
+                (if actionAfterDone
+                    (do-action-after-url-shortening mbShortUrl actionAfterDone)))
 
             (not (contains? SHORTENING-IN-PROGRESS currentUrl))
-            (make-request-to-get-short-url currentUrl $urlShortenerInput
-                                           localStorage localStorageKey)))))
+            (do (add-url-and-action-to-shortening-in-progress currentUrl
+                                                              actionAfterDone)
+                (make-request-to-get-short-url currentUrl actionAfterDone
+                                               $urlShortenerInput localStorage
+                                               localStorageKey))
+
+            ; currentUrl in `SHORTENING-IN-PROGRESS`.
+            ; add `actionAfterDone` to the set of actions to perform
+            :else
+            (add-url-and-action-to-shortening-in-progress currentUrl
+                                                          actionAfterDone)))))
 
 (defn- qtip-for-sharing-button
   "Add qtip for social sharing buttons"
@@ -484,6 +530,7 @@
         localStorage        (aget js/window "localStorage")
         zcbClient           (ZeroClipboard. $copy-to-clipboard)
         $urlShortenerInput  ($ :#url-shortener)
+        $share-by-email     ($ :#share-by-email)
         get-url-evt-handler (get-short-url-jq-evt-handler-maker
                               $urlShortenerInput localStorage)
         qtipOrgCopyText     "Copy to Clipboard"
@@ -506,8 +553,12 @@
     (.mouseenter $copy-to-clipboard get-url-evt-handler)
     ; Change text of qtip when user clicks the copy-to-clipboard <button>
     (.on zcbClient "copy" (fn [] (.set qtipApi "content.text" "Copied!")))
-    (qtip-for-sharing-button ($ :#share-by-email) "Share via Email")
-    (qtip-for-sharing-button ($ :#share-on-twitter) "Share via Twitter")))
+    (qtip-for-sharing-button $share-by-email  "Share via Email")
+    (qtip-for-sharing-button ($ :#share-on-twitter) "Share via Twitter")
+    (.click $share-by-email
+            (get-short-url-jq-evt-handler-maker $urlShortenerInput
+                                                localStorage
+                                                :email))))
 
 ; Main entry point of the program
 (defn ^:export init [acad-year sem]
