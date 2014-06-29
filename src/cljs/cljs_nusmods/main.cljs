@@ -532,8 +532,8 @@
         localStorage        (aget js/window "localStorage")
         zcbClient           (ZeroClipboard. $copy-to-clipboard)
         $urlShortenerInput  ($ :#url-shortener)
-        $share-by-email     ($ :#share-by-email)
-        $share-on-twitter   ($ :#share-on-twitter)
+        $share-via-email    ($ :#share-via-email)
+        $share-via-twitter  ($ :#share-via-twitter)
         get-url-evt-handler (get-short-url-jq-evt-handler-maker
                               $urlShortenerInput localStorage)
         qtipOrgCopyText     "Copy to Clipboard"
@@ -556,13 +556,13 @@
     (.mouseenter $copy-to-clipboard get-url-evt-handler)
     ; Change text of qtip when user clicks the copy-to-clipboard <button>
     (.on zcbClient "copy" (fn [] (.set qtipApi "content.text" "Copied!")))
-    (qtip-for-sharing-button $share-by-email  "Share via Email")
-    (qtip-for-sharing-button ($ :#share-on-twitter) "Share via Twitter")
-    (.click $share-by-email
+    (qtip-for-sharing-button $share-via-email  "Share via Email")
+    (qtip-for-sharing-button $share-via-twitter "Share via Twitter")
+    (.click $share-via-email
             (get-short-url-jq-evt-handler-maker $urlShortenerInput
                                                 localStorage
                                                 :email))
-    (.click $share-on-twitter
+    (.click $share-via-twitter
             (get-short-url-jq-evt-handler-maker $urlShortenerInput
                                                 localStorage
                                                 :twitter))))
