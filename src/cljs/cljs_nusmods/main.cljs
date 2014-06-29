@@ -426,14 +426,17 @@
   "Performs an action after url shortening"
   [shortUrl action]
   (case action
-        :email   (aset js/window
-                       "location"
-                       (str "mailto:?"
-                            "subject=My%20cljs-nusmods%20timetable&body="
-                            "&body=" (js/encodeURI shortUrl)))
-        :twitter (.open js/window
-                        (str "https://twitter.com/intent/tweet?url="
-                             (js/encodeURI shortUrl)))
+        :email    (aset js/window
+                        "location"
+                        (str "mailto:?"
+                             "subject=My%20cljs-nusmods%20timetable&body="
+                             "&body=" (js/encodeURI shortUrl)))
+        :facebook (.open js/window
+                         (str "http://www.facebook.com/sharer/sharer.php?u="
+                              (js/encodeURI shortUrl)))
+        :twitter  (.open js/window
+                         (str "https://twitter.com/intent/tweet?url="
+                              (js/encodeURI shortUrl)))
         nil      nil))
 
 (defn- make-request-to-get-short-url
@@ -536,6 +539,7 @@
         zcbClient               (ZeroClipboard. $copy-to-clipboard)
         $urlShortenerInput      ($ :#url-shortener)
         $share-via-email        ($ :#share-via-email)
+        $share-via-facebook     ($ :#share-via-facebook)
         $share-via-twitter      ($ :#share-via-twitter)
 
         get-short-url-evt-handler-maker
@@ -564,8 +568,10 @@
     ; Change text of qtip when user clicks the copy-to-clipboard <button>
     (.on zcbClient "copy" (fn [] (.set qtipApi "content.text" "Copied!")))
     (qtip-for-sharing-button $share-via-email  "Share via Email")
+    (qtip-for-sharing-button $share-via-facebook "Share via Facebook")
     (qtip-for-sharing-button $share-via-twitter "Share via Twitter")
     (.click $share-via-email (get-short-url-evt-handler-maker :email))
+    (.click $share-via-facebook (get-short-url-evt-handler-maker :facebook))
     (.click $share-via-twitter (get-short-url-evt-handler-maker :twitter))))
 
 ; Main entry point of the program
