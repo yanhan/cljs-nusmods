@@ -466,39 +466,42 @@
                      (set! SHORTENING-IN-PROGRESS
                            (dissoc SHORTENING-IN-PROGRESS currentUrl)))}))
 
-(defn- get-short-url-jq-evt-handler-maker
-  "Returns a function suitable for a jQuery event handler; the returned function
-   tries to obtain a short url and sets the result in the #url-shortener
-   <input>"
-  [$urlShortenerInput localStorage & [actionAfterDone]]
-  (fn []
-    (let [currentUrl (aget js/document "URL")
-          localStorageKey (str "shortUrl-" currentUrl)
+(defn- get-short-url-jq-evt-handler-maker-maker
+  "Returns a function f1 that takes in an optional action. function f1 after
+   taking the action, returns a function f2 suitable for a jQuery event handler.
+   f2 tries to obtain a short url, sets the resulting short url in the
+   #url-shortener <input>, and performs any actions associated with the url
+   submitted for shortening."
+  [$urlShortenerInput localStorage]
+  (fn [& [actionAfterDone]]
+    (fn []
+      (let [currentUrl      (aget js/document "URL")
+            localStorageKey (str "shortUrl-" currentUrl)
+            mbShortUrl      (and localStorage
+                                 (.getItem localStorage localStorageKey))]
+        (cond mbShortUrl
+              ; the set! on `SHORTENING-IN-PROGRESS` is carried out to clear away
+              ; any actions that may have been added by the :else part of this
+              ; `cond` after the url has been shortened
+              (do (set! SHORTENING-IN-PROGRESS
+                        (dissoc SHORTENING-IN-PROGRESS currentUrl))
+                  (.val $urlShortenerInput mbShortUrl)
+                  (if actionAfterDone
+                      (do-action-after-url-shortening mbShortUrl
+                                                      actionAfterDone)))
 
-          mbShortUrl (and localStorage
-                          (.getItem localStorage localStorageKey))]
-      (cond mbShortUrl
-            ; the set! on `SHORTENING-IN-PROGRESS` is carried out to clear away
-            ; any actions that may have been added by the :else part of this
-            ; `cond` after the url has been shortened
-            (do (set! SHORTENING-IN-PROGRESS
-                      (dissoc SHORTENING-IN-PROGRESS currentUrl))
-                (.val $urlShortenerInput mbShortUrl)
-                (if actionAfterDone
-                    (do-action-after-url-shortening mbShortUrl actionAfterDone)))
+              (not (contains? SHORTENING-IN-PROGRESS currentUrl))
+              (do (add-url-and-action-to-shortening-in-progress currentUrl
+                                                                actionAfterDone)
+                  (make-request-to-get-short-url currentUrl actionAfterDone
+                                                 $urlShortenerInput localStorage
+                                                 localStorageKey))
 
-            (not (contains? SHORTENING-IN-PROGRESS currentUrl))
-            (do (add-url-and-action-to-shortening-in-progress currentUrl
-                                                              actionAfterDone)
-                (make-request-to-get-short-url currentUrl actionAfterDone
-                                               $urlShortenerInput localStorage
-                                               localStorageKey))
-
-            ; currentUrl in `SHORTENING-IN-PROGRESS`.
-            ; add `actionAfterDone` to the set of actions to perform
-            :else
-            (add-url-and-action-to-shortening-in-progress currentUrl
-                                                          actionAfterDone)))))
+              ; currentUrl in `SHORTENING-IN-PROGRESS`.
+              ; add `actionAfterDone` to the set of actions to perform
+              :else
+              (add-url-and-action-to-shortening-in-progress currentUrl
+                                                            actionAfterDone))))))
 
 (defn- qtip-for-sharing-button
   "Add qtip for social sharing buttons"
@@ -515,7 +518,7 @@
 (defn- short-url-setup
   "Setup url shortening"
   []
-  (let [ZeroClipboard       (aget js/window "ZeroClipboard")
+  (let [ZeroClipboard           (aget js/window "ZeroClipboard")
 
         ; NOTE: This `ZeroClipboard.config` must be performed before we create
         ;       a new instance of ZeroClipboard.
@@ -527,16 +530,20 @@
                          (str "http://cdnjs.cloudflare.com/ajax/libs"
                               "/zeroclipboard/2.1.1/ZeroClipboard.swf")))
 
-        $copy-to-clipboard  ($ :#copy-to-clipboard)
+        $copy-to-clipboard      ($ :#copy-to-clipboard)
         ; setup the `copy shorturl` button
-        localStorage        (aget js/window "localStorage")
-        zcbClient           (ZeroClipboard. $copy-to-clipboard)
-        $urlShortenerInput  ($ :#url-shortener)
-        $share-via-email    ($ :#share-via-email)
-        $share-via-twitter  ($ :#share-via-twitter)
-        get-url-evt-handler (get-short-url-jq-evt-handler-maker
-                              $urlShortenerInput localStorage)
-        qtipOrgCopyText     "Copy to Clipboard"
+        localStorage            (aget js/window "localStorage")
+        zcbClient               (ZeroClipboard. $copy-to-clipboard)
+        $urlShortenerInput      ($ :#url-shortener)
+        $share-via-email        ($ :#share-via-email)
+        $share-via-twitter      ($ :#share-via-twitter)
+
+        get-short-url-evt-handler-maker
+        (get-short-url-jq-evt-handler-maker-maker $urlShortenerInput
+                                                  localStorage)
+
+        get-short-url-no-action (get-short-url-evt-handler-maker)
+        qtipOrgCopyText         "Copy to Clipboard"
 
         qtipApi
         (-> $copy-to-clipboard
@@ -552,20 +559,14 @@
                                                 (.set api "content.text"
                                                       qtipOrgCopyText)))))
             (.qtip "api"))]
-    (.click $urlShortenerInput get-url-evt-handler)
-    (.mouseenter $copy-to-clipboard get-url-evt-handler)
+    (.click $urlShortenerInput get-short-url-no-action)
+    (.mouseenter $copy-to-clipboard get-short-url-no-action)
     ; Change text of qtip when user clicks the copy-to-clipboard <button>
     (.on zcbClient "copy" (fn [] (.set qtipApi "content.text" "Copied!")))
     (qtip-for-sharing-button $share-via-email  "Share via Email")
     (qtip-for-sharing-button $share-via-twitter "Share via Twitter")
-    (.click $share-via-email
-            (get-short-url-jq-evt-handler-maker $urlShortenerInput
-                                                localStorage
-                                                :email))
-    (.click $share-via-twitter
-            (get-short-url-jq-evt-handler-maker $urlShortenerInput
-                                                localStorage
-                                                :twitter))))
+    (.click $share-via-email (get-short-url-evt-handler-maker :email))
+    (.click $share-via-twitter (get-short-url-evt-handler-maker :twitter))))
 
 ; Main entry point of the program
 (defn ^:export init [acad-year sem]
