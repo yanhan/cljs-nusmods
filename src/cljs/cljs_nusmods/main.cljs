@@ -3,7 +3,8 @@
   (:use [jayq.core :only [$ $deferred $when ajax attr document-ready done
                           fade-out hide is one parent prevent resolve show
                           unbind]])
-  (:require [cljs-nusmods.module-array-repr     :as module-array-repr]
+  (:require clojure.string
+            [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
             [cljs-nusmods.select2               :as select2]
@@ -451,6 +452,18 @@
             (make-request-to-get-short-url currentUrl $urlShortenerInput
                                            localStorage localStorageKey)))))
 
+(defn- qtip-for-sharing-button
+  "Add qtip for social sharing buttons"
+  [$button content]
+  (.qtip $button (js-obj "content"  content
+                         "position" (js-obj "my" "bottom center"
+                                            "at" "top center")
+                         "style"    (js-obj "classes"
+                                            (clojure.string/join
+                                              " "
+                                              ["qtip-bootstrap" "qtip-rounded"
+                                               "qtip-shadow"])))))
+
 (defn- short-url-setup
   "Setup url shortening"
   []
@@ -492,7 +505,9 @@
     (.click $urlShortenerInput get-url-evt-handler)
     (.mouseenter $copy-to-clipboard get-url-evt-handler)
     ; Change text of qtip when user clicks the copy-to-clipboard <button>
-    (.on zcbClient "copy" (fn [] (.set qtipApi "content.text" "Copied!")))))
+    (.on zcbClient "copy" (fn [] (.set qtipApi "content.text" "Copied!")))
+    (qtip-for-sharing-button ($ :#share-by-email) "Share via Email")
+    (qtip-for-sharing-button ($ :#share-on-twitter) "Share via Twitter")))
 
 ; Main entry point of the program
 (defn ^:export init [acad-year sem]
