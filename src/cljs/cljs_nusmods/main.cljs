@@ -1,8 +1,8 @@
 (ns ^{:doc "main entry point for the cljs-nusmods project"}
   cljs-nusmods.main
   (:use [jayq.core :only [$ $deferred $when ajax attr document-ready done
-                          fade-out hide is one parent prevent resolve show
-                          unbind]])
+                          fade-out hide is one parent prevent remove-attr
+                          resolve show unbind]])
   (:require clojure.string
             [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
@@ -240,17 +240,15 @@
 
 (defn- timetable-builder-tab-click-handler
   "Click event handler for the `Timetable Builder` tab"
-  []
+  [evt]
+  (prevent evt)
   ; Clear the interval when user switches to `Timetable Builder` page
   (if (and (not EXHIBIT3-INITIALIZED?)
            (not (nil? INITIALIZE-EXHIBIT3-INTERVAL-VAL)))
       (do
         (js/clearInterval INITIALIZE-EXHIBIT3-INTERVAL-VAL)
         (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL nil)))
-  (hide ($ :#module-finder))
-  (.removeClass (parent ($ :#module-finder-tab-link)) "active")
-  (.addClass (parent ($ :#timetable-builder-tab-link)) "active")
-  (show ($ :#timetable-builder))
+  (this-as this (.tab ($ this) "show"))
   (select2/shift-select2-container-to "module-finder-sidebar"
                                       "timetable-builder-controls")
   (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX))
@@ -267,6 +265,11 @@
       ; the user cannot switch tabs when we are initializing Exhibit3 here and
       ; screw things up
       (unbind $timetable-builder-tab-link "click")
+      ; to disable Bootstrap tab
+      (remove-attr $timetable-builder-tab-link "data-toggle")
+      ; this prevents the id of the tab content from showing up in
+      ; `document.location.hash`
+      (attr $timetable-builder-tab-link "href" "javascript: void(0)")
       (aux-module-array-repr/init!)
       (let [modulesArray (build-modules-array MODULES AUXMODULES)
             itemsArray   (add-aux-info-to-exhibit-items
@@ -288,6 +291,9 @@
         (.configureFromDOM myExhibit)
         ; rebind click event handler for `Timetable Builder` tab link
         (js/setTimeout (fn []
+                         (attr $timetable-builder-tab-link "href"
+                               "#timetable-builder")
+                         (attr $timetable-builder-tab-link "data-toggle" "tab")
                          (.click $timetable-builder-tab-link
                                  timetable-builder-tab-click-handler))
                        3000)))))
@@ -621,9 +627,9 @@
              #(set! EXHIBIT3-LOADED? true))
 
         ; Code for tabs
-        (hide ($ :#module-finder))
         (.click ($ :#module-finder-tab-link)
-                (fn []
+                (fn [evt]
+                  (prevent evt)
                   (if (not MODULE-FINDER-SCRIPTS-STARTED-DL?)
                       (do
                         (set! MODULE-FINDER-SCRIPTS-STARTED-DL? true)
@@ -638,10 +644,7 @@
                            (nil? INITIALIZE-EXHIBIT3-INTERVAL-VAL))
                     (set! INITIALIZE-EXHIBIT3-INTERVAL-VAL
                           (js/setInterval check-and-initialize-exhibit3 1000)))
-                  (hide ($ :#timetable-builder))
-                  (show ($ :#module-finder))
-                  (.removeClass (parent ($ :#timetable-builder-tab-link)) "active")
-                  (.addClass (parent ($ :#module-finder-tab-link)) "active")
+                  (this-as this (.tab ($ this) "show"))
                   (aset js/window "ActiveTab" MODULEFINDER-TAB-INDEX)
                   (select2/shift-select2-container-to "timetable-builder-controls"
                                                       "module-finder-sidebar")))
