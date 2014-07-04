@@ -109,51 +109,6 @@ a:hover, a:active, a:focus {
   }
 }
 
-dl.nav-tab {
-  @include box-sizing(content-box);
-  margin-left: 2rem;
-  margin-bottom: 1.2rem;
-  line-height: 2.5;
-  $one_px_solid_gray: 1px solid #D6D6D6;
-
-  dd {
-    @include box-sizing(content-box);
-    background: $BODY_BGCOLOR;
-    display: inline-block;
-    -webkit-margin-start: 0;
-    border-bottom: $one_px_solid_gray;
-  }
-
-  dd > a {
-    display: block;
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  dd > a:hover {
-    background: #EEEEEE;
-    text-decoration: none;
-  }
-
-  dd > a > i {
-    margin-right: 0.5rem;
-  }
-
-  dd.active {
-    @include border-radius(4px 4px 0 0);
-
-    border-left: $one_px_solid_gray;
-    border-top: $one_px_solid_gray;
-    border-right: $one_px_solid_gray;
-    border-bottom: 1px solid #{$BODY_BGCOLOR};
-  }
-
-  dd.active > a {
-    pointer-events: none;
-    color: #555555;
-  }
-}
-
 // `Module Finder` page <table>
 table.exhibit-tabularView-body {
   tr:first-child {
