@@ -225,6 +225,11 @@
        :private true}
   TIMETABLE-TAB-INDEX 1)
 
+(def ^{:doc     "index for the active tab; one of `MODULE-FINDER-TAB-INDEX` or
+                 `TIMETABLE-TAB-INDEX`"
+       :private true}
+  ACTIVE-TAB)
+
 (def ^{:doc     "Whether we started downloading JavaScript files for
                  Module Finder page"
        :private true}
@@ -254,14 +259,14 @@
   (show ($ :#timetable-builder))
   (select2/shift-select2-container-to "module-finder-sidebar"
                                       "timetable-builder-controls")
-  (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX))
+  (set! ACTIVE-TAB TIMETABLE-TAB-INDEX))
 
 (defn- initialize-exhibit3 [MODULES AUXMODULES]
   "Initialize Exhibit3 database and UI for Module Finder page"
   (if (and (not EXHIBIT3-INITIALIZED?)
            EXHIBIT3-LOADED?
            MODULE-FINDER-SCRIPTS-DLED?
-           (= (aget js/window "ActiveTab") MODULEFINDER-TAB-INDEX))
+           (= ACTIVE-TAB MODULEFINDER-TAB-INDEX))
     (let [$timetable-builder-tab-link ($ :#timetable-builder-tab-link)]
       (set! EXHIBIT3-INITIALIZED? true)
       ; Unbind the click event handler for `Timetable Builder` tab link so
@@ -586,7 +591,7 @@
         (.on js/Pace "done" (fn []
                               (fade-out ($ ".overlay"))))
 
-        (aset js/window "ActiveTab" TIMETABLE-TAB-INDEX)
+        (set! ACTIVE-TAB TIMETABLE-TAB-INDEX)
         (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
 
         ; initialize `WEEK-TEXT-ARRAY`
@@ -640,7 +645,7 @@
                   (show ($ :#module-finder))
                   (.removeClass (parent ($ :#timetable-builder-tab-link)) "active")
                   (.addClass (parent ($ :#module-finder-tab-link)) "active")
-                  (aset js/window "ActiveTab" MODULEFINDER-TAB-INDEX)
+                  (set! ACTIVE-TAB MODULEFINDER-TAB-INDEX)
                   (select2/shift-select2-container-to "timetable-builder-controls"
                                                       "module-finder-sidebar")))
 
