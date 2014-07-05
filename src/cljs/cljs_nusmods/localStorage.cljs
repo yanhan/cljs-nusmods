@@ -10,8 +10,8 @@
    not support localStorage"
   [k]
   (if LOCALSTORAGE
-      (.getItem LOCALSTORAGE k))
-      nil)
+      (.getItem LOCALSTORAGE k)
+      nil))
 
 (defn set-item
   "Sets a key value pair in the localStorage"
