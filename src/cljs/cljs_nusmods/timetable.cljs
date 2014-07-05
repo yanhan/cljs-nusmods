@@ -409,8 +409,7 @@
   "Sorts a sequence of `PreToUrlHashLessonGroup` objects lexicographically by
    `:lessonType`."
   [preToUrlHashLessonGroupSeq]
-  (sort (fn [a b] (< (:lessonType a) (:lessonType b)))
-        preToUrlHashLessonGroupSeq))
+  (sort #(< (:lessonType %1) (:lessonType %2)) preToUrlHashLessonGroupSeq))
 
 (defn- get-PreToUrlHashLessonGroup-seq-for-selected-module
   "Given the module code of a module that has been selected, returns a sequence
