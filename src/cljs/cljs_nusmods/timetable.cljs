@@ -4,9 +4,10 @@
                           parent prepend prevent remove-attr show text width]])
   (:require [clojure.set]
             [clojure.string]
-            [cljs-nusmods.localStorage :as localStorage]
-            [cljs-nusmods.select2      :as select2]
-            [cljs-nusmods.time         :as time-helper]))
+            [cljs-nusmods.localStorage           :as localStorage]
+            [cljs-nusmods.document-location-hash :as docLocHash]
+            [cljs-nusmods.select2                :as select2]
+            [cljs-nusmods.time                   :as time-helper]))
 
 ; Data type Definitions
 ; =====================
@@ -428,91 +429,6 @@
    :preToUrlHashLessonGroupSeqSorted
    (sort-PreToUrlHashLessonGroup-seq
      (get-PreToUrlHashLessonGroup-seq-for-selected-module moduleCode))})
-
-(def ^{:doc     "Key for storing the `document.location.hash` indicating
-                 modules and lessons selected by the user"
-       :private true}
-  LOCALSTORAGE-DOC-LOCATION-HASH-KEY "cljs-nusmods:url-hash")
-
-(defn- remove-leading-sharp-from-url-hash
-  "Removes the leading '#' character from a url hash"
-  [urlHash]
-  (if (= "#" (first urlHash))
-      (subs urlHash 1)
-      urlHash))
-
-(defn- get-document-location-hash
-  "Retrieves the current value of `document.location.hash`"
-  []
-  (aget (aget js/document "location") "hash"))
-
-(defn- set-document-location-hash!
-  "Sets `document.location.hash` to a given string and updates the url hash in
-   LocalStorage"
-  [newDocLocationHash]
-  (let [finalDocLocationHash (remove-leading-sharp-from-url-hash
-                               newDocLocationHash)]
-    (aset (aget js/document "location") "hash" finalDocLocationHash)
-    (localStorage/set-item LOCALSTORAGE-DOC-LOCATION-HASH-KEY
-                           finalDocLocationHash)))
-
-(defn- set-document-location-hash-based-on-modules-order!
-  "Sets document.location.hash based on the `ModulesSelectedOrder` global."
-  []
-  (let [preToUrlHashModuleSeq
-        (map #(get-PreToUrlHashModule-for-selected-module %1)
-             ModulesSelectedOrder)]
-    (.log js/console (str "ModulesSelectedOrder = " (.stringify js/JSON (clj->js ModulesSelectedOrder))))
-    (set-document-location-hash!
-      (clojure.string/join "&"
-                           (map #(preToUrlHashModule-to-url-hash-string %1)
-                                preToUrlHashModuleSeq)))))
-
-(defn- update-document-location-hash-with-new-module!
-  "Updates document.location.hash with the `PreToUrlHashModule` of a
-   newly added module."
-  [preToUrlHashModule]
-  (let [orgUrlHash    (get-document-location-hash)
-
-        moduleUrlHash
-        (preToUrlHashModule-to-url-hash-string preToUrlHashModule)]
-    (.log js/console (str "orgUrlHash = \"" orgUrlHash "\""))
-    (.log js/console (str "preToUrlHashModule = " (.stringify js/JSON (clj->js preToUrlHashModule))))
-    (set-document-location-hash!
-      (str orgUrlHash (if (empty? orgUrlHash) "" "&") moduleUrlHash))))
-
-(defn- remove-module-from-document-location-hash!
-  "Removes a module from `document.location.hash`"
-  [moduleCode]
-  (let [orgUrlHash (get-document-location-hash)
-
-        urlHashWithoutModule
-        (if (module-has-lessons? moduleCode)
-            (clojure.string/replace
-              orgUrlHash
-              (re-pattern (str moduleCode "_[A-Z]{1,3}=[^&]+&?")) "")
-            ; for modules without lessons, replace the module code itself
-            (clojure.string/replace orgUrlHash
-                                    (re-pattern (str moduleCode "&?")) ""))]
-    (set-document-location-hash!
-      (clojure.string/replace urlHashWithoutModule #"&$" ""))))
-
-(defn- update-document-location-hash-with-changed-lesson-group!
-  "Updates a module's lesson type in `document.location.hash` with a changed
-   changed lesson group."
-  [moduleCode lessonTypeLongForm newLessonGroup]
-  (let [orgUrlHash (get-document-location-hash)
-        lessonType (Lesson-Type-Long-To-Short-Form lessonTypeLongForm)
-        newUrlHash (clojure.string/replace
-                     orgUrlHash
-                     (re-pattern (str moduleCode "_" lessonType "=[^&]+"))
-                     (str moduleCode "_" lessonType "=" newLessonGroup))]
-    (set-document-location-hash! newUrlHash)))
-
-(defn- document-location-hash-reset!
-  "Resets `document.location.hash` to the empty string"
-  []
-  (set-document-location-hash! ""))
 
 (defn- short-url-box-reset!
   "Sets the placeholder text of the url shortener <input>"
@@ -1277,8 +1193,10 @@
             (add-module-lesson-group! moduleCode lessonType destLessonGroup
                                       bgColorCssClass true)
             (html-timetable-display-saturday-if-needed!)
-            (update-document-location-hash-with-changed-lesson-group!
-              moduleCode lessonType destLessonGroup)
+            (docLocHash/update-with-changed-lesson-group!
+              moduleCode
+              (Lesson-Type-Long-To-Short-Form lessonType)
+              destLessonGroup)
             (short-url-box-reset!))))))
 
 (defn- make-added-lessons-draggable
@@ -1432,16 +1350,18 @@
       (html-timetable-display-saturday-if-needed!)
 
       ; Update URL hash with newly added module
-      (update-document-location-hash-with-new-module!
-        {:moduleCode moduleCode,
+      (docLocHash/update-with-new-module!
+        (preToUrlHashModule-to-url-hash-string
+          {:moduleCode moduleCode,
 
-         :preToUrlHashLessonGroupSeqSorted
-         (sort-PreToUrlHashLessonGroup-seq
-           (map #(dissoc
-                   (assoc %1 :lessonType
-                          (Lesson-Type-Long-To-Short-Form (:lessonType %1)))
-                   :moduleCode)
-                newModInfoSeq))})
+           :preToUrlHashLessonGroupSeqSorted
+           (sort-PreToUrlHashLessonGroup-seq
+             (map #(dissoc
+                     (assoc %1 :lessonType
+                            (Lesson-Type-Long-To-Short-Form (:lessonType %1)))
+                     :moduleCode)
+                  newModInfoSeq))}))
+
       (short-url-box-reset!)
       "Added!")
 
@@ -1519,6 +1439,18 @@
                      :lessonGroup lessonGroup})
                   (get moduleLessonGroupsMapFinal moduleCode)))
            moduleCodesSeq))))
+
+(defn- set-document-location-hash-based-on-modules-order!
+  "Sets document.location.hash based on the `ModulesSelectedOrder` global."
+  []
+  (let [preToUrlHashModuleSeq
+        (map #(get-PreToUrlHashModule-for-selected-module %1)
+             ModulesSelectedOrder)]
+    (.log js/console (str "ModulesSelectedOrder = " (.stringify js/JSON (clj->js ModulesSelectedOrder))))
+    (docLocHash/set-url-hash!
+      (clojure.string/join "&"
+                           (map #(preToUrlHashModule-to-url-hash-string %1)
+                                preToUrlHashModuleSeq)))))
 
 (defn- add-module-lesson-groups-from-url-hash!
   "Adds the module lesson groups available in the url hash. Erroneous lesson
@@ -1626,19 +1558,19 @@
 
 (defn- choose-url-hash-to-use
   "Choose between `document.location.hash` and the value of the
-   `LOCALSTORAGE-DOC-LOCATION-HASH-KEY` in localStorage for using to add
-   modules, preferring the latter if it is not empty.
+   `docLocHash/LOCALSTORAGE-DOC-LOCATION-HASH-KEY` in localStorage for using
+   to add modules, preferring the latter if it is not empty.
 
    Returns the url hash if it's non empty, nil otherwise."
   []
-  (let [docLocHash       (remove-leading-sharp-from-url-hash
-                           (aget (aget js/document "location") "hash"))
+  (let [docLocHash       (docLocHash/remove-leading-sharp-from-url-hash
+                           (docLocHash/get-url-hash))
         localStorageHash (localStorage/get-item
-                           LOCALSTORAGE-DOC-LOCATION-HASH-KEY)
+                           docLocHash/LOCALSTORAGE-DOC-LOCATION-HASH-KEY)
 
         localStorageHashPrime
         (if localStorageHash
-            (remove-leading-sharp-from-url-hash localStorageHash)
+            (docLocHash/remove-leading-sharp-from-url-hash localStorageHash)
             "")]
     (cond (not (empty? docLocHash))            docLocHash
           (not (empty? localStorageHashPrime)) localStorageHashPrime
@@ -1646,8 +1578,9 @@
 
 (defn add-module-lesson-groups-from-url-hash-or-local-storage!
   "Adds modules from `document.location.hash`, using the value stored in the
-   `LOCALSTORAGE-DOC-LOCATION-HASH-KEY` key of the localStorage as a fallback
-   if the former is empty. If the latter is empty, no modules will be added."
+   `docLocHash/LOCALSTORAGE-DOC-LOCATION-HASH-KEY` key of the localStorage as a
+   fallback if the former is empty. If the latter is empty, no modules will be
+   added."
   []
   (let [urlHash (choose-url-hash-to-use)]
     (if (not (nil? urlHash))
@@ -1940,7 +1873,7 @@
         (.log js/console "Boo ya!")
         (.log js/console (str "ModulesSelected:" (.stringify js/JSON (clj->js ModulesSelected))))
 
-        (remove-module-from-document-location-hash! moduleCode)
+        (docLocHash/remove-module! moduleCode (module-has-lessons? moduleCode))
 
         (remove-from-ModulesSelectedOrder! moduleCode)
         (.log js/console "I hear and obey!")
@@ -1960,5 +1893,5 @@
   (reset-ModulesSelectedOrder!)
   (reset-exam-timetable!)
   (select2-box-update-modules!)
-  (document-location-hash-reset!)
+  (docLocHash/reset-url-hash!)
   (short-url-box-reset!))
