@@ -544,6 +544,46 @@ input[readonly] {
   }
 }
 
+.btn.active {
+  background-color: #E6E6E6;
+  background-image: none;
+  outline: 0;
+  @include box-shadow(inset 0 2px 4px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.05));
+}
+
+.btn-group {
+  white-space: nowrap;
+  vertical-align: middle;
+
+  .btn {
+    @include border-radius(0);
+  }
+
+  .btn:first-child {
+    margin-left: 0;
+    -webkit-border-top-left-radius: 4px;
+    -moz-border-radius-topleft: 4px;
+    border-top-left-radius: 4px;
+    -webkit-border-bottom-left-radius: 4px;
+    -moz-border-radius-bottomleft: 4px;
+    border-bottom-left-radius: 4px;
+  }
+
+  .btn:last-child {
+    -webkit-border-top-right-radius: 4px;
+    -moz-border-radius-topright: 4px;
+    border-top-right-radius: 4px;
+    -webkit-border-bottom-right-radius: 4px;
+    -moz-border-radius-bottomright: 4px;
+    border-bottom-right-radius: 4px;
+  }
+
+  .btn+.btn {
+    margin-left: -4px;
+  }
+}
+
 #show-hide-controls {
   @extend .cf;
   margin-bottom: 1em;
