@@ -280,12 +280,12 @@
                 ModulesSelected
                 [moduleCode lessonType :info]
                 (fn [modSelLessonInfoSeq]
-                  (conj (filter (fn [modSelLessonInfo]
-                                  (or (not= (:day modSelLessonInfo) day)
-                                      (not= (:startTime modSelLessonInfo)
-                                            startTime)
-                                      (not= (:endTime modSelLessonInfo)
-                                            endTime)))
+                  (conj (filter (fn [{modDay       :day
+                                      modStartTime :startTime
+                                      modEndTime   :endTime}]
+                                  (or (not= modDay day)
+                                      (not= modStartTime startTime)
+                                      (not= modEndTime endTime)))
                                 modSelLessonInfoSeq)
                         {:day day,
                          :rowNum rowIdx,
