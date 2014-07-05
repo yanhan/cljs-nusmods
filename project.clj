@@ -15,7 +15,7 @@
   :plugins [[lein-cljsbuild "1.0.3"]
             [lein-ring "0.8.10"]
             [com.cemerick/clojurescript.test "0.3.0"]]
-  :ring {:handler cljs-nusmods.server/app}
+  :ring {:handler cljs-nusmods.server/app :host "127.0.0.1"}
   :cljsbuild {
     :builds [{
       :source-paths ["src/cljs"]
