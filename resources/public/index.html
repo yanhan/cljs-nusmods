@@ -8,7 +8,7 @@
     <meta property="og:image" content="{{ host-url }}/img/og-image-thumbnail.png" />
     <title>cljs-nusmods: Unofficial NUS Module Finder & Timetable Builder (ClojureScript implementation of NUSMods 1.0)</title>
 
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/normalize.css" />
     <link rel="stylesheet" href="/css/exhibit3-styles.min.css" />
     <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/select2/3.4.6/select2.css" />
@@ -16,17 +16,26 @@
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="stylesheet" href="/css/vendor/pace-center-atom.css">
 
+    <script src="/js/vendor/modernizr.js"></script>
     <script src="/js/vendor/pace.min.js"></script>
   </head>
   <body>
     <div class="overlay"></div>
-    <ul class="nav nav-tabs" role="tablist">
-      <li><a id="module-finder-tab-link" role="tab" data-toggle="tab" href="#module-finder"><i class="fa fa-search"></i>Module Finder</a></li>
-      <li class="active"><a id="timetable-builder-tab-link" role="tab" data-toggle="tab" href="#timetable-builder"><i class="fa fa-table"></i>Timetable Builder</a>
-      </li>
-    </ul>
-    <div class="tab-content">
-      <div class="tab-pane grid grid-pad-sides" id="module-finder">
+    <div class="nav-div">
+      <dl class="nav-tab">
+        <dd>
+          <a id="module-finder-tab-link" href="javascript:void(0)">
+            <i class="fa fa-search"></i>Module Finder</a>
+        </dd>
+        <dd class="active">
+          <a id="timetable-builder-tab-link" href="javascript:void(0)">
+            <i class="fa fa-table"></i>Timetable Builder
+          </a>
+        </dd>
+      </dl>
+    </div>
+    <div>
+      <div class="tab-content grid grid-pad-sides" id="module-finder">
         <div id="module-finder-sidebar" class="medium-col-1-4">
           <div data-ex-role="exhibit-facet"
                data-ex-facet-class="Exhibit.TextSearchFacet"
@@ -154,7 +163,7 @@
           </div>
         </div>
       </div>
-      <div class="tab-pane active cf" id="timetable-builder">
+      <div class="tab-content cf" id="timetable-builder">
         <table id="timetable" class="hide-module-name">
           <tbody>
             <tr id="timetable-times">
@@ -670,7 +679,6 @@
     <script src="/js/mods/{{ acad-year }}/{{ sem }}/modinfo.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
-    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/select2/3.4.6/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/qtip2/2.2.0/jquery.qtip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.1.1/ZeroClipboard.min.js"></script>
