@@ -4,8 +4,9 @@
                           parent prepend prevent remove-attr show text width]])
   (:require [clojure.set]
             [clojure.string]
-            [cljs-nusmods.select2 :as select2]
-            [cljs-nusmods.time    :as time-helper]))
+            [cljs-nusmods.localStorage :as localStorage]
+            [cljs-nusmods.select2      :as select2]
+            [cljs-nusmods.time         :as time-helper]))
 
 ; Data type Definitions
 ; =====================
@@ -432,10 +433,6 @@
    (sort-PreToUrlHashLessonGroup-seq
      (get-PreToUrlHashLessonGroup-seq-for-selected-module moduleCode))})
 
-(def ^{:doc     "HTML localStorage object"
-       :private true}
-  LOCALSTORAGE (aget js/window "localStorage"))
-
 (def ^{:doc     "Key for storing the `document.location.hash` indicating
                  modules and lessons selected by the user"
        :private true}
@@ -460,10 +457,8 @@
   (let [finalDocLocationHash (remove-leading-sharp-from-url-hash
                                newDocLocationHash)]
     (aset (aget js/document "location") "hash" finalDocLocationHash)
-    (if LOCALSTORAGE
-        (.setItem LOCALSTORAGE
-                  LOCALSTORAGE-DOC-LOCATION-HASH-KEY
-                  finalDocLocationHash))))
+    (localStorage/set-item LOCALSTORAGE-DOC-LOCATION-HASH-KEY
+                           finalDocLocationHash)))
 
 (defn- set-document-location-hash-based-on-modules-order!
   "Sets document.location.hash based on the `ModulesSelectedOrder` global."
@@ -1642,14 +1637,16 @@
   []
   (let [docLocHash       (remove-leading-sharp-from-url-hash
                            (aget (aget js/document "location") "hash"))
-        localStorageHash (if LOCALSTORAGE
-                             (remove-leading-sharp-from-url-hash
-                               (.getItem LOCALSTORAGE
-                                         LOCALSTORAGE-DOC-LOCATION-HASH-KEY))
-                             "")]
-    (cond (not (empty? docLocHash))       docLocHash
-          (not (empty? localStorageHash)) localStorageHash
-          :else                           nil)))
+        localStorageHash (localStorage/get-item
+                           LOCALSTORAGE-DOC-LOCATION-HASH-KEY)
+
+        localStorageHashPrime
+        (if localStorageHash
+            (remove-leading-sharp-from-url-hash localStorageHash)
+            "")]
+    (cond (not (empty? docLocHash))            docLocHash
+          (not (empty? localStorageHashPrime)) localStorageHashPrime
+          :else                                nil)))
 
 (defn add-module-lesson-groups-from-url-hash-or-local-storage!
   "Adds modules from `document.location.hash`, using the value stored in the

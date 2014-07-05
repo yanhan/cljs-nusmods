@@ -7,6 +7,7 @@
             [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
+            [cljs-nusmods.localStorage          :as localStorage]
             [cljs-nusmods.select2               :as select2]
             [cljs-nusmods.time                  :as time-helper]
             [cljs-nusmods.timetable             :as timetable]))
@@ -441,7 +442,7 @@
 
 (defn- make-request-to-get-short-url
   "Makes the ajax request to the server to obtain a short url"
-  [currentUrl actionAfterDone $urlShortenerInput localStorage localStorageKey]
+  [currentUrl actionAfterDone $urlShortenerInput localStorageKey]
   (ajax "/shorten"
         {:data     {:url (js/encodeURI currentUrl)}
          :dataType "json"
@@ -454,8 +455,7 @@
                  ; perform actions before setting in localStorage
                  (doseq [action (get SHORTENING-IN-PROGRESS currentUrl)]
                    (do-action-after-url-shortening shortUrl action))
-                 (.setItem localStorage localStorageKey
-                           shortUrl))
+                 (localStorage/set-item localStorageKey shortUrl))
 
                ; else status != 200
                (.val $urlShortenerInput
@@ -475,13 +475,12 @@
    f2 tries to obtain a short url, sets the resulting short url in the
    #url-shortener <input>, and performs any actions associated with the url
    submitted for shortening."
-  [$urlShortenerInput localStorage]
+  [$urlShortenerInput]
   (fn [& [actionAfterDone]]
     (fn []
       (let [currentUrl      (aget js/document "URL")
             localStorageKey (str "shortUrl-" currentUrl)
-            mbShortUrl      (and localStorage
-                                 (.getItem localStorage localStorageKey))]
+            mbShortUrl      (localStorage/get-item localStorageKey)]
         (cond mbShortUrl
               ; the set! on `SHORTENING-IN-PROGRESS` is carried out to clear away
               ; any actions that may have been added by the :else part of this
@@ -496,8 +495,9 @@
               (not (contains? SHORTENING-IN-PROGRESS currentUrl))
               (do (add-url-and-action-to-shortening-in-progress currentUrl
                                                                 actionAfterDone)
-                  (make-request-to-get-short-url currentUrl actionAfterDone
-                                                 $urlShortenerInput localStorage
+                  (make-request-to-get-short-url currentUrl
+                                                 actionAfterDone
+                                                 $urlShortenerInput
                                                  localStorageKey))
 
               ; currentUrl in `SHORTENING-IN-PROGRESS`.
@@ -535,7 +535,6 @@
 
         $copy-to-clipboard      ($ :#copy-to-clipboard)
         ; setup the `copy shorturl` button
-        localStorage            (aget js/window "localStorage")
         zcbClient               (ZeroClipboard. $copy-to-clipboard)
         $urlShortenerInput      ($ :#url-shortener)
         $share-via-email        ($ :#share-via-email)
@@ -543,8 +542,7 @@
         $share-via-twitter      ($ :#share-via-twitter)
 
         get-short-url-evt-handler-maker
-        (get-short-url-jq-evt-handler-maker-maker $urlShortenerInput
-                                                  localStorage)
+        (get-short-url-jq-evt-handler-maker-maker $urlShortenerInput)
 
         get-short-url-no-action (get-short-url-evt-handler-maker)
         qtipOrgCopyText         "Copy to Clipboard"
