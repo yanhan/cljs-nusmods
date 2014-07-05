@@ -372,8 +372,7 @@
    "SECTIONAL TEACHING"         "ST",
    "TUTORIAL"                   "T",
    "TUTORIAL TYPE 2"            "T2",
-   "TUTORIAL TYPE 3"            "T3"
-   })
+   "TUTORIAL TYPE 3"            "T3"})
 
 (def ^{:doc     "Converts a long form lesson type to a nicer looking string"
        :private true}
