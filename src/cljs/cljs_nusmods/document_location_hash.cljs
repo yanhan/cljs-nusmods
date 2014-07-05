@@ -4,10 +4,11 @@
             [cljs-nusmods.localStorage :as localStorage]))
 
 (def ^{:doc     "Key for storing the `document.location.hash` indicating
-                 modules and lessons selected by the user"}
+                 modules and lessons selected by the user"
+       :private true}
   LOCALSTORAGE-DOC-LOCATION-HASH-KEY "cljs-nusmods:url-hash")
 
-(defn remove-leading-sharp-from-url-hash
+(defn- remove-leading-sharp-from-url-hash
   "Removes the leading '#' character from a url hash"
   [urlHash]
   (if (= "#" (first urlHash))
@@ -17,7 +18,13 @@
 (defn get-url-hash
   "Retrieves the current value of `document.location.hash`"
   []
-  (aget (aget js/document "location") "hash"))
+  (remove-leading-sharp-from-url-hash
+    (aget (aget js/document "location") "hash")))
+
+(defn get-url-hash-from-local-storage
+  "Retrieves the `document.location.hash` stored in `localStorage`"
+  []
+  (localStorage/get-item LOCALSTORAGE-DOC-LOCATION-HASH-KEY))
 
 (defn set-url-hash!
   "Sets `document.location.hash` to a given string and updates the url hash in

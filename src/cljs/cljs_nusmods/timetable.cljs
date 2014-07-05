@@ -1563,18 +1563,11 @@
 
    Returns the url hash if it's non empty, nil otherwise."
   []
-  (let [docLocHash       (docLocHash/remove-leading-sharp-from-url-hash
-                           (docLocHash/get-url-hash))
-        localStorageHash (localStorage/get-item
-                           docLocHash/LOCALSTORAGE-DOC-LOCATION-HASH-KEY)
-
-        localStorageHashPrime
-        (if localStorageHash
-            (docLocHash/remove-leading-sharp-from-url-hash localStorageHash)
-            "")]
-    (cond (not (empty? docLocHash))            docLocHash
-          (not (empty? localStorageHashPrime)) localStorageHashPrime
-          :else                                nil)))
+  (let [docLocHash       (docLocHash/get-url-hash)
+        localStorageHash (docLocHash/get-url-hash-from-local-storage)]
+    (cond (not (empty? docLocHash))       docLocHash
+          (not (empty? localStorageHash)) localStorageHash
+          :else                           nil)))
 
 (defn add-module-lesson-groups-from-url-hash-or-local-storage!
   "Adds modules from `document.location.hash`, using the value stored in the
