@@ -120,10 +120,8 @@
   (let [departmentToFacultyIndexHash (aget AUXMODULES "departmentToFaculty")
         departmentStringsArray       (aget AUXMODULES "departments")]
     (doseq [[departmentIdxString facultyIdx]
-              (filter (fn [kv]
-                        (let [departmentIdx (int (first kv))
-                              facultyIdx    (second kv)]
-                          (not= departmentIdx facultyIdx)))
+              (filter (fn [[departmentIdx facultyIdx]]
+                        (not= (int departmentIdx) facultyIdx))
                       (js->clj departmentToFacultyIndexHash))]
       (let [departmentIdx    (int departmentIdxString)
             departmentString (nth departmentStringsArray departmentIdx)
