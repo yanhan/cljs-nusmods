@@ -242,8 +242,7 @@
                              :endTime   -> 0-indexed end time of lesson}
               }
        }"
-  :private true
-  }
+  :private true}
   ModulesSelected {})
 
 (defn is-module-selected?
