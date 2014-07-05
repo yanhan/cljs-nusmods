@@ -41,8 +41,7 @@
         lessonTypesStringsArray      (aget MODULES "lessonTypesStringsArray")
         ; return value, a JavaScript array of modules for the
         ; Exhibit 3.0 library
-        modulesArray                 (array)
-       ]
+        modulesArray                 (array)]
     (doseq [[idx moduleArrayRepr auxModuleArrayRepr]
               (map vector (range) (aget MODULES "modules") auxModulesArray)]
       (let [moduleCode        (module-array-repr/get-module-code
