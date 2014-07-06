@@ -499,13 +499,13 @@
 ; First argument is a 0-indexed integer of the day
 (defmethod timetable-get-day-row true
   [day rowNum]
-  (nth (timetable-get-day day) rowNum))
+  ((timetable-get-day day) rowNum))
 
 ; First argument is a day in `TIMETABLE` - the return value of
 ; `timetable-get-day` function
 (defmethod timetable-get-day-row false
   [ttDay rowNum]
-  (nth ttDay rowNum))
+  (ttDay rowNum))
 
 ; Returns the total number of rows for a given day in the Timetable.
 (defmulti timetable-day-get-nr-rows number? :default true)
