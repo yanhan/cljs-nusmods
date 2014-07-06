@@ -29,8 +29,8 @@
 ;
 ; TimetableLessonInfo (abbrev: ttLessonInfo)
 ; ------------------------------------------
-; Describes a lesson in the `Timetable` global; this is the key used for each
-; row in a day of the `Timetable`.
+; Describes a lesson in the `TIMETABLE` global; this is the key used for each
+; row in a day of the `TIMETABLE`.
 ;
 ; Each instance of `TimetableLessonInfo` is a map in the following format:
 ;
@@ -215,7 +215,7 @@
 
 (def ^{:doc     "In-memory representation of a Timetable"
        :private true}
-  Timetable nil)
+  TIMETABLE nil)
 
 (def ^{:doc "Modules selected by the user. This map has the following
              format:
@@ -484,16 +484,16 @@
    The timetable is a vector of 6 rows, with each row representing a day from
    Monday to Saturday"
   []
-  (set! Timetable (vec (map (fn [x] (create-day-repr))
+  (set! TIMETABLE (vec (map (fn [x] (create-day-repr))
                             (range 0 time-helper/NR-DAYS)))))
 
 (defn- timetable-get-day
   "Retrieves the in-memory representation of the given 0-indexed day in the
    Timetable, where 0 = Monday, 1 = Tuesday, until 5 = Saturday"
   [day]
-  (nth Timetable day))
+  (nth TIMETABLE day))
 
-; Retrieves a row for a given day in `Timetable`
+; Retrieves a row for a given day in `TIMETABLE`
 (defmulti timetable-get-day-row (fn [a1 _] (number? a1)) :default true)
 
 ; First argument is a 0-indexed integer of the day
@@ -501,7 +501,7 @@
   [day rowNum]
   (nth (timetable-get-day day) rowNum))
 
-; First argument is a day in `Timetable - the return value of
+; First argument is a day in `TIMETABLE` - the return value of
 ; `timetable-get-day` function
 (defmethod timetable-get-day-row false
   [ttDay rowNum]
@@ -559,11 +559,11 @@
    <td class='h23 m30'></td>")
 
 (defn- add-new-row-to-timetable-day!
-  "Adds a new row to the 0-indexed day in the Timetable, where 0 = Monday,
+  "Adds a new row to the 0-indexed day in the `TIMETABLE`, where 0 = Monday,
    1 = Tuesday, until 5 = Saturday."
   [day]
-  (set! Timetable
-        (update-in Timetable [day]
+  (set! TIMETABLE
+        (update-in TIMETABLE [day]
                    (fn [ttDay]
                      (conj ttDay (create-empty-timetable-row)))))
   (.append (nth HTML-Timetable day)
@@ -574,11 +574,11 @@
     (attr thElem "rowspan" nrRows)))
 
 (defn- timetable-add-lesson!
-  "Adds a lesson to the `Timetable` global, effectively 'marking' the
+  "Adds a lesson to the `TIMETABLE` global, effectively 'marking' the
    time interval for that lesson as being occupied."
   [day rowNum ttLessonInfo $lessonDiv]
-  (set! Timetable
-        (update-in Timetable
+  (set! TIMETABLE
+        (update-in TIMETABLE
                    [day rowNum]
                    (fn [ttRow]
                      (assoc ttRow ttLessonInfo $lessonDiv)))))
@@ -586,15 +586,15 @@
 (defn- timetable-get-lesson-div
   "Retrieves the jQuery object for a lesson <div>"
   [day rowNum ttLessonInfo]
-  (get-in Timetable [day rowNum ttLessonInfo]))
+  (get-in TIMETABLE [day rowNum ttLessonInfo]))
 
 (defn- timetable-remove-lesson!
-  "Removes a lesson from the `Timetable` global, effectively 'marking' the
+  "Removes a lesson from the `TIMETABLE` global, effectively 'marking' the
    time interval occupied by that lesson as free."
   [day rowNum ttLessonInfo]
   (let [$lessonDiv (timetable-get-lesson-div day rowNum ttLessonInfo)]
-    (set! Timetable
-          (update-in Timetable [day rowNum]
+    (set! TIMETABLE
+          (update-in TIMETABLE [day rowNum]
                      (fn [ttRow] (dissoc ttRow ttLessonInfo))))
     $lessonDiv))
 
@@ -650,7 +650,7 @@
    the one on the row closest to that time.
    If such a `TimetableLessonInfo` object does not exist, returns nil."
   [day rowNum timeIdx]
-  (let [ttRow (get-in Timetable [day rowNum])]
+  (let [ttRow (get-in TIMETABLE [day rowNum])]
     (reduce (fn [ttLessonInfoBefore [ttLessonInfo _]]
               (let [endTime   (:endTime ttLessonInfo)]
                 (cond (and (nil? ttLessonInfoBefore)
@@ -671,7 +671,7 @@
    is the one on the row closest to that time.
    If such a `TimetableLessonInfo` object does not exist, returns nil."
   [day rowNum timeIdx]
-  (let [ttRow (get-in Timetable [day rowNum])]
+  (let [ttRow (get-in TIMETABLE [day rowNum])]
     (reduce (fn [ttLessonInfoAfter [ttLessonInfo _]]
               (let [startTime (:startTime ttLessonInfo)]
                 (cond (and (nil? ttLessonInfoAfter)
@@ -688,7 +688,7 @@
             ttRow)))
 
 (defn- timetable-row-empty?
-  "Returns true if there is no lesson for a given day and row in `Timetable`.
+  "Returns true if there is no lesson for a given day and row in `TIMETABLE`.
    Returns false otherwise."
   ([ttRow] (empty? ttRow))
 
@@ -696,7 +696,7 @@
 
 (defn- timetable-row-not-empty?
   "Returns true if there at least one lesson for a given day and row in
-   `Timetable`. Returns false otherwise."
+   `TIMETABLE`. Returns false otherwise."
   ([ttRow] (not (timetable-row-empty? ttRow)))
 
   ([day rowNum] (not (timetable-row-empty? day rowNum))))
@@ -734,12 +734,12 @@
           (timetable-enumerate-rows-in-day day)))
 
 (defn- timetable-prune-empty-rows-for-day!
-  "Removes empty rows from a day in `Timetable`, based on the return value of
+  "Removes empty rows from a day in `TIMETABLE`, based on the return value of
    the `timetable-day-get-empty-and-non-empty-rows` function."
   [day {:keys [emptyRows nonEmptyRows]}]
   (let [nrNonEmptyRows (count nonEmptyRows)]
-    (set! Timetable
-          (update-in Timetable [day]
+    (set! TIMETABLE
+          (update-in TIMETABLE [day]
                      (fn [ttDay]
                        (vec (map (fn [rowIdx]
                                    (timetable-get-day-row ttDay rowIdx))
@@ -756,7 +756,7 @@
                                              emptyRows)))))))))
 
 (defn- timetable-remove-lesson-group!
-  "Removes a selected lesson group for a module from the `Timetable`.
+  "Removes a selected lesson group for a module from the `TIMETABLE`.
 
    Returns a sequence of `TimetableLessonInfo` objects, augmented with the
    `:day`, `:rowNum` and `:divElem` keys. The `divElem` key's value is the
@@ -794,7 +794,7 @@
           (timetable-enumerate-rows-in-day day)))
 
 (defn- html-timetable-prune-empty-rows-for-day!
-  "Removes <tr> elements corresponding to empty rows in `Timetable`.
+  "Removes <tr> elements corresponding to empty rows in `TIMETABLE`.
    The 2nd argument should be the return value of the
    `timetable-day-get-empty-and-non-empty-rows` function."
   [day {:keys [emptyRows nonEmptyRows]}]
@@ -1748,7 +1748,7 @@
       (.remove $siblingTd))
     ; update colspan of destination <td>
     (attr $destTd "colspan" slotsOccupied)
-    ; update `Timetable` global
+    ; update `TIMETABLE` global
     (timetable-remove-lesson! day rowNum ttLessonInfo)
     (timetable-add-lesson! day destinationRowNum ttLessonInfo $divElem)))
 
