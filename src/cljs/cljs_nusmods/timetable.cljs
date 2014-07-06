@@ -659,7 +659,7 @@
                          (<= endTime timeIdx))
                     ttLessonInfo
 
-                    (and (not (nil? selectedTTLessonInfo))
+                    (and selectedTTLessonInfo
                          (<= endTime timeIdx)
                          (> endTime (:endTime selectedTTLessonInfo)))
                     ttLessonInfo
