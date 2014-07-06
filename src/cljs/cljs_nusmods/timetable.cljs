@@ -635,9 +635,11 @@
               ; FOUR:
               ; |------- exist -------|
               ;      |-- new --|
-              (filter (fn [[ttLessonInfo _]]
-                        (and (>= (dec endTime) (:startTime ttLessonInfo))
-                             (< startTime (:endTime ttLessonInfo))))
+              (filter (fn [[{existingLessonStartTime :startTime
+                             existingLessonEndTime   :endTime}
+                            _]]
+                        (and (>= (dec endTime) existingLessonStartTime)
+                             (< startTime existingLessonEndTime)))
                       ttRow))
             (assoc result :foundFreeRow true)
 
