@@ -4,6 +4,7 @@
                           parent prepend prevent remove-attr show text width]])
   (:require [clojure.set]
             [clojure.string]
+            [cljs-nusmods.dom-globals            :as domGlobals]
             [cljs-nusmods.localStorage           :as localStorage]
             [cljs-nusmods.document-location-hash :as docLocHash]
             [cljs-nusmods.select2                :as select2]
@@ -77,10 +78,6 @@
 ;                                          sorted lexicographically by
 ;                                          `:lessonType`
 ;   }
-
-(def ^{:doc     "jQuery window selector"
-       :private true}
-  $window ($ js/window))
 
 (def ^{:doc     "Minimum number of rows for a day in the Timetable"
        :private true}
@@ -920,7 +917,7 @@
              (js-obj "content"  (js-obj "text" $qtipContent)
                      "position" (js-obj "my"       "center left"
                                         "at"       "center right"
-                                        "viewport" $window)
+                                        "viewport" domGlobals/$window)
 
                      "style"
                      (js-obj "classes"

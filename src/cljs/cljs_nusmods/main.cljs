@@ -7,6 +7,7 @@
             [cljs-nusmods.module-array-repr     :as module-array-repr]
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
+            [cljs-nusmods.dom-globals           :as domGlobals]
             [cljs-nusmods.localStorage          :as localStorage]
             [cljs-nusmods.select2               :as select2]
             [cljs-nusmods.time                  :as time-helper]
@@ -579,9 +580,7 @@
   ; Globals
   (document-ready
     (fn []
-      (let [$document     ($ js/document)
-            $window       ($ js/window)
-            MODULES       (aget js/window "MODULES")
+      (let [MODULES       (aget js/window "MODULES")
             $timetable    ($ :#timetable)]
 
         ; hides the overlay once the `Timetable Builder` page is done loading
@@ -617,7 +616,7 @@
                       (.toggleClass $btn "active")
                       (.toggleClass $timetable cssClass)))))
 
-        (one $document "scriptsLoaded.exhibit"
+        (one domGlobals/$document "scriptsLoaded.exhibit"
              #(set! EXHIBIT3-LOADED? true))
 
         ; Code for tabs
@@ -676,7 +675,9 @@
                                              "position"
                                              (js-obj "my" "bottom center"
                                                      "at" "top center"
-                                                     "viewport" $window)))
+
+                                                     "viewport"
+                                                     domGlobals/$window)))
 
                               api          (.qtip tooltip "api")]
                           ; destroy qTip after 2s.
