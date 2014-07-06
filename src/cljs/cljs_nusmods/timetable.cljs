@@ -8,7 +8,8 @@
             [cljs-nusmods.localStorage           :as localStorage]
             [cljs-nusmods.document-location-hash :as docLocHash]
             [cljs-nusmods.select2                :as select2]
-            [cljs-nusmods.time                   :as time-helper]))
+            [cljs-nusmods.time                   :as time-helper]
+            [cljs-nusmods.timetable-constants    :as timetable-constants]))
 
 ; Data type Definitions
 ; =====================
@@ -78,10 +79,6 @@
 ;                                          sorted lexicographically by
 ;                                          `:lessonType`
 ;   }
-
-(def ^{:doc     "Minimum number of rows for a day in the Timetable"
-       :private true}
-  TIMETABLE-MIN-ROWS-FOR-DAY 2)
 
 (def ^{:doc     "`Modules.examDates` of the JavaScript global; set this using
                  the `set-EXAM-DATE-ARRAY!` function"
@@ -467,12 +464,12 @@
   "Creates in-memory representation of a single day in the timetable.
 
    Each day is a vector of rows, and there is a minimum of
-   `TIMETABLE-MIN-ROWS-FOR-DAY` rows in each day.
+   `timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY` rows in each day.
    Multiple rows are needed when there are lessons with overlapping start and
    end time."
   []
   (loop [ttDay           []
-         nrRowsRemaining TIMETABLE-MIN-ROWS-FOR-DAY]
+         nrRowsRemaining timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY]
     (if (zero? nrRowsRemaining)
         ttDay
         (recur (conj ttDay (create-empty-timetable-row))
@@ -745,7 +742,7 @@
                        (vec (map (fn [rowIdx]
                                    (timetable-get-day-row ttDay rowIdx))
                                  (cond (>= nrNonEmptyRows
-                                           TIMETABLE-MIN-ROWS-FOR-DAY)
+                                           timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY)
                                        nonEmptyRows
 
                                        (= nrNonEmptyRows 1)
@@ -753,7 +750,7 @@
                                         (first emptyRows)]
 
                                        :else
-                                       (take TIMETABLE-MIN-ROWS-FOR-DAY
+                                       (take timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY
                                              emptyRows)))))))))
 
 (defn- timetable-remove-lesson-group!
@@ -804,16 +801,18 @@
         nrNonEmptyRows (count nonEmptyRows)
 
         rowIndicesToPreserve
-        (if (>= nrNonEmptyRows TIMETABLE-MIN-ROWS-FOR-DAY)
+        (if (>= nrNonEmptyRows timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY)
             nonEmptyRows
             ; Preserve the initial empty rows to make up for the minimum
             ; number of non-empty rows; remove the remaining empty rows.
             (concat nonEmptyRows
-                    (take (- TIMETABLE-MIN-ROWS-FOR-DAY nrNonEmptyRows)
+                    (take (- timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY
+                             nrNonEmptyRows)
                           emptyRows)))
 
         orgTotalRows   (+ nrNonEmptyRows (count emptyRows))
-        newNrRows      (max nrNonEmptyRows TIMETABLE-MIN-ROWS-FOR-DAY)
+        newNrRows      (max nrNonEmptyRows
+                            timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY)
 
         $rows           (children $day "tr")
         $rowsToPreserve (map (fn [rowIdx] ($ (nth $rows rowIdx)))
@@ -934,16 +933,19 @@
   (doseq [day (range time-helper/NR-DAYS)]
     (let [nrRows   (timetable-day-get-nr-rows day)
           $dayElem (nth HTML-Timetable day)]
-      ; Remove rows >= TIMETABLE-MIN-ROWS-FOR-DAY
-      (doseq [rowIdx (reverse (range TIMETABLE-MIN-ROWS-FOR-DAY nrRows))]
+      ; Remove rows >= timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY
+      (doseq [rowIdx (reverse
+                       (range timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY
+                              nrRows))]
         (.remove (nth (children $dayElem "tr") rowIdx)))
       ; Remove all <td>
       (.remove (.find $dayElem "td"))
       ; Add clean <td>
-      (doseq [rowIdx (range TIMETABLE-MIN-ROWS-FOR-DAY)]
+      (doseq [rowIdx (range timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY)]
         (.append (nth (children $dayElem "tr") rowIdx)
                  ($ Timetable-Row-TD-HTML-String)))
-      (attr (.find $dayElem "tr > th") "rowspan" TIMETABLE-MIN-ROWS-FOR-DAY))))
+      (attr (.find $dayElem "tr > th") "rowspan"
+            timetable-constants/TIMETABLE-MIN-ROWS-FOR-DAY))))
 
 (def ^{:doc     "In-memory representation of Exam Timetable"
        :private true}
