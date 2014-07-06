@@ -652,7 +652,7 @@
    the one on the row closest to that time.
    If such a `TimetableLessonInfo` object does not exist, returns nil."
   [day rowNum timeIdx]
-  (let [ttRow (get-in TIMETABLE [day rowNum])]
+  (let [ttRow (timetable-get-day-row day rowNum)]
     (reduce (fn [ttLessonInfoBefore [ttLessonInfo _]]
               (let [endTime   (:endTime ttLessonInfo)]
                 (cond (and (nil? ttLessonInfoBefore)
@@ -673,7 +673,7 @@
    is the one on the row closest to that time.
    If such a `TimetableLessonInfo` object does not exist, returns nil."
   [day rowNum timeIdx]
-  (let [ttRow (get-in TIMETABLE [day rowNum])]
+  (let [ttRow (timetable-get-day-row day rowNum)]
     (reduce (fn [ttLessonInfoAfter [ttLessonInfo _]]
               (let [startTime (:startTime ttLessonInfo)]
                 (cond (and (nil? ttLessonInfoAfter)
