@@ -491,7 +491,7 @@
   "Retrieves the in-memory representation of the given 0-indexed day in the
    Timetable, where 0 = Monday, 1 = Tuesday, until 5 = Saturday"
   [day]
-  (nth TIMETABLE day))
+  (TIMETABLE day))
 
 ; Retrieves a row for a given day in `TIMETABLE`
 (defmulti timetable-get-day-row (fn [a1 _] (number? a1)) :default true)
