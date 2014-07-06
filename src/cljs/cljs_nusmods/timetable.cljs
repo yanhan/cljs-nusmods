@@ -194,19 +194,19 @@
 
 (def ^{:doc     "Number of available background colors for lesson divs"
        :private true}
-  Nr-Available-Bg-Colors 24)
+  NR-AVAILABLE-BG-COLORS 24)
 
 (def ^{:doc     "Sequence of background color indices"
        :private true}
-  Bg-Colors-Seq [])
+  BG-COLORS-SEQ [])
 
 (defn get-next-lesson-bg-color-css-class
   "Returns the next css background color class for a lesson div"
   []
-  (if (empty? Bg-Colors-Seq)
-      (set! Bg-Colors-Seq (shuffle (range 0 Nr-Available-Bg-Colors))))
-  (let [currentIdx (first Bg-Colors-Seq)]
-    (set! Bg-Colors-Seq (rest Bg-Colors-Seq))
+  (if (empty? BG-COLORS-SEQ)
+      (set! BG-COLORS-SEQ (shuffle (range 0 NR-AVAILABLE-BG-COLORS))))
+  (let [currentIdx (first BG-COLORS-SEQ)]
+    (set! BG-COLORS-SEQ (rest BG-COLORS-SEQ))
     (str "lesson-bg-"
          (if (< currentIdx 10)
              "0"
