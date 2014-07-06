@@ -610,10 +610,10 @@
   (let [ttDay (timetable-get-day day)]
     (:rowIndex
       (reduce
-        (fn [result ttRow]
+        (fn [{:keys [foundFreeRow] :as result} ttRow]
           (cond
-            (:foundFreeRow result) result
-            (zero? (count ttRow))  (assoc result :foundFreeRow true)
+            foundFreeRow          result
+            (zero? (count ttRow)) (assoc result :foundFreeRow true)
 
             (empty?
               ; Find any existing lessons which overlap with our new lesson.
