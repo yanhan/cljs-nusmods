@@ -643,7 +643,8 @@
                       ttRow))
             (assoc result :foundFreeRow true)
 
-            :else (update-in result [:rowIndex] inc)))
+            :else                 (update-in result [:rowIndex] inc)))
+
         {:foundFreeRow false, :rowIndex 0}
         ttDay))))
 
