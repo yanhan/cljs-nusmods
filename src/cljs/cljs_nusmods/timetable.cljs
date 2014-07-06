@@ -2,8 +2,8 @@
   cljs-nusmods.timetable
   (:use [jayq.core :only [$ attr before children data hide insert-after is
                           parent prepend prevent remove-attr show text width]])
-  (:require [clojure.set]
-            [clojure.string]
+  (:require clojure.set
+            clojure.string
             [cljs-nusmods.dom-globals            :as domGlobals]
             [cljs-nusmods.localStorage           :as localStorage]
             [cljs-nusmods.document-location-hash :as docLocHash]
