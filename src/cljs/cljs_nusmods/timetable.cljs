@@ -674,18 +674,18 @@
    If such a `TimetableLessonInfo` object does not exist, returns nil."
   [day rowNum timeIdx]
   (let [ttRow (timetable-get-day-row day rowNum)]
-    (reduce (fn [ttLessonInfoAfter [ttLessonInfo _]]
+    (reduce (fn [selectedTTLessonInfo [ttLessonInfo _]]
               (let [startTime (:startTime ttLessonInfo)]
-                (cond (and (nil? ttLessonInfoAfter)
+                (cond (and (nil? selectedTTLessonInfo)
                            (>= startTime timeIdx))
                       ttLessonInfo
 
-                      (and (not (nil? ttLessonInfoAfter))
+                      (and (not (nil? selectedTTLessonInfo))
                            (>= startTime timeIdx)
-                           (< startTime (:startTime ttLessonInfoAfter)))
+                           (< startTime (:startTime selectedTTLessonInfo)))
                       ttLessonInfo
 
-                      :else ttLessonInfoAfter)))
+                      :else selectedTTLessonInfo)))
             nil
             ttRow)))
 
