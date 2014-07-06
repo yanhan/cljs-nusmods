@@ -8,6 +8,7 @@
             [cljs-nusmods.aux-module-array-repr :as aux-module-array-repr]
             [cljs-nusmods.lesson-array-repr     :as lesson-array-repr]
             [cljs-nusmods.dom-globals           :as domGlobals]
+            [cljs-nusmods.html-timetable        :as html-timetable]
             [cljs-nusmods.localStorage          :as localStorage]
             [cljs-nusmods.select2               :as select2]
             [cljs-nusmods.time                  :as time-helper]
@@ -591,7 +592,7 @@
         (aset js/window "ModulesMap" (build-timetable-module-map MODULES))
 
         ; initialize `WEEK-TEXT-ARRAY`
-        (timetable/set-WEEK-TEXT-ARRAY! (aget MODULES "weekText"))
+        (html-timetable/set-WEEK-TEXT-ARRAY! (aget MODULES "weekText"))
         ; initialize `EXAM-DATE-ARRAY`
         (timetable/set-EXAM-DATE-ARRAY! (aget MODULES "examDates"))
 
