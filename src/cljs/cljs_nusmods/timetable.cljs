@@ -192,11 +192,6 @@
           #{}
           s))
 
-(def ^{:doc     "Width in pixels of a half hour timeslot"
-       :private true
-       }
-  half-hour-pixels 35)
-
 (def ^{:doc     "Number of available background colors for lesson divs"
        :private true}
   Nr-Available-Bg-Colors 24)
