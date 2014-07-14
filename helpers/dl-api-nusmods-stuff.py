@@ -8,7 +8,7 @@ import requests
 API_NUSMODS_STUFF_FOLDER      = "api-nusmods-stuff"
 API_NUSMODS_URL_FORMAT_STRING = \
   "http://api.nusmods.com/{acad_year}/{sem}/{file_name}"
-ACADEMIC_YEARS                = ["2013-2014"]
+ACADEMIC_YEARS                = ["2014-2015"]
 API_NUSMODS_FILES             = [
   "facultyDepartments.json", "lessonTypes.json", "modules.json"
 ]

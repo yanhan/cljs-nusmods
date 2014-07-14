@@ -4,14 +4,28 @@ var fs = require("fs");
 var _ = require("lodash");
 var argv = require("minimist")(process.argv.slice(2));
 // TODO: Centralize this information somewhere
-var ACAD_YEAR = argv["acad-year"] || "2013-2014";
-var SEM = argv.sem || 2;
+var ACAD_YEAR = argv["acad-year"] || "2014-2015";
+var SEM = argv.sem || 1;
 var API_NUSMODS_FOLDER = __dirname +
   "/../api-nusmods-stuff/" + ACAD_YEAR + "/sem" + SEM;
 
 var SharedGlobals = require("./shared_globals.js");
 var NormalizeDepartment = require("./normalize_department.js");
+
 var MODULES_ARRAY = require(API_NUSMODS_FOLDER + "/modules.json");
+(function() {
+  var keysToPreserve = [
+    "ModuleCode", "ModuleTitle", "ModuleCredit", "ExamDate", "Timetable",
+    "ModuleDescription", "Department", "Types", "Lecturers", "Prerequisite",
+    "Preclusion", "Workload"
+  ];
+  var acadYearRegex = /^(\d{4})-/;
+  if (_.parseInt(ACAD_YEAR.match(acadYearRegex)[1], 10) >= 2014) {
+    MODULES_ARRAY = _.map(MODULES_ARRAY, function(moduleObj) {
+      return _.pick(moduleObj, keysToPreserve);
+    });
+  }
+})();
 
 var STRING_KEYS = [
   "ModuleCode", "ModuleTitle", "Department", "ModuleDescription",
@@ -58,6 +72,8 @@ var ARRAY_OF_STRINGS_KEYS = [
           name: "ExamDateFormatException"
         };
       }
+    } else {
+      mod.ExamDate = SharedGlobals.PROCESSED_NO_EXAM_DATE_STRING ;
     }
     // normalize department string
     if (_.has(mod, "Department")) {
@@ -74,12 +90,15 @@ var ARRAY_OF_STRINGS_KEYS = [
       mod.Timetable = _.map(mod.Timetable, function(lesson) {
         var weeksArr;
         var reduceResult;
-        if (lesson.WeekText === "EVEN&nbsp;WEEK") {
+        lesson.DayText = lesson.DayText.toUpperCase();
+        lesson.LessonType = lesson.LessonType.toUpperCase();
+        lesson.WeekText = lesson.WeekText.replace(/&nbsp;/, " ").toUpperCase();
+        if (lesson.WeekText === "EVEN WEEK") {
           lesson.WeekText = "Even Weeks";
-        } else if (lesson.WeekText === "EVERY&nbsp;WEEK" ||
+        } else if (lesson.WeekText === "EVERY WEEK" ||
             lesson.WeekText === "EVERY WEEK") {
           lesson.WeekText = "Every Week";
-        } else if (lesson.WeekText === "ODD&nbsp;WEEK") {
+        } else if (lesson.WeekText === "ODD WEEK") {
           lesson.WeekText = "Odd Weeks";
         } else {
           weeksArr = _(lesson.WeekText.split(","))

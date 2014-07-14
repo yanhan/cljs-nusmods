@@ -3,8 +3,8 @@ var fs = require("fs");
 var mkdirp = require("mkdirp");
 var argv = require("minimist")(process.argv.slice(2));
 // TODO: Centralize this information somewhere
-var ACAD_YEAR = argv["acad-year"] || "2013-2014";
-var SEM = argv.sem || 2;
+var ACAD_YEAR = argv["acad-year"] || "2014-2015";
+var SEM = argv.sem || 1;
 var API_NUSMODS_FOLDER = __dirname +
   "/../api-nusmods-stuff/" + ACAD_YEAR + "/sem" + SEM;
 

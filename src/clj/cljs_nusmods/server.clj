@@ -129,7 +129,7 @@
        (selmer.parser/render-file "public/index.html"
                                   {:acad-year acad-year :sem sem
                                    :host-url  HOST-URL}))
-  (GET "/" [] (resp/redirect "2013-2014/sem2/"))
+  (GET "/" [] (resp/redirect "2014-2015/sem1/"))
   (GET "/shorten" [url]
        (if (url-to-shorten-right-format? url)
            ; do smth meaningful here

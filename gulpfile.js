@@ -166,8 +166,8 @@ gulp.task("sass", function() {
 // Generate compacted representation of module data
 // TODO: Allow for generating different academic year and semester
 gulp.task("generate-module-data", shell.task([
-  "node helpers/normalize_modules_json.js --acad-year='2013-2014' --sem=2",
-  "node helpers/convert_modules.js --acad-year='2013-2014' --sem=2"
+  "node helpers/normalize_modules_json.js --acad-year='2014-2015' --sem=1",
+  "node helpers/convert_modules.js --acad-year='2014-2015' --sem=1"
 ]));
 
 // Clean ClojureScript build products + Compile ClojureScript
